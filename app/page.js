@@ -1,4 +1,3 @@
-"use client";
 import { useState, useEffect, useRef } from "react";
 
 // ─── CONFIGURATION ────────────────────────────────────────────────────────────
@@ -8,18 +7,18 @@ const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ
 
 // Fallback sample data (used when sheet isn't configured yet)
 const FALLBACK_PRODUCTS = [
-  { id: 1, name: "Embroidered Lawn 3-Piece", brand: "Khaadi", price: 4800, category: "Lawn", color: "White", fabric: "Lawn", occasion: "Eid", image: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=400&q=80", product_url: "https://www.khaadi.com", badge: "Bestseller" },
-  { id: 2, name: "Printed Pret Kurta", brand: "Sapphire", price: 3200, category: "Pret", color: "Pink", fabric: "Cotton", occasion: "Casual", image: "https://images.unsplash.com/photo-1583391733956-6c78276477e2?w=400&q=80", product_url: "https://pk.sapphireonline.pk", badge: "New" },
-  { id: 3, name: "Formal Chiffon Suit", brand: "Gul Ahmed", price: 7500, category: "Formal", color: "Navy", fabric: "Chiffon", occasion: "Wedding", image: "https://images.unsplash.com/photo-1619086303291-0ef7699e4b31?w=400&q=80", product_url: "https://gulahmedshop.com", badge: null },
-  { id: 4, name: "Casual Linen Co-ord", brand: "Limelight", price: 2800, category: "Casual", color: "Pastel", fabric: "Linen", occasion: "Casual", image: "https://images.unsplash.com/photo-1552902865-b72c031ac5ea?w=400&q=80", product_url: "https://www.limelightpk.com", badge: "Sale" },
-  { id: 5, name: "Luxury Eid Collection", brand: "Alkaram Studio", price: 9200, category: "Eid Collection", color: "Red", fabric: "Silk", occasion: "Eid", image: "https://images.unsplash.com/photo-1604671801908-6f0c6a092c05?w=400&q=80", product_url: "https://alkaramstudio.com", badge: "Exclusive" },
-  { id: 6, name: "Black Embroidered Kurta", brand: "Khaadi", price: 5500, category: "Pret", color: "Black", fabric: "Cotton", occasion: "Party", image: "https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?w=400&q=80", product_url: "https://www.khaadi.com", badge: null },
-  { id: 7, name: "Office Wear Lawn Set", brand: "Sapphire", price: 4100, category: "Lawn", color: "Multi", fabric: "Lawn", occasion: "Office", image: "https://images.unsplash.com/photo-1582142407894-ec85a1260cce?w=400&q=80", product_url: "https://pk.sapphireonline.pk", badge: "New" },
-  { id: 8, name: "Karandi Winter Suit", brand: "Gul Ahmed", price: 6800, category: "Formal", color: "Navy", fabric: "Karandi", occasion: "Formal", image: "https://images.unsplash.com/photo-1623091411395-09e79fdbfcf6?w=400&q=80", product_url: "https://gulahmedshop.com", badge: null },
-  { id: 9, name: "Wedding Silk Gharara", brand: "Limelight", price: 12000, category: "Formal", color: "Red", fabric: "Silk", occasion: "Wedding", image: "https://images.unsplash.com/photo-1614886137799-1629b5a17c4c?w=400&q=80", product_url: "https://www.limelightpk.com", badge: "Premium" },
-  { id: 10, name: "Pastel Summer Pret", brand: "Alkaram Studio", price: 2500, category: "Pret", color: "Pastel", fabric: "Cotton", occasion: "Casual", image: "https://images.unsplash.com/photo-1571513722275-4b41940f54b8?w=400&q=80", product_url: "https://alkaramstudio.com", badge: "Sale" },
-  { id: 11, name: "Chiffon Party Suit", brand: "Khaadi", price: 8900, category: "Formal", color: "Pink", fabric: "Chiffon", occasion: "Party", image: "https://images.unsplash.com/photo-1585386959984-a4155224a1ad?w=400&q=80", product_url: "https://www.khaadi.com", badge: null },
-  { id: 12, name: "White Eid Luxury 3-Pc", brand: "Sapphire", price: 11500, category: "Eid Collection", color: "White", fabric: "Chiffon", occasion: "Eid", image: "https://images.unsplash.com/photo-1606503825008-909a67e63c3d?w=400&q=80", product_url: "https://pk.sapphireonline.pk", badge: "Trending" },
+  { id: 1, name: "Embroidered Lawn 3-Piece", brand: "Khaadi", price: 4800, category: "Lawn", color: "White", fabric: "Lawn", occasion: "Eid", image: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=400&q=80", product_url: "https://www.khaadi.com/pk/women/", badge: "Bestseller" },
+  { id: 2, name: "Printed Pret Kurta", brand: "Sapphire", price: 3200, category: "Pret", color: "Pink", fabric: "Cotton", occasion: "Casual", image: "https://images.unsplash.com/photo-1583391733956-6c78276477e2?w=400&q=80", product_url: "https://pk.sapphireonline.pk/collections/pret", badge: "New" },
+  { id: 3, name: "Formal Chiffon Suit", brand: "Gul Ahmed", price: 7500, category: "Formal", color: "Navy", fabric: "Chiffon", occasion: "Wedding", image: "https://images.unsplash.com/photo-1619086303291-0ef7699e4b31?w=400&q=80", product_url: "https://www.gulahmedshop.com/collections/formal", badge: null },
+  { id: 4, name: "Casual Linen Co-ord", brand: "Limelight", price: 2800, category: "Casual", color: "Pastel", fabric: "Linen", occasion: "Casual", image: "https://images.unsplash.com/photo-1552902865-b72c031ac5ea?w=400&q=80", product_url: "https://www.limelightpk.com/collections/pret-wear", badge: "Sale" },
+  { id: 5, name: "Luxury Eid Collection", brand: "Alkaram Studio", price: 9200, category: "Eid Collection", color: "Red", fabric: "Silk", occasion: "Eid", image: "https://images.unsplash.com/photo-1604671801908-6f0c6a092c05?w=400&q=80", product_url: "https://www.alkaramstudio.com/collections/festive", badge: "Exclusive" },
+  { id: 6, name: "Black Embroidered Kurta", brand: "Khaadi", price: 5500, category: "Pret", color: "Black", fabric: "Cotton", occasion: "Party", image: "https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?w=400&q=80", product_url: "https://www.khaadi.com/pk/women/", badge: null },
+  { id: 7, name: "Office Wear Lawn Set", brand: "Sapphire", price: 4100, category: "Lawn", color: "Multi", fabric: "Lawn", occasion: "Office", image: "https://images.unsplash.com/photo-1582142407894-ec85a1260cce?w=400&q=80", product_url: "https://pk.sapphireonline.pk/collections/lawn", badge: "New" },
+  { id: 8, name: "Karandi Winter Suit", brand: "Gul Ahmed", price: 6800, category: "Formal", color: "Navy", fabric: "Karandi", occasion: "Formal", image: "https://images.unsplash.com/photo-1623091411395-09e79fdbfcf6?w=400&q=80", product_url: "https://www.gulahmedshop.com/collections/winter", badge: null },
+  { id: 9, name: "Wedding Silk Gharara", brand: "Limelight", price: 12000, category: "Formal", color: "Red", fabric: "Silk", occasion: "Wedding", image: "https://images.unsplash.com/photo-1614886137799-1629b5a17c4c?w=400&q=80", product_url: "https://www.limelightpk.com/collections/formal-wear", badge: "Premium" },
+  { id: 10, name: "Pastel Summer Pret", brand: "Alkaram Studio", price: 2500, category: "Pret", color: "Pastel", fabric: "Cotton", occasion: "Casual", image: "https://images.unsplash.com/photo-1571513722275-4b41940f54b8?w=400&q=80", product_url: "https://www.alkaramstudio.com/collections/summer", badge: "Sale" },
+  { id: 11, name: "Chiffon Party Suit", brand: "Khaadi", price: 8900, category: "Formal", color: "Pink", fabric: "Chiffon", occasion: "Party", image: "https://images.unsplash.com/photo-1585386959984-a4155224a1ad?w=400&q=80", product_url: "https://www.khaadi.com/pk/women/", badge: null },
+  { id: 12, name: "White Eid Luxury 3-Pc", brand: "Sapphire", price: 11500, category: "Eid Collection", color: "White", fabric: "Chiffon", occasion: "Eid", image: "https://images.unsplash.com/photo-1606503825008-909a67e63c3d?w=400&q=80", product_url: "https://pk.sapphireonline.pk/collections/eid", badge: "Trending" },
 ];
 
 // ─── CSV PARSER ───────────────────────────────────────────────────────────────
@@ -295,7 +294,9 @@ export default function App() {
                     <span className="tag">{p.occasion}</span>
                     <span className="tag">{p.color}</span>
                   </div>
-                  <button className="cta-btn" onClick={() => window.open(p.product_url || "#", "_blank", "noopener,noreferrer")}>View on {p.brand} →</button>
+                  <a href={p.product_url} target="_blank" rel="noopener noreferrer" style={{ display: "block", textDecoration: "none" }}>
+                    <button className="cta-btn">View on {p.brand} →</button>
+                  </a>
                 </div>
               </div>
             ))}
