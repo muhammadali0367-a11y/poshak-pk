@@ -1,10 +1,11 @@
 "use client";
+
 import { useState, useEffect, useRef } from "react";
 
 // ─── CONFIGURATION ────────────────────────────────────────────────────────────
 // Replace this URL with your own Google Sheet's published CSV URL.
 // How to get it: File → Share → Publish to web → Sheet1 → CSV → Publish → Copy URL
-const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQjuWejNvV1eOM9H1abXWMB-wAJMN2reQNNY1jWWx6dap-x2OTwdMzK5uK3DO05Bq6g0appKglzUDl4/pub?gid=0&single=true&output=csv";
+const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/pub?gid=0&single=true&output=csv";
 
 // Fallback sample data (used when sheet isn't configured yet)
 const FALLBACK_PRODUCTS = [
