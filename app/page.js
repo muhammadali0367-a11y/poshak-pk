@@ -48,8 +48,11 @@ function parseCSV(csvText) {
   }).filter(p => p.name);
 }
 
-const PRICE_RANGES = ["All Prices", "Under 3,000", "3,000–6,000", "6,000–10,000", "10,000+"];
-
+const PRICE_RANGES = ["All Prices", "Under 3,000", "3,000–6,000", "6,000–10,000", "10,000–20,000", "20,000+"];
+const STATIC_CATEGORIES = ["All", "Unstitched", "Pret / Ready to Wear", "Luxury Pret", "Lawn", "Kurta", "Co-ords", "Shalwar Kameez", "Formal", "Bridal", "Winter Collection", "Festive / Eid"];
+const STATIC_FABRICS = ["All Fabrics", "Lawn", "Cotton", "Chiffon", "Silk", "Organza", "Velvet", "Khaddar", "Karandi", "Linen", "Cambric", "Jacquard", "Net", "Raw Silk"];
+const STATIC_OCCASIONS = ["All Occasions", "Casual / Everyday", "Office / Work", "Formal Event", "Wedding", "Eid / Festive", "Party", "Bridal", "Winter"];
+const STATIC_COLORS = ["All", "Black", "White", "Navy", "Red", "Maroon", "Pink", "Peach", "Mint", "Teal", "Mustard", "Olive", "Grey", "Beige", "Pastel", "Multi / Printed"];
 
 const BADGE_COLORS = {
   "Bestseller": "#d4915a",
@@ -91,17 +94,18 @@ export default function App() {
   }, []);
 
   const BRANDS = ["All Brands", ...Array.from(new Set(products.map(p => p.brand))).sort()];
-  const CATEGORIES = ["All", ...Array.from(new Set(products.map(p => p.category))).sort()];
-  const COLORS = ["All", ...Array.from(new Set(products.map(p => p.color))).sort()];
-  const FABRICS = ["All Fabrics", ...Array.from(new Set(products.map(p => p.fabric))).sort()];
-  const OCCASIONS = ["All Occasions", ...Array.from(new Set(products.map(p => p.occasion))).sort()];
+  const CATEGORIES = STATIC_CATEGORIES;
+  const COLORS = STATIC_COLORS;
+  const FABRICS = STATIC_FABRICS;
+  const OCCASIONS = STATIC_OCCASIONS;
 
   const priceFilter = (price) => {
     if (priceRange === "All Prices") return true;
     if (priceRange === "Under 3,000") return price < 3000;
     if (priceRange === "3,000–6,000") return price >= 3000 && price <= 6000;
     if (priceRange === "6,000–10,000") return price > 6000 && price <= 10000;
-    if (priceRange === "10,000+") return price > 10000;
+    if (priceRange === "10,000–20,000") return price > 10000 && price <= 20000;
+    if (priceRange === "20,000+") return price > 20000;
     return true;
   };
 
@@ -200,7 +204,7 @@ export default function App() {
 
           {/* QUICK TAGS */}
           <div style={{ marginTop: "16px", display: "flex", flexWrap: "wrap", gap: "6px", justifyContent: "center" }}>
-            {["Eid dresses", "Lawn suits", "Under 5000", "Wedding wear", "Black kurta", "Office wear"].map(t => (
+            {["Lawn 3-Piece", "Luxury Pret", "Unstitched", "Bridal", "Kurta", "Co-ords", "Festive", "Winter Shawl"].map(t => (
               <button key={t} className="tag" style={{ cursor: "pointer" }} onClick={() => setQuery(t)}>
                 {t}
               </button>
