@@ -69,10 +69,23 @@ const FALLBACK_PRODUCTS = [
 ];
 
 // ─── CSV PARSER ────────────────────────────────────────────────────────────────
+// Build a reverse lookup: category → gender (authoritative source of truth)
+const CATEGORY_TO_GENDER = {};
+for (const [g, cats] of Object.entries(GENDER_MAP)) {
+  for (const cat of cats) { CATEGORY_TO_GENDER[cat] = g; }
+}
+
 function inferGender(category) {
-  for (const [g, cats] of Object.entries(GENDER_MAP)) {
-    if (cats.includes(category)) return g;
-  }
+  return CATEGORY_TO_GENDER[category] || "Women";
+}
+
+function validateGenderCategory(gender, category) {
+  // If the category maps to a known gender, ALWAYS trust the category
+  // over the gender field — this fixes importer misclassifications.
+  const correctGender = CATEGORY_TO_GENDER[category];
+  if (correctGender) return correctGender;
+  // Category is unknown; trust gender if it's valid, else default
+  if (ALL_GENDERS.includes(gender)) return gender;
   return "Women";
 }
 
@@ -84,9 +97,10 @@ function parseCSV(csvText) {
     const obj    = {};
     headers.forEach((h, idx) => { obj[h] = (values[idx] || "").replace(/"/g, "").trim(); });
     const cat    = obj.category || "";
+    const rawGender = obj.gender || inferGender(cat);
     return {
       id: i + 1,
-      gender:      obj.gender || inferGender(cat),
+      gender:      validateGenderCategory(rawGender, cat),
       name:        obj.name        || "",
       brand:       obj.brand       || "",
       price:       parseInt(obj.price) || 0,
