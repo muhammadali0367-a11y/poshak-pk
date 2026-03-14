@@ -333,7 +333,7 @@ function parseCSV(csvText) {
       image,
       product_url,
       badge:          obj.badge          || null,
-      in_stock:       obj.in_stock !== "false",
+      in_stock:       !["false","FALSE","0","no","out of stock","sold out"].includes((obj.in_stock||"").trim().toLowerCase()),
       handle:         obj.handle         || "",
     };
   }).filter(p => p.name); // Don't filter by image — show placeholder if missing
@@ -367,38 +367,10 @@ const BRAND_URLS = {
 const _stockCache = {};
 
 async function checkLiveStock(product) {
-  const cacheKey = `${product.brand}::${product.handle}`;
-  if (_stockCache[cacheKey] !== undefined) return _stockCache[cacheKey];
-
-  const baseUrl = BRAND_URLS[product.brand];
-  if (!baseUrl || !product.handle) {
-    _stockCache[cacheKey] = null;
-    return null;
-  }
-
-  try {
-    const url = `${baseUrl}/products/${product.handle}.json`;
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 5000);
-    const resp = await fetch(url, { signal: ctrl.signal, mode: "cors" });
-    clearTimeout(timer);
-
-    if (!resp.ok) {
-      // 404 = product removed from brand site
-      _stockCache[cacheKey] = resp.status === 404 ? "removed" : null;
-      return _stockCache[cacheKey];
-    }
-
-    const data = await resp.json();
-    const variants = data?.product?.variants || [];
-    const anyAvailable = variants.some(v => v.available);
-    _stockCache[cacheKey] = anyAvailable ? "in_stock" : "sold_out";
-    return _stockCache[cacheKey];
-  } catch (e) {
-    // CORS block or timeout — fall back to sheet data
-    _stockCache[cacheKey] = null;
-    return null;
-  }
+  // Brand sites block CORS so a true live check isn't possible from the browser.
+  // We use the in_stock value set by the importer instead, which is accurate
+  // at the time of the last import run.
+  return product.in_stock ? "in_stock" : "sold_out";
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -612,11 +584,11 @@ export default function App() {
 
   // ── Stock display helpers ──
   const stockLabel = {
-    checking: { dot:"checking", text:"Checking stock…",      color:"#c9a96e" },
-    in_stock: { dot:"in",       text:"In Stock",              color:"#3d8a60" },
-    sold_out: { dot:"out",      text:"Sold Out on brand site",color:"#b03030" },
-    removed:  { dot:"removed",  text:"Product removed by brand", color:"#888" },
-    unknown:  { dot:"in",       text:"Check brand site for stock", color:"#888" },
+    checking: { dot:"checking", text:"Checking…",                    color:"#c9a96e" },
+    in_stock: { dot:"in",       text:"In Stock (at last import)",    color:"#3d8a60" },
+    sold_out: { dot:"out",      text:"Sold Out (at last import)",    color:"#b03030" },
+    removed:  { dot:"removed",  text:"Product removed by brand",     color:"#888"    },
+    unknown:  { dot:"in",       text:"Check brand site for stock",   color:"#888"    },
   };
 
   return (
@@ -956,7 +928,7 @@ export default function App() {
                 <span style={{ fontSize:".72rem", color:stockLabel[liveStock]?.color||"#888", fontWeight:500 }}>
                   {stockLabel[liveStock]?.text || "Checking…"}
                 </span>
-                <span style={{ fontSize:".65rem", color:"#bbb", marginLeft:"auto" }}>Live check</span>
+                <span style={{ fontSize:".65rem", color:"#bbb", marginLeft:"auto" }}>Last import</span>
               </div>
 
               {/* Product details */}
