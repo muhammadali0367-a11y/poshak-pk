@@ -623,53 +623,14 @@ export default function App() {
     <div style={{ fontFamily:"'DM Sans',sans-serif", background:"linear-gradient(160deg,#fdfcfb 0%,#f5f0eb 40%,#ede8e0 100%)", minHeight:"100vh", color:"#2a2420" }}>
       <style>{CSS}</style>
 
-      {/* SIDEBAR OVERLAY */}
-      <div className={`sb-overlay ${sidebarOpen?"open":""}`} onClick={() => setSidebarOpen(false)} />
-
-      {/* SIDEBAR */}
-      <aside className={`sb ${sidebarOpen?"open":""}`}>
-        <div style={{ padding:"20px 20px 14px", borderBottom:"1px solid #f0ebe4", flexShrink:0 }}>
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-            <div>
-              <div className="wordmark" style={{ fontSize:"1.2rem" }}>Poshak<span style={{ color:"#c9a96e" }}>.</span>pk</div>
-              <div style={{ fontSize:".6rem", letterSpacing:".15em", textTransform:"uppercase", color:"#ccc", marginTop:"3px" }}>Women's Fashion</div>
-            </div>
-            <button onClick={() => setSidebarOpen(false)} style={{ background:"none", border:"1px solid #e8e0d8", borderRadius:"50%", width:"30px", height:"30px", cursor:"pointer", color:"#aaa", fontSize:".85rem" }}>✕</button>
-          </div>
-        </div>
-
-        {/* Category list */}
-        <div style={{ padding:"8px 0" }}>
-          <div style={{ padding:"8px 20px 6px", fontSize:".6rem", letterSpacing:".2em", textTransform:"uppercase", color:"#bbb" }}>Categories</div>
-          {POPULATED_CATEGORIES.map(cat => (
-            <button key={cat} className={`sb-cat-btn ${activeCategory===cat?"active":""}`}
-              onClick={() => { setActiveCategory(cat); setSidebarOpen(false); }}>
-              {cat}
-            </button>
-          ))}
-        </div>
-
-        {/* Brand list */}
-        <div style={{ padding:"8px 0", borderTop:"1px solid #f0ebe4" }}>
-          <div style={{ padding:"8px 20px 6px", fontSize:".6rem", letterSpacing:".2em", textTransform:"uppercase", color:"#bbb" }}>Brands</div>
-          {BRANDS.map(b => (
-            <button key={b} className={`sb-cat-btn ${brand===b?"active":""}`}
-              onClick={() => { setBrand(b); setSidebarOpen(false); }}>
-              {b}
-            </button>
-          ))}
-        </div>
-
-        <div style={{ marginTop:"auto", padding:"14px 20px", borderTop:"1px solid #f0ebe4", fontSize:".62rem", letterSpacing:".1em", textTransform:"uppercase", color:"#ccc", textAlign:"center" }}>
-          {products.length} Dresses
-          {dataSource === "sheets" && <span style={{ color:"#3d8a60", marginLeft:"8px" }}>● Live</span>}
-        </div>
-      </aside>
-
-      {/* NAV */}
+      {/* ── NAV ── */}
       <nav className="nav">
         <div style={{ display:"flex", alignItems:"center", gap:"14px" }}>
-          <button className="hamburger" onClick={() => setSidebarOpen(true)}><span/><span/><span/></button>
+          <button className="hamburger" onClick={() => setSidebarOpen(v => !v)} aria-label="Toggle categories">
+            <span style={{ transform: sidebarOpen ? "rotate(45deg) translate(4px,4px)" : "none", transition:"transform .22s" }}/>
+            <span style={{ opacity: sidebarOpen ? 0 : 1, transition:"opacity .22s" }}/>
+            <span style={{ transform: sidebarOpen ? "rotate(-45deg) translate(4px,-4px)" : "none", transition:"transform .22s" }}/>
+          </button>
           <div className="wordmark" onClick={clearAll}>Poshak<span style={{ color:"#c9a96e" }}>.</span>pk</div>
         </div>
         <div className="nav-desktop" style={{ display:"flex", gap:"8px", flexWrap:"wrap" }}>
@@ -687,178 +648,257 @@ export default function App() {
         </div>
       </nav>
 
-      {/* HERO */}
-      <section style={{ textAlign:"center", padding:"64px 24px 48px", position:"relative", overflow:"hidden" }}>
-        <div style={{ position:"absolute", inset:0, background:"radial-gradient(ellipse 75% 55% at 50% 0%,rgba(201,169,110,.09) 0%,transparent 72%)", pointerEvents:"none" }} />
-        <p style={{ fontSize:".65rem", letterSpacing:".38em", textTransform:"uppercase", color:"#c9a96e", marginBottom:"14px" }}>Pakistan's Women's Fashion Discovery</p>
-        <h1 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"clamp(2rem,5.5vw,3.8rem)", fontWeight:300, lineHeight:1.1, marginBottom:"4px" }}>Find Every Dress,</h1>
-        <h1 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"clamp(2rem,5.5vw,3.8rem)", fontWeight:300, fontStyle:"italic", lineHeight:1.1, marginBottom:"28px", color:"#c9a96e" }}>Across Every Brand</h1>
-        <div style={{ width:"48px", height:"1px", background:"linear-gradient(90deg,transparent,#c9a96e,transparent)", margin:"0 auto 32px" }} />
+      {/* ── LAYOUT: LEFT PANEL + MAIN CONTENT ── */}
+      <div style={{ display:"flex", alignItems:"flex-start" }}>
 
-        {/* SEARCH */}
-        <div style={{ maxWidth:"640px", margin:"0 auto 18px" }}>
-          <div ref={searchRef} style={{ position:"relative" }}>
-            <div style={{ display:"flex", alignItems:"center", background:"#fff", border:"1px solid #e0d8d0", borderRadius:"8px", padding:"13px 20px", gap:"12px", boxShadow:"0 4px 22px rgba(0,0,0,.06)" }}>
-              <span style={{ color:"#ccc", fontSize:"1.1rem" }}>⊹</span>
-              <input className="search-box"
-                placeholder="Search: black lawn, kala suit, bridal chiffon, eid dress…"
-                value={query}
-                onChange={e => setQuery(e.target.value)}
-                onFocus={() => query.length>=2 && setShowSugg(true)}
-              />
-              {query && <button onClick={() => { setQuery(""); setSuggestions([]); }} style={{ background:"none", border:"none", color:"#ccc", cursor:"pointer" }}>✕</button>}
+        {/* ── LEFT CATEGORY PANEL ── */}
+        <aside style={{
+          width: sidebarOpen ? "220px" : "0",
+          minWidth: sidebarOpen ? "220px" : "0",
+          overflow:"hidden",
+          transition:"width .32s cubic-bezier(.4,0,.2,1), min-width .32s cubic-bezier(.4,0,.2,1)",
+          background:"#fff",
+          borderRight:"1px solid #e8e0d8",
+          position:"sticky",
+          top:"60px",
+          height:"calc(100vh - 60px)",
+          overflowY:"auto",
+          flexShrink:0,
+          boxShadow: sidebarOpen ? "2px 0 12px rgba(0,0,0,.04)" : "none",
+        }}>
+          <div style={{ width:"220px", padding:"20px 0 40px" }}>
+            {/* All */}
+            <button
+              onClick={() => setActiveCategory("All")}
+              style={{
+                width:"100%", padding:"10px 20px", background:activeCategory==="All"?"#fdf7ef":"transparent",
+                border:"none", borderLeft:`3px solid ${activeCategory==="All"?"#c9a96e":"transparent"}`,
+                textAlign:"left", cursor:"pointer", fontSize:".8rem", letterSpacing:".06em",
+                color:activeCategory==="All"?"#c9a96e":"#555", fontFamily:"'DM Sans',sans-serif",
+                fontWeight:activeCategory==="All"?"500":"400", transition:"all .15s",
+              }}>
+              All Dresses
+              <span style={{ float:"right", fontSize:".7rem", color:"#bbb" }}>{products.length}</span>
+            </button>
+
+            <div style={{ padding:"14px 20px 6px", fontSize:".58rem", letterSpacing:".22em", textTransform:"uppercase", color:"#bbb" }}>
+              Categories
             </div>
-            {showSugg && suggestions.length>0 && (
-              <div className="ac-box">
-                {suggestions.map((s,i) => (
-                  <div key={i} className="ac-item" onClick={() => pickSugg(s.label)}>
-                    <span className="ac-item-type">{s.type}</span>
-                    <span style={{ fontSize:".82rem", color:"#2a2420" }}>{s.label}</span>
-                    {s.brand && <span style={{ fontSize:".7rem", color:"#bbb", marginLeft:"auto" }}>{s.brand}</span>}
+
+            {/* Only populated categories */}
+            {POPULATED_CATEGORIES.filter(c => c !== "All").map(cat => {
+              const count = products.filter(p => p.category === cat).length;
+              const isActive = activeCategory === cat;
+              return (
+                <button key={cat}
+                  onClick={() => setActiveCategory(isActive ? "All" : cat)}
+                  style={{
+                    width:"100%", padding:"9px 20px", background:isActive?"#fdf7ef":"transparent",
+                    border:"none", borderLeft:`3px solid ${isActive?"#c9a96e":"transparent"}`,
+                    textAlign:"left", cursor:"pointer", fontSize:".78rem", letterSpacing:".04em",
+                    color:isActive?"#c9a96e":"#666", fontFamily:"'DM Sans',sans-serif",
+                    fontWeight:isActive?"500":"400", transition:"all .15s", display:"flex",
+                    alignItems:"center", justifyContent:"space-between",
+                  }}>
+                  <span>{cat}</span>
+                  <span style={{ fontSize:".68rem", color:isActive?"#c9a96e":"#bbb" }}>{count}</span>
+                </button>
+              );
+            })}
+
+            <div style={{ padding:"14px 20px 6px", fontSize:".58rem", letterSpacing:".22em", textTransform:"uppercase", color:"#bbb", marginTop:"8px", borderTop:"1px solid #f0ebe4" }}>
+              Brands
+            </div>
+            {BRANDS.filter(b => b !== "All Brands").map(b => {
+              const isActive = brand === b;
+              return (
+                <button key={b}
+                  onClick={() => setBrand(isActive ? "All Brands" : b)}
+                  style={{
+                    width:"100%", padding:"8px 20px", background:isActive?"#fdf7ef":"transparent",
+                    border:"none", borderLeft:`3px solid ${isActive?"#c9a96e":"transparent"}`,
+                    textAlign:"left", cursor:"pointer", fontSize:".75rem", letterSpacing:".04em",
+                    color:isActive?"#c9a96e":"#777", fontFamily:"'DM Sans',sans-serif",
+                    fontWeight:isActive?"500":"400", transition:"all .15s",
+                  }}>
+                  {b}
+                </button>
+              );
+            })}
+          </div>
+        </aside>
+
+        {/* ── MAIN CONTENT ── */}
+        <div style={{ flex:1, minWidth:0 }}>
+
+          {/* HERO */}
+          <section style={{ textAlign:"center", padding:"56px 32px 40px", position:"relative", overflow:"hidden" }}>
+            <div style={{ position:"absolute", inset:0, background:"radial-gradient(ellipse 75% 55% at 50% 0%,rgba(201,169,110,.09) 0%,transparent 72%)", pointerEvents:"none" }} />
+            <p style={{ fontSize:".65rem", letterSpacing:".38em", textTransform:"uppercase", color:"#c9a96e", marginBottom:"14px" }}>Pakistan's Women's Fashion Discovery</p>
+            <h1 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"clamp(1.8rem,4vw,3.2rem)", fontWeight:300, lineHeight:1.1, marginBottom:"4px" }}>Find Every Dress,</h1>
+            <h1 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"clamp(1.8rem,4vw,3.2rem)", fontWeight:300, fontStyle:"italic", lineHeight:1.1, marginBottom:"24px", color:"#c9a96e" }}>Across Every Brand</h1>
+            <div style={{ width:"48px", height:"1px", background:"linear-gradient(90deg,transparent,#c9a96e,transparent)", margin:"0 auto 28px" }} />
+
+            {/* SEARCH */}
+            <div style={{ maxWidth:"580px", margin:"0 auto 16px" }}>
+              <div ref={searchRef} style={{ position:"relative" }}>
+                <div style={{ display:"flex", alignItems:"center", background:"#fff", border:"1px solid #e0d8d0", borderRadius:"8px", padding:"12px 18px", gap:"12px", boxShadow:"0 4px 22px rgba(0,0,0,.06)" }}>
+                  <span style={{ color:"#ccc", fontSize:"1.1rem" }}>⊹</span>
+                  <input className="search-box"
+                    placeholder="Search: black lawn, kala suit, bridal chiffon…"
+                    value={query}
+                    onChange={e => setQuery(e.target.value)}
+                    onFocus={() => query.length>=2 && setShowSugg(true)}
+                  />
+                  {query && <button onClick={() => { setQuery(""); setSuggestions([]); }} style={{ background:"none", border:"none", color:"#ccc", cursor:"pointer" }}>✕</button>}
+                </div>
+                {showSugg && suggestions.length>0 && (
+                  <div className="ac-box">
+                    {suggestions.map((s,i) => (
+                      <div key={i} className="ac-item" onClick={() => pickSugg(s.label)}>
+                        <span className="ac-item-type">{s.type}</span>
+                        <span style={{ fontSize:".82rem", color:"#2a2420" }}>{s.label}</span>
+                        {s.brand && <span style={{ fontSize:".7rem", color:"#bbb", marginLeft:"auto" }}>{s.brand}</span>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              {searchHint && query && (
+                <div style={{ fontSize:".68rem", color:"#c9a96e", letterSpacing:".06em", marginTop:"8px", textAlign:"left", paddingLeft:"4px" }}>
+                  ✦ Searching for: {searchHint}
+                </div>
+              )}
+            </div>
+
+            {/* QUICK TAGS */}
+            <div style={{ display:"flex", flexWrap:"wrap", gap:"8px", justifyContent:"center" }}>
+              {QUICK_TAGS.filter(t => POPULATED_CATEGORIES.includes(t)).map(t => (
+                <button key={t} className={`quick-tag ${activeCategory===t?"active":""}`}
+                  onClick={() => { setActiveCategory(activeCategory===t?"All":t); setQuery(""); }}>
+                  {t}
+                </button>
+              ))}
+            </div>
+          </section>
+
+          {/* ── PRODUCTS AREA ── */}
+          <div style={{ padding:"0 24px 60px" }}>
+
+            {/* FILTER ROW */}
+            <div style={{ display:"flex", alignItems:"center", gap:"10px", marginBottom:"14px", flexWrap:"wrap" }}>
+              <button className={`filter-btn ${filtersOpen?"active":""}`} onClick={() => setFiltersOpen(f=>!f)}>
+                ⊞ Filters {activeFilterCount>0 && `(${activeFilterCount})`}
+              </button>
+              {activeFilterCount>0 && (
+                <button className="filter-btn" onClick={clearAll} style={{ color:"#b03030", borderColor:"#f0c0c0" }}>Clear All</button>
+              )}
+              <span style={{ fontSize:".7rem", color:"#bbb", marginLeft:"auto", letterSpacing:".08em" }}>
+                {filtered.length} dresses
+              </span>
+            </div>
+
+            {/* FILTER PANEL */}
+            <div className="filter-panel" style={{ maxHeight:filtersOpen?"420px":"0", padding:filtersOpen?"20px":"0 20px", marginBottom:filtersOpen?"20px":"0" }}>
+              <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(185px,1fr))", gap:"18px" }}>
+                {[
+                  { label:"Brand",       value:brand,     setter:setBrand,     options:BRANDS },
+                  { label:"Color",       value:color,     setter:setColor,     options:STATIC_COLORS },
+                  { label:"Price Range", value:priceRange,setter:setPriceRange,options:PRICE_RANGES },
+                  { label:"Fabric",      value:fabric,    setter:setFabric,    options:STATIC_FABRICS },
+                  { label:"Occasion",    value:occasion,  setter:setOccasion,  options:STATIC_OCCASIONS },
+                ].map(({ label, value, setter, options }) => (
+                  <div key={label}>
+                    <div style={{ fontSize:".6rem", letterSpacing:".2em", textTransform:"uppercase", color:"#aaa", marginBottom:"8px" }}>{label}</div>
+                    <select value={value} onChange={e => setter(e.target.value)} className="filter-btn" style={{ width:"100%", background:"#fff", cursor:"pointer" }}>
+                      {options.map(o => <option key={o}>{o}</option>)}
+                    </select>
                   </div>
                 ))}
               </div>
-            )}
-          </div>
-          {searchHint && query && (
-            <div style={{ fontSize:".68rem", color:"#c9a96e", letterSpacing:".06em", marginTop:"8px", textAlign:"left", paddingLeft:"4px" }}>
-              ✦ Searching for: {searchHint}
             </div>
-          )}
-        </div>
 
-        {/* QUICK CATEGORY TAGS */}
-        <div style={{ display:"flex", flexWrap:"wrap", gap:"8px", justifyContent:"center" }}>
-          {QUICK_TAGS.map(t => (
-            <button key={t} className={`quick-tag ${activeCategory===t?"active":""}`}
-              onClick={() => { setActiveCategory(activeCategory===t?"All":t); setQuery(""); }}>
-              {t}
-            </button>
-          ))}
-        </div>
-      </section>
-
-      {/* MAIN CONTENT */}
-      <div style={{ maxWidth:"1240px", margin:"0 auto", padding:"0 24px 60px" }}>
-
-        {/* FILTER ROW */}
-        <div style={{ display:"flex", alignItems:"center", gap:"10px", marginBottom:"14px", flexWrap:"wrap" }}>
-          <button className={`filter-btn ${filtersOpen?"active":""}`} onClick={() => setFiltersOpen(f=>!f)}>
-            ⊞ Filters {activeFilterCount>0 && `(${activeFilterCount})`}
-          </button>
-          {activeFilterCount>0 && (
-            <button className="filter-btn" onClick={clearAll} style={{ color:"#b03030", borderColor:"#f0c0c0" }}>Clear All</button>
-          )}
-          <span style={{ fontSize:".7rem", color:"#bbb", marginLeft:"auto", letterSpacing:".08em" }}>
-            {filtered.length} dresses
-          </span>
-        </div>
-
-        {/* FILTER PANEL */}
-        <div className="filter-panel" style={{ maxHeight:filtersOpen?"420px":"0", padding:filtersOpen?"20px":"0 20px", marginBottom:filtersOpen?"20px":"0" }}>
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(185px,1fr))", gap:"18px" }}>
-            {[
-              { label:"Category",    value:activeCategory, setter:setActiveCategory, options:POPULATED_CATEGORIES },
-              { label:"Brand",       value:brand,          setter:setBrand,          options:BRANDS },
-              { label:"Color",       value:color,          setter:setColor,          options:STATIC_COLORS },
-              { label:"Price Range", value:priceRange,     setter:setPriceRange,     options:PRICE_RANGES },
-              { label:"Fabric",      value:fabric,         setter:setFabric,         options:STATIC_FABRICS },
-              { label:"Occasion",    value:occasion,       setter:setOccasion,       options:STATIC_OCCASIONS },
-            ].map(({ label, value, setter, options }) => (
-              <div key={label}>
-                <div style={{ fontSize:".6rem", letterSpacing:".2em", textTransform:"uppercase", color:"#aaa", marginBottom:"8px" }}>{label}</div>
-                <select value={value} onChange={e => setter(e.target.value)} className="filter-btn" style={{ width:"100%", background:"#fff", cursor:"pointer" }}>
-                  {options.map(o => <option key={o}>{o}</option>)}
-                </select>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* PRODUCT GRID */}
-        {filtered.length === 0 ? (
-          <div style={{ textAlign:"center", padding:"80px 0", color:"#ccc" }}>
-            <div style={{ fontSize:"3rem", marginBottom:"16px" }}>◌</div>
-            <p style={{ fontSize:".85rem", letterSpacing:".1em" }}>No dresses found</p>
-            <p style={{ fontSize:".75rem", color:"#bbb", marginTop:"8px" }}>Try "black lawn", "bridal", or clear your filters</p>
-            <button className="filter-btn" onClick={clearAll} style={{ marginTop:"16px" }}>Clear All Filters</button>
-          </div>
-        ) : (
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))", gap:"20px" }}>
-            {filtered.map((p, i) => (
-              <div key={p.id} className={`card animate-in ${!p.in_stock?"sold-out":""}`}
-                style={{ animationDelay:`${Math.min(i,12)*.055}s` }}
-                onClick={() => setSelectedProduct(p)}>
-                <div style={{ position:"relative", overflow:"hidden" }}>
-                  {/* Image — always show, sold-out does NOT hide or grey out the image */}
-                  {p.image ? (
-                    <ImageWithFallback
-                      src={p.image}
-                      alt={p.name}
-                      className="card-img"
-                    />
-                  ) : (
-                    <div className="card-img-placeholder">
-                      <div style={{ fontSize:"2rem", opacity:.3 }}>👗</div>
-                      <div style={{ fontSize:".65rem", color:"#bbb", letterSpacing:".1em", textTransform:"uppercase" }}>{p.brand}</div>
+            {/* ── SEARCH RESULTS — flat grid ── */}
+            {(query || activeCategory !== "All" || activeFilterCount > 0) ? (
+              <>
+                {filtered.length === 0 ? (
+                  <div style={{ textAlign:"center", padding:"80px 0", color:"#ccc" }}>
+                    <div style={{ fontSize:"3rem", marginBottom:"16px" }}>◌</div>
+                    <p style={{ fontSize:".85rem" }}>No dresses found</p>
+                    <p style={{ fontSize:".75rem", color:"#bbb", marginTop:"8px" }}>Try clearing filters or searching differently</p>
+                    <button className="filter-btn" onClick={clearAll} style={{ marginTop:"16px" }}>Clear All</button>
+                  </div>
+                ) : (
+                  <>
+                    {activeCategory !== "All" && (
+                      <div style={{ marginBottom:"20px" }}>
+                        <h2 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"1.6rem", fontWeight:400, color:"#2a2420" }}>
+                          {activeCategory}
+                        </h2>
+                        <p style={{ fontSize:".7rem", color:"#aaa", marginTop:"4px", letterSpacing:".08em" }}>{filtered.length} dresses</p>
+                      </div>
+                    )}
+                    <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))", gap:"20px" }}>
+                      {filtered.map((p, i) => (
+                        <ProductCard key={p.id} p={p} i={i} wishlist={wishlist} toggleWish={toggleWish} onClick={() => setSelectedProduct(p)} />
+                      ))}
                     </div>
-                  )}
-                  {/* Sold Out — small badge top-right, doesn't cover the image */}
-                  {!p.in_stock && (
-                    <div style={{
-                      position:"absolute", top:"10px", right:"10px",
-                      background:"rgba(42,36,32,.85)", backdropFilter:"blur(4px)",
-                      color:"#fff", fontSize:".58rem", letterSpacing:".12em",
-                      textTransform:"uppercase", padding:"4px 8px",
-                      borderRadius:"3px", zIndex:4, fontWeight:500
-                    }}>
-                      Sold Out
-                    </div>
-                  )}
-                  {/* Regular badge — top-left (only show if in stock) */}
-                  {p.in_stock && p.badge && (
-                    <div className="badge-pill" style={{ background:BADGE_COLORS[p.badge]||"#888" }}>{p.badge}</div>
-                  )}
-                  {/* Sale % ribbon */}
-                  {p.original_price > p.price && (
-                    <div style={{ position:"absolute", top:p.badge?"38px":"10px", left:"10px", background:BADGE_COLORS.Sale, color:"#fff", fontSize:".56rem", letterSpacing:".12em", textTransform:"uppercase", padding:"3px 8px", borderRadius:"20px", fontWeight:600, zIndex:2 }}>
-                      -{Math.round((1 - p.price/p.original_price)*100)}% Off
-                    </div>
-                  )}
-                  <button className="wish-btn" onClick={e => toggleWish(p.id, e)}>
-                    <span style={{ color:wishlist.includes(p.id)?"#c9a96e":"#ccc", fontSize:".9rem" }}>
-                      {wishlist.includes(p.id)?"♥":"♡"}
-                    </span>
-                  </button>
-                </div>
-                <div style={{ padding:"14px" }}>
-                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:"8px" }}>
-                    <div style={{ flex:1, minWidth:0, paddingRight:"8px" }}>
-                      <div style={{ fontSize:".6rem", letterSpacing:".14em", textTransform:"uppercase", color:"#c9a96e", marginBottom:"4px" }}>{p.brand}</div>
-                      <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"1rem", color:"#2a2420", lineHeight:1.3, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical" }}>{p.name}</div>
-                    </div>
-                    <div style={{ textAlign:"right", flexShrink:0 }}>
-                      <div style={{ fontSize:".88rem", fontWeight:500, color:"#2a2420" }}>Rs. {p.price.toLocaleString()}</div>
-                      {p.original_price > p.price && (
-                        <div style={{ fontSize:".72rem", color:"#bbb", textDecoration:"line-through" }}>Rs. {p.original_price.toLocaleString()}</div>
+                  </>
+                )}
+              </>
+            ) : (
+              /* ── HOMEPAGE — category sections with 4 products + View All ── */
+              <div>
+                {POPULATED_CATEGORIES.filter(c => c !== "All").map(cat => {
+                  const catProducts = products.filter(p => p.category === cat);
+                  if (catProducts.length === 0) return null;
+                  const preview = catProducts.slice(0, 4);
+                  return (
+                    <div key={cat} style={{ marginBottom:"48px" }}>
+                      {/* Section header */}
+                      <div style={{ display:"flex", alignItems:"flex-end", justifyContent:"space-between", marginBottom:"16px", paddingBottom:"12px", borderBottom:"1px solid #e8e0d8" }}>
+                        <div>
+                          <h2 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"1.55rem", fontWeight:400, color:"#2a2420" }}>{cat}</h2>
+                          <p style={{ fontSize:".68rem", color:"#bbb", marginTop:"3px", letterSpacing:".08em" }}>{catProducts.length} dresses</p>
+                        </div>
+                        <button
+                          onClick={() => setActiveCategory(cat)}
+                          className="filter-btn"
+                          style={{ fontSize:".68rem", color:"#c9a96e", borderColor:"#e8d5b0" }}>
+                          View All {cat} →
+                        </button>
+                      </div>
+                      {/* 4 product preview */}
+                      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))", gap:"20px" }}>
+                        {preview.map((p, i) => (
+                          <ProductCard key={p.id} p={p} i={i} wishlist={wishlist} toggleWish={toggleWish} onClick={() => setSelectedProduct(p)} />
+                        ))}
+                      </div>
+                      {/* View all link if more than 4 */}
+                      {catProducts.length > 4 && (
+                        <div style={{ textAlign:"center", marginTop:"16px" }}>
+                          <button
+                            onClick={() => setActiveCategory(cat)}
+                            style={{ background:"none", border:"1px solid #e0d8d0", borderRadius:"4px", padding:"10px 28px", cursor:"pointer", fontSize:".72rem", letterSpacing:".14em", textTransform:"uppercase", color:"#888", fontFamily:"'DM Sans',sans-serif", transition:"all .2s" }}
+                            onMouseOver={e => { e.target.style.borderColor="#c9a96e"; e.target.style.color="#c9a96e"; }}
+                            onMouseOut={e => { e.target.style.borderColor="#e0d8d0"; e.target.style.color="#888"; }}>
+                            View all {catProducts.length} {cat} dresses →
+                          </button>
+                        </div>
                       )}
                     </div>
-                  </div>
-                  <div style={{ display:"flex", gap:"5px", flexWrap:"wrap" }}>
-                    <span className="tag">{p.category}</span>
-                    <span className="tag">{p.occasion}</span>
-                  </div>
-                </div>
+                  );
+                })}
               </div>
-            ))}
+            )}
           </div>
-        )}
+        </div>
       </div>
 
       {/* FOOTER */}
       <footer style={{ borderTop:"1px solid #e8e0d8", padding:"40px 24px", textAlign:"center", background:"rgba(255,255,255,.55)" }}>
         <div className="wordmark" style={{ color:"#c9a96e", fontSize:"1.35rem", marginBottom:"6px" }}>Poshak.pk</div>
-        <p style={{ fontSize:".62rem", letterSpacing:".15em", color:"#bbb", textTransform:"uppercase" }}>Pakistan's Women's Fashion Discovery Engine · v4.0</p>
+        <p style={{ fontSize:".62rem", letterSpacing:".15em", color:"#bbb", textTransform:"uppercase" }}>Pakistan's Women's Fashion Discovery · v4.0</p>
         <p style={{ fontSize:".6rem", color:"#ccc", marginTop:"6px" }}>All products link to official brand websites. Stock availability is checked live.</p>
       </footer>
 
@@ -994,9 +1034,7 @@ export default function App() {
 // ─── IMAGE WITH FALLBACK ──────────────────────────────────────────────────────
 function ImageWithFallback({ src, alt, className }) {
   const [imgSrc, setImgSrc] = useState(src);
-
   useEffect(() => { setImgSrc(src); }, [src]);
-
   return (
     <img
       className={className}
@@ -1004,9 +1042,78 @@ function ImageWithFallback({ src, alt, className }) {
       alt={alt}
       loading="lazy"
       onError={() => {
-        // Use a neutral fashion placeholder from Unsplash instead of emoji
         setImgSrc("https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=500&q=80");
       }}
     />
+  );
+}
+
+// ─── PRODUCT CARD ─────────────────────────────────────────────────────────────
+function ProductCard({ p, i, wishlist, toggleWish, onClick }) {
+  return (
+    <div
+      className={`card animate-in ${!p.in_stock ? "sold-out" : ""}`}
+      style={{ animationDelay:`${Math.min(i,12)*.055}s` }}
+      onClick={onClick}>
+      <div style={{ position:"relative", overflow:"hidden" }}>
+        {/* Image — always show regardless of stock status */}
+        <ImageWithFallback src={p.image} alt={p.name} className="card-img" />
+
+        {/* Sold Out badge — top-right, small, doesn't cover image */}
+        {!p.in_stock && (
+          <div style={{
+            position:"absolute", top:"10px", right:"10px",
+            background:"rgba(42,36,32,.85)", backdropFilter:"blur(4px)",
+            color:"#fff", fontSize:".58rem", letterSpacing:".12em",
+            textTransform:"uppercase", padding:"4px 8px",
+            borderRadius:"3px", zIndex:4, fontWeight:500,
+          }}>
+            Sold Out
+          </div>
+        )}
+
+        {/* Regular badge — top-left, only if in stock */}
+        {p.in_stock && p.badge && (
+          <div className="badge-pill" style={{ background:BADGE_COLORS[p.badge]||"#888" }}>{p.badge}</div>
+        )}
+
+        {/* Sale % */}
+        {p.original_price > p.price && (
+          <div style={{
+            position:"absolute", top: p.in_stock && p.badge ? "38px" : "10px", left:"10px",
+            background:BADGE_COLORS.Sale, color:"#fff", fontSize:".56rem",
+            letterSpacing:".12em", textTransform:"uppercase", padding:"3px 8px",
+            borderRadius:"20px", fontWeight:600, zIndex:2,
+          }}>
+            -{Math.round((1 - p.price/p.original_price)*100)}% Off
+          </div>
+        )}
+
+        <button className="wish-btn" onClick={e => toggleWish(p.id, e)}>
+          <span style={{ color:wishlist.includes(p.id)?"#c9a96e":"#ccc", fontSize:".9rem" }}>
+            {wishlist.includes(p.id) ? "♥" : "♡"}
+          </span>
+        </button>
+      </div>
+
+      <div style={{ padding:"14px" }}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:"8px" }}>
+          <div style={{ flex:1, minWidth:0, paddingRight:"8px" }}>
+            <div style={{ fontSize:".6rem", letterSpacing:".14em", textTransform:"uppercase", color:"#c9a96e", marginBottom:"4px" }}>{p.brand}</div>
+            <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"1rem", color:"#2a2420", lineHeight:1.3, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical" }}>{p.name}</div>
+          </div>
+          <div style={{ textAlign:"right", flexShrink:0 }}>
+            <div style={{ fontSize:".88rem", fontWeight:500, color:"#2a2420" }}>Rs. {p.price.toLocaleString()}</div>
+            {p.original_price > p.price && (
+              <div style={{ fontSize:".72rem", color:"#bbb", textDecoration:"line-through" }}>Rs. {p.original_price.toLocaleString()}</div>
+            )}
+          </div>
+        </div>
+        <div style={{ display:"flex", gap:"5px", flexWrap:"wrap" }}>
+          <span className="tag">{p.category}</span>
+          <span className="tag">{p.occasion}</span>
+        </div>
+      </div>
+    </div>
   );
 }
