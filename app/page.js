@@ -698,7 +698,13 @@ export default function App() {
                 style={{ animationDelay:`${Math.min(i,12)*.055}s` }}
                 onClick={() => setSelectedProduct(p)}>
                 <div style={{ position:"relative", overflow:"hidden" }}>
-                  <img className="card-img" src={p.image} alt={p.name} loading="lazy" />
+                  <img
+                    className="card-img"
+                    src={p.image}
+                    alt={p.name}
+                    loading="lazy"
+                    onError={e => { e.target.style.display="none"; e.target.parentNode.style.background="#f5f0eb"; }}
+                  />
                   {/* Show sold-out badge if we know from sheet */}
                   {!p.in_stock
                     ? <div className="sold-out-badge">Sold Out</div>
