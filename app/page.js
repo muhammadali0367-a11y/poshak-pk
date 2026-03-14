@@ -112,12 +112,37 @@ function levenshtein(a, b) {
 
 function buildIndex(products) {
   return products.map(p => {
-    const colorSyns   = Object.entries(COLOR_SYNONYMS).filter(([,v]) => v === p.color).map(([k]) => k).join(" ");
-    const fabricSyns  = Object.entries(FABRIC_SYNONYMS).filter(([,v]) => v === p.fabric).map(([k]) => k).join(" ");
-    const occasionSyns= Object.entries(OCCASION_SYNONYMS).filter(([,v]) => v === p.occasion).map(([k]) => k).join(" ");
+    // Normalize color to canonical form (case-insensitive lookup)
+    const normalizedColor = (() => {
+      const raw = (p.color || "").trim();
+      // Direct match first
+      const validColors = ["Black","White","Navy","Red","Maroon","Pink","Peach",
+        "Mint","Teal","Mustard","Olive","Grey","Beige","Pastel","Multi / Printed"];
+      if (validColors.includes(raw)) return raw;
+      // Case-insensitive match
+      const lower = raw.toLowerCase();
+      const found = validColors.find(c => c.toLowerCase() === lower);
+      if (found) return found;
+      // Synonym lookup
+      return COLOR_SYNONYMS[lower] || "Multi / Printed";
+    })();
+
+    const colorSyns    = Object.entries(COLOR_SYNONYMS).filter(([,v]) => v === normalizedColor).map(([k]) => k).join(" ");
+    const fabricSyns   = Object.entries(FABRIC_SYNONYMS).filter(([,v]) => v === p.fabric).map(([k]) => k).join(" ");
+    const occasionSyns = Object.entries(OCCASION_SYNONYMS).filter(([,v]) => v === p.occasion).map(([k]) => k).join(" ");
+
     return {
       ...p,
-      _idx: [p.name, p.brand, p.category, p.color, p.fabric, p.occasion, p.badge||"", colorSyns, fabricSyns, occasionSyns].join(" ").toLowerCase(),
+      color: normalizedColor, // always use normalized color
+      _idx: [
+        p.name, p.brand, p.category,
+        normalizedColor,        // canonical: "Black"
+        normalizedColor.toLowerCase(), // lowercase: "black"
+        p.fabric, p.occasion, p.badge || "",
+        colorSyns,   // all synonyms: "kala kali koyla charcoal jet black"
+        fabricSyns,
+        occasionSyns,
+      ].join(" ").toLowerCase(),
     };
   });
 }
@@ -147,21 +172,40 @@ function normalizeQuery(raw) {
 function smartSearch(indexed, raw, filters={}) {
   if (!raw.trim()) return indexed.filter(p => hardFilter(p, filters));
   const intent = normalizeQuery(raw);
+
+  // Fast path: pure color search (e.g. "black", "kala", "gulabi")
+  // Return ALL products of that color, no score threshold
+  const isColorOnly = intent.colors.length > 0 &&
+    intent.fabrics.length === 0 &&
+    intent.occasions.length === 0 &&
+    intent.keywords.length === 0;
+
+  if (isColorOnly) {
+    return indexed
+      .filter(p => hardFilter(p, filters) && intent.colors.includes(p.color))
+      .sort((a, b) => {
+        const order = { Bestseller:0, Trending:1, New:2, Exclusive:3, Premium:4, Festive:5, Sale:6 };
+        return (order[a.badge]??7) - (order[b.badge]??7);
+      });
+  }
+
   return indexed.map(p => {
     if (!hardFilter(p, filters)) return null;
     let score = 0;
     const idx = p._idx;
+
     if (intent.colors.length) {
-      if (intent.colors.includes(p.color)) score += 20;
+      if (intent.colors.includes(p.color))                              score += 20;
       else if (intent.colors.some(c => idx.includes(c.toLowerCase()))) score += 8;
-      else if (idx.includes(intent.raw.toLowerCase())) score += 5;
+      else if (idx.includes(intent.raw.toLowerCase()))                  score += 4;
+      else return null; // color was specified, this product doesn't match → exclude
     }
     if (intent.fabrics.length) {
-      if (intent.fabrics.includes(p.fabric)) score += 15;
+      if (intent.fabrics.includes(p.fabric))                              score += 15;
       else if (intent.fabrics.some(f => idx.includes(f.toLowerCase()))) score += 6;
     }
     if (intent.occasions.length) {
-      if (intent.occasions.includes(p.occasion)) score += 12;
+      if (intent.occasions.includes(p.occasion))                              score += 12;
       else if (intent.occasions.some(o => idx.includes(o.toLowerCase()))) score += 5;
     }
     for (const kw of intent.keywords) {
@@ -170,17 +214,18 @@ function smartSearch(indexed, raw, filters={}) {
         if (p.name.toLowerCase().includes(kw)) score += 5;
       } else {
         for (const w of p.name.toLowerCase().split(/\s+/))
-          if (w.length > 3 && levenshtein(kw,w) === 1) score += 2;
+          if (w.length > 3 && levenshtein(kw, w) === 1) score += 2;
       }
     }
+    // General keyword fallback (no specific intent detected)
     if (!intent.colors.length && !intent.fabrics.length && !intent.occasions.length) {
-      if (idx.includes(intent.raw.toLowerCase())) score += 10;
+      if (idx.includes(intent.raw.toLowerCase()))                  score += 10;
       if (p.name.toLowerCase().includes(intent.raw.toLowerCase())) score += 8;
     }
-    if (p.badge==="Bestseller") score += 2;
-    if (p.badge==="Trending")   score += 1;
-    return score > 0 ? {...p, _score:score} : null;
-  }).filter(Boolean).sort((a,b) => b._score - a._score);
+    if (p.badge === "Bestseller") score += 2;
+    if (p.badge === "Trending")   score += 1;
+    return score > 0 ? { ...p, _score:score } : null;
+  }).filter(Boolean).sort((a, b) => b._score - a._score);
 }
 
 function hardFilter(p, f={}) {
@@ -225,28 +270,60 @@ function getSuggestions(q, indexed) {
 
 function parseCSV(csvText) {
   const lines   = csvText.trim().split("\n");
-  const headers = lines[0].split(",").map(h => h.trim().replace(/"/g,""));
+  const headers = lines[0].split(",").map(h => h.trim().replace(/"/g,"").toLowerCase());
+
   return lines.slice(1).map((line, i) => {
-    const vals = line.match(/(".*?"|[^,]+)(?=,|$)/g) || [];
-    const obj  = {};
-    headers.forEach((h,idx) => { obj[h] = (vals[idx]||"").replace(/"/g,"").trim(); });
+    // Robust CSV parser — handles commas inside quoted fields
+    const vals = [];
+    let cur = "", inQuote = false;
+    for (let ci = 0; ci < line.length; ci++) {
+      const ch = line[ci];
+      if (ch === '"') { inQuote = !inQuote; }
+      else if (ch === "," && !inQuote) { vals.push(cur.trim()); cur = ""; }
+      else { cur += ch; }
+    }
+    vals.push(cur.trim());
+
+    const obj = {};
+    headers.forEach((h, idx) => { obj[h] = (vals[idx] || "").replace(/"/g,"").trim(); });
+
+    // Validate image_url — must be a real URL not a CDN path fragment
+    const rawImage = obj.image_url || obj.image || "";
+    const image = rawImage.startsWith("http") ? rawImage : "";
+
+    // Validate product_url — must start with https
+    const rawUrl = obj.product_url || "";
+    const product_url = rawUrl.startsWith("http") ? rawUrl : "#";
+
+    // Validate category — must be one of our known categories
+    const validCategories = ["Lawn","Kurta","Co-ords","Pret / Ready to Wear","Luxury Pret",
+      "Unstitched","Shalwar Kameez","Formal","Bridal","Festive / Eid","Winter Collection","Abaya"];
+    const rawCat = obj.category || "";
+    const category = validCategories.includes(rawCat) ? rawCat : "Pret / Ready to Wear";
+
+    // Validate color — must be one of our known colors
+    const validColors = ["Black","White","Navy","Red","Maroon","Pink","Peach","Mint",
+      "Teal","Mustard","Olive","Grey","Beige","Pastel","Multi / Printed"];
+    const rawColor = obj.color || "";
+    const color = validColors.includes(rawColor) ? rawColor : "Multi / Printed";
+
     return {
       id:             i + 1,
       name:           obj.name           || "",
       brand:          obj.brand          || "",
-      price:          parseInt(obj.price)|| 0,
+      price:          parseInt(obj.price) || 0,
       original_price: parseInt(obj.original_price) || 0,
-      category:       obj.category       || "Pret / Ready to Wear",
-      color:          obj.color          || "Multi / Printed",
+      category,
+      color,
       fabric:         obj.fabric         || "Cotton",
       occasion:       obj.occasion       || "Casual / Everyday",
-      image:          obj.image_url      || "",
-      product_url:    obj.product_url    || "#",
+      image,
+      product_url,
       badge:          obj.badge          || null,
-      in_stock:       obj.in_stock !== "false", // true unless explicitly "false"
+      in_stock:       obj.in_stock !== "false",
       handle:         obj.handle         || "",
     };
-  }).filter(p => p.name && p.image);
+  }).filter(p => p.name); // Don't filter by image — show placeholder if missing
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -359,9 +436,11 @@ body{overflow-x:hidden;}
 /* CARDS */
 .card{background:#fff;border:1px solid #e8e0d8;border-radius:10px;overflow:hidden;cursor:pointer;position:relative;box-shadow:0 2px 10px rgba(0,0,0,.04);transition:transform .28s,box-shadow .28s,border-color .2s;}
 .card:hover{border-color:#c9a96e;transform:translateY(-5px);box-shadow:0 18px 44px rgba(180,140,90,.14);}
-.card-img{width:100%;height:300px;object-fit:cover;display:block;background:#f5f0eb;transition:transform .48s;}
+.card-img{width:100%;height:300px;object-fit:cover;display:block;background:#f0ebe4;transition:transform .48s;}
+.card-img-placeholder{width:100%;height:300px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#f5f0eb,#ede8e0);flex-direction:column;gap:8px;}
 .card:hover .card-img{transform:scale(1.04);}
-.card.sold-out .card-img{filter:grayscale(30%);}
+.card.sold-out .card-img{ opacity:.95; }
+.card.sold-out .card-img-placeholder{ opacity:.95; }
 
 /* BADGES */
 .badge-pill{position:absolute;top:10px;left:10px;font-family:'DM Sans',sans-serif;font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;padding:3px 9px;border-radius:20px;font-weight:600;color:#fff;z-index:2;}
@@ -698,23 +777,38 @@ export default function App() {
                 style={{ animationDelay:`${Math.min(i,12)*.055}s` }}
                 onClick={() => setSelectedProduct(p)}>
                 <div style={{ position:"relative", overflow:"hidden" }}>
-                  <img
-                    className="card-img"
-                    src={p.image}
-                    alt={p.name}
-                    loading="lazy"
-                    onError={e => { e.target.style.display="none"; e.target.parentNode.style.background="#f5f0eb"; }}
-                  />
-                  {/* Show sold-out badge if we know from sheet */}
-                  {!p.in_stock
-                    ? <div className="sold-out-badge">Sold Out</div>
-                    : p.badge
-                      ? <div className="badge-pill" style={{ background:BADGE_COLORS[p.badge]||"#888" }}>{p.badge}</div>
-                      : null
-                  }
-                  {/* Sale ribbon if original_price exists */}
+                  {/* Image — always show, sold-out does NOT hide or grey out the image */}
+                  {p.image ? (
+                    <ImageWithFallback
+                      src={p.image}
+                      alt={p.name}
+                      className="card-img"
+                    />
+                  ) : (
+                    <div className="card-img-placeholder">
+                      <div style={{ fontSize:"2rem", opacity:.3 }}>👗</div>
+                      <div style={{ fontSize:".65rem", color:"#bbb", letterSpacing:".1em", textTransform:"uppercase" }}>{p.brand}</div>
+                    </div>
+                  )}
+                  {/* Sold Out — small badge top-right, doesn't cover the image */}
+                  {!p.in_stock && (
+                    <div style={{
+                      position:"absolute", top:"10px", right:"10px",
+                      background:"rgba(42,36,32,.85)", backdropFilter:"blur(4px)",
+                      color:"#fff", fontSize:".58rem", letterSpacing:".12em",
+                      textTransform:"uppercase", padding:"4px 8px",
+                      borderRadius:"3px", zIndex:4, fontWeight:500
+                    }}>
+                      Sold Out
+                    </div>
+                  )}
+                  {/* Regular badge — top-left (only show if in stock) */}
+                  {p.in_stock && p.badge && (
+                    <div className="badge-pill" style={{ background:BADGE_COLORS[p.badge]||"#888" }}>{p.badge}</div>
+                  )}
+                  {/* Sale % ribbon */}
                   {p.original_price > p.price && (
-                    <div style={{ position:"absolute", top:p.badge||!p.in_stock?"38px":"10px", left:"10px", background:BADGE_COLORS.Sale, color:"#fff", fontSize:".56rem", letterSpacing:".12em", textTransform:"uppercase", padding:"3px 8px", borderRadius:"20px", fontWeight:600, zIndex:2 }}>
+                    <div style={{ position:"absolute", top:p.badge?"38px":"10px", left:"10px", background:BADGE_COLORS.Sale, color:"#fff", fontSize:".56rem", letterSpacing:".12em", textTransform:"uppercase", padding:"3px 8px", borderRadius:"20px", fontWeight:600, zIndex:2 }}>
                       -{Math.round((1 - p.price/p.original_price)*100)}% Off
                     </div>
                   )}
@@ -881,5 +975,29 @@ export default function App() {
         </div>
       )}
     </div>
+  );
+}
+
+// ─── IMAGE WITH FALLBACK ──────────────────────────────────────────────────────
+function ImageWithFallback({ src, alt, className }) {
+  const [broken, setBroken] = useState(false);
+  if (broken || !src) {
+    return (
+      <div className="card-img-placeholder">
+        <div style={{ fontSize:"2.5rem", opacity:.2 }}>👗</div>
+        <div style={{ fontSize:".6rem", color:"#ccc", letterSpacing:".1em", textTransform:"uppercase", marginTop:"4px", textAlign:"center", padding:"0 16px" }}>
+          {alt?.split(" ").slice(0,4).join(" ")}
+        </div>
+      </div>
+    );
+  }
+  return (
+    <img
+      className={className}
+      src={src}
+      alt={alt}
+      loading="lazy"
+      onError={() => setBroken(true)}
+    />
   );
 }
