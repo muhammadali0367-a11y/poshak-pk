@@ -287,9 +287,22 @@ function parseCSV(csvText) {
     const obj = {};
     headers.forEach((h, idx) => { obj[h] = (vals[idx] || "").replace(/"/g,"").trim(); });
 
-    // Validate image_url — must be a real URL not a CDN path fragment
-    const rawImage = obj.image_url || obj.image || "";
-    const image = rawImage.startsWith("http") ? rawImage : "";
+    // Find image_url — check dedicated field first, then scan ALL fields for a CDN URL
+    // This handles misaligned CSV columns where image_url ends up in wrong column
+    let image = "";
+    const directImg = obj.image_url || obj.image || "";
+    if (directImg.startsWith("http")) {
+      image = directImg;
+    } else {
+      // Scan every field value looking for a CDN/image URL
+      for (const val of Object.values(obj)) {
+        if (val && (val.includes("cdn.shopify.com") || val.includes("unsplash.com") || 
+            (val.startsWith("http") && (val.includes(".jpg") || val.includes(".png") || val.includes(".webp"))))) {
+          image = val;
+          break;
+        }
+      }
+    }
 
     // Validate product_url — must start with https
     const rawUrl = obj.product_url || "";
@@ -980,24 +993,20 @@ export default function App() {
 
 // ─── IMAGE WITH FALLBACK ──────────────────────────────────────────────────────
 function ImageWithFallback({ src, alt, className }) {
-  const [broken, setBroken] = useState(false);
-  if (broken || !src) {
-    return (
-      <div className="card-img-placeholder">
-        <div style={{ fontSize:"2.5rem", opacity:.2 }}>👗</div>
-        <div style={{ fontSize:".6rem", color:"#ccc", letterSpacing:".1em", textTransform:"uppercase", marginTop:"4px", textAlign:"center", padding:"0 16px" }}>
-          {alt?.split(" ").slice(0,4).join(" ")}
-        </div>
-      </div>
-    );
-  }
+  const [imgSrc, setImgSrc] = useState(src);
+
+  useEffect(() => { setImgSrc(src); }, [src]);
+
   return (
     <img
       className={className}
-      src={src}
+      src={imgSrc}
       alt={alt}
       loading="lazy"
-      onError={() => setBroken(true)}
+      onError={() => {
+        // Use a neutral fashion placeholder from Unsplash instead of emoji
+        setImgSrc("https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=500&q=80");
+      }}
     />
   );
 }
