@@ -643,7 +643,7 @@ export default function App() {
             <span style={{ opacity: sidebarOpen ? 0 : 1, transition:"opacity .22s" }}/>
             <span style={{ transform: sidebarOpen ? "rotate(-45deg) translate(4px,-4px)" : "none", transition:"transform .22s" }}/>
           </button>
-          <div className="wordmark" onClick={clearAll}>Poshak<span style={{ color:"#c9a96e" }}>.</span>pk</div>
+          <img src="/poshak_logo.png" alt="Poshak.pk" onClick={clearAll} style={{ height:"38px", cursor:"pointer", objectFit:"contain" }} />
         </div>
         <div className="nav-desktop" style={{ display:"flex", gap:"8px", flexWrap:"wrap" }}>
           {POPULATED_CATEGORIES.filter(c=>c!=="All").slice(0,6).map(cat => (
@@ -941,7 +941,7 @@ export default function App() {
 
       {/* FOOTER */}
       <footer style={{ borderTop:"1px solid #e8e0d8", padding:"40px 24px", textAlign:"center", background:"rgba(255,255,255,.55)" }}>
-        <div className="wordmark" style={{ color:"#c9a96e", fontSize:"1.35rem", marginBottom:"6px" }}>Poshak.pk</div>
+        <img src="/poshak_logo.png" alt="Poshak.pk" style={{ height:"32px", objectFit:"contain", marginBottom:"6px" }} />
         <p style={{ fontSize:".62rem", letterSpacing:".15em", color:"#bbb", textTransform:"uppercase" }}>Pakistan's Women's Fashion Discovery · v4.0</p>
         <p style={{ fontSize:".6rem", color:"#ccc", marginTop:"6px" }}>All products link to official brand websites. Stock availability is checked live.</p>
       </footer>
