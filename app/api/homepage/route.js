@@ -6,7 +6,6 @@ const CATEGORIES = [
   "Co-ords", "Kurta", "Abaya", "Shalwar Kameez"
 ]
 
-// Collection-to-category mapping (same as website)
 function getCategory(collection, tags, product_type) {
   const col = (collection || "").toLowerCase()
   const all = `${col} ${(tags||"").toLowerCase()} ${(product_type||"").toLowerCase()}`
@@ -28,42 +27,64 @@ function getCategory(collection, tags, product_type) {
   for (const [keys, cat] of MAP) {
     if (keys.some(k => col.includes(k))) return cat
   }
-  if (all.includes("unstitched"))   return "Unstitched"
-  if (all.includes("luxury pret"))  return "Luxury Pret"
+  // Tags fallback
+  if (all.includes("unstitched"))                      return "Unstitched"
+  if (all.includes("luxury pret"))                     return "Luxury Pret"
   if (all.match(/bridal|bride|gharara|sharara|lehenga/)) return "Bridal"
-  if (all.includes("abaya"))        return "Abaya"
-  if (all.match(/festive|eid/))     return "Festive / Eid"
-  if (all.match(/khaddar|karandi|winter/)) return "Winter Collection"
-  if (all.includes("lawn"))         return "Lawn"
-  if (all.match(/kurta|kurti/))     return "Kurta"
-  if (all.match(/formal|evening/))  return "Formal"
+  if (all.includes("abaya"))                           return "Abaya"
+  if (all.match(/\bco-ord\b|coord set/))               return "Co-ords"
+  if (all.match(/\bfestive\b|\beid\b/))                return "Festive / Eid"
+  if (all.match(/khaddar|karandi|\bwinter\b/))         return "Winter Collection"
+  if (all.includes("lawn"))                            return "Lawn"
+  if (all.match(/\bkurta\b|\bkurti\b/))                return "Kurta"
+  if (all.match(/shalwar|kameez/))                     return "Shalwar Kameez"
+  if (all.match(/\bformal\b|evening wear/))            return "Formal"
   return "Pret / Ready to Wear"
 }
 
 export async function GET() {
   try {
-    // Fetch enough products to fill all categories (4 per category × 12 categories)
-    // We fetch 500 and distribute — fast single query
-    const { data, error } = await supabase
-      .from('products')
-      .select('id, name, brand, price, original_price, product_type, tags, collection, image_url, product_url, in_stock')
-      .eq('in_stock', true)
-      .limit(500)
-
-    if (error) throw error
-
-    // Group into categories
     const byCategory = {}
     for (const cat of CATEGORIES) byCategory[cat] = []
 
-    for (const p of data) {
-      const cat = getCategory(p.collection, p.tags, p.product_type)
-      if (byCategory[cat] && byCategory[cat].length < 4) {
-        byCategory[cat].push(p)
+    // Fetch products in batches of 1000 until all categories have 4 products
+    let from = 0
+    const batchSize = 1000
+
+    while (true) {
+      // Check if all categories are filled
+      const allFilled = CATEGORIES.every(cat => byCategory[cat].length >= 4)
+      if (allFilled) break
+
+      const { data, error } = await supabase
+        .from('products')
+        .select('id, name, brand, price, original_price, product_type, tags, collection, image_url, product_url, in_stock')
+        .eq('in_stock', true)
+        .range(from, from + batchSize - 1)
+
+      if (error) throw error
+      if (!data || data.length === 0) break
+
+      for (const p of data) {
+        const cat = getCategory(p.collection, p.tags, p.product_type)
+        if (byCategory[cat] && byCategory[cat].length < 4) {
+          byCategory[cat].push(p)
+        }
+      }
+
+      from += batchSize
+      if (data.length < batchSize) break // last page
+    }
+
+    // Filter out empty categories
+    const sections = {}
+    for (const cat of CATEGORIES) {
+      if (byCategory[cat].length > 0) {
+        sections[cat] = byCategory[cat]
       }
     }
 
-    return Response.json({ sections: byCategory })
+    return Response.json({ sections })
   } catch (err) {
     return Response.json({ error: err.message }, { status: 500 })
   }
