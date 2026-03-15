@@ -475,6 +475,7 @@ select{appearance:none;-webkit-appearance:none;background-image:url("data:image/
 /* MISC */
 .animate-in{opacity:0;transform:translateY(12px);animation:aIn .42s ease forwards;}
 @keyframes aIn{to{opacity:1;transform:translateY(0)}}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 .section-rule{height:1px;background:linear-gradient(90deg,transparent,#c9a96e 30%,#c9a96e 70%,transparent);}
 .pill-row{display:flex;flex-wrap:wrap;gap:8px;}
 .disclaimer{border-radius:8px;padding:11px 14px;margin-bottom:16px;display:flex;gap:11px;align-items:flex-start;}
@@ -495,8 +496,9 @@ select{appearance:none;-webkit-appearance:none;background-image:url("data:image/
 //  ROOT COMPONENT
 // ═══════════════════════════════════════════════════════════════════════════════
 export default function App() {
-  const [products,        setProducts]        = useState(FALLBACK_PRODUCTS);
-  const [dataSource,      setDataSource]      = useState("fallback");
+  const [products,        setProducts]        = useState([]);
+  const [loading,         setLoading]         = useState(true);
+  const [dataSource,      setDataSource]      = useState("loading");
   const [sidebarOpen,     setSidebarOpen]     = useState(false);
   const [activeCategory,  setActiveCategory]  = useState("All");
   const [query,           setQuery]           = useState("");
@@ -516,14 +518,52 @@ export default function App() {
 
   // ── Load products from Google Sheet ──
   useEffect(() => {
-    if (GOOGLE_SHEET_CSV_URL.includes("YOUR_SHEET_ID")) return;
+    if (GOOGLE_SHEET_CSV_URL.includes("YOUR_SHEET_ID")) {
+      setLoading(false);
+      return;
+    }
+
+    // Try cache first for instant load on repeat visits
+    const CACHE_KEY = "poshak_products_v1";
+    const CACHE_TTL = 30 * 60 * 1000; // 30 minutes
+    try {
+      const cached = sessionStorage.getItem(CACHE_KEY);
+      if (cached) {
+        const { data, timestamp } = JSON.parse(cached);
+        if (Date.now() - timestamp < CACHE_TTL && data.length > 0) {
+          setProducts(data);
+          setDataSource("sheets");
+          setLoading(false);
+          // Still refresh in background silently
+          fetch(GOOGLE_SHEET_CSV_URL)
+            .then(r => r.text())
+            .then(csv => {
+              const p = parseCSV(csv);
+              if (p.length) {
+                setProducts(p);
+                sessionStorage.setItem(CACHE_KEY, JSON.stringify({ data: p, timestamp: Date.now() }));
+              }
+            }).catch(() => {});
+          return;
+        }
+      }
+    } catch(e) {}
+
+    // No cache — fetch fresh
     fetch(GOOGLE_SHEET_CSV_URL)
       .then(r => r.text())
       .then(csv => {
         const p = parseCSV(csv);
-        if (p.length) { setProducts(p); setDataSource("sheets"); }
+        if (p.length) {
+          setProducts(p);
+          setDataSource("sheets");
+          try {
+            sessionStorage.setItem(CACHE_KEY, JSON.stringify({ data: p, timestamp: Date.now() }));
+          } catch(e) {}
+        }
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
   // ── Lock scroll when modal open + trigger live stock check ──
@@ -757,6 +797,37 @@ export default function App() {
           {/* ── PRODUCTS AREA ── */}
           <div style={{ padding:"0 24px 60px" }}>
 
+            {/* LOADING SKELETON */}
+            {loading && (
+              <div>
+                <div style={{ display:"flex", gap:"10px", marginBottom:"24px" }}>
+                  {[1,2,3].map(i => (
+                    <div key={i} style={{ height:"32px", width:"80px", background:"#f0ebe4", borderRadius:"4px", animation:"shimmer 1.4s infinite" }} />
+                  ))}
+                </div>
+                {[1,2].map(section => (
+                  <div key={section} style={{ marginBottom:"48px" }}>
+                    <div style={{ height:"28px", width:"180px", background:"#f0ebe4", borderRadius:"4px", marginBottom:"8px", animation:"shimmer 1.4s infinite" }} />
+                    <div style={{ height:"14px", width:"80px", background:"#f5f0eb", borderRadius:"4px", marginBottom:"20px", animation:"shimmer 1.4s infinite" }} />
+                    <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))", gap:"20px" }}>
+                      {[1,2,3,4].map(i => (
+                        <div key={i} style={{ background:"#fff", border:"1px solid #e8e0d8", borderRadius:"10px", overflow:"hidden" }}>
+                          <div style={{ height:"300px", background:"linear-gradient(90deg,#f5f0eb 25%,#ede8e0 50%,#f5f0eb 75%)", backgroundSize:"200% 100%", animation:"shimmer 1.4s infinite" }} />
+                          <div style={{ padding:"14px" }}>
+                            <div style={{ height:"10px", width:"60px", background:"#f0ebe4", borderRadius:"3px", marginBottom:"8px", animation:"shimmer 1.4s infinite" }} />
+                            <div style={{ height:"16px", width:"90%", background:"#f0ebe4", borderRadius:"3px", marginBottom:"6px", animation:"shimmer 1.4s infinite" }} />
+                            <div style={{ height:"14px", width:"50%", background:"#f5f0eb", borderRadius:"3px", animation:"shimmer 1.4s infinite" }} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {!loading && (<>
+
             {/* FILTER ROW */}
             <div style={{ display:"flex", alignItems:"center", gap:"10px", marginBottom:"14px", flexWrap:"wrap" }}>
               <button className={`filter-btn ${filtersOpen?"active":""}`} onClick={() => setFiltersOpen(f=>!f)}>
@@ -863,6 +934,7 @@ export default function App() {
                 })}
               </div>
             )}
+            </>)}
           </div>
         </div>
       </div>
