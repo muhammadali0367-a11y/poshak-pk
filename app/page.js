@@ -661,6 +661,7 @@ export default function App() {
   const [filtersOpen,     setFiltersOpen]     = useState(false);
   const [suggestions,     setSuggestions]     = useState([]);
   const [showSugg,        setShowSugg]        = useState(false);
+  const [showAllDropdown, setShowAllDropdown] = useState(false);
   const [liveStock,       setLiveStock]       = useState("checking");
   const searchRef = useRef(null);
 
@@ -871,162 +872,153 @@ export default function App() {
       <style>{CSS}</style>
 
       {/* ── NAV ── */}
-      <nav className="nav">
-        <div style={{ display:"flex", alignItems:"center", gap:"14px" }}>
+      <nav className="nav" style={{ gap:"12px" }}>
+        {/* Left: hamburger + logo */}
+        <div style={{ display:"flex", alignItems:"center", gap:"12px", flexShrink:0 }}>
           <button className="hamburger" onClick={() => setSidebarOpen(v => !v)} aria-label="Toggle categories">
             <span style={{ transform: sidebarOpen ? "rotate(45deg) translate(4px,4px)" : "none", transition:"transform .22s" }}/>
             <span style={{ opacity: sidebarOpen ? 0 : 1, transition:"opacity .22s" }}/>
             <span style={{ transform: sidebarOpen ? "rotate(-45deg) translate(4px,-4px)" : "none", transition:"transform .22s" }}/>
           </button>
-          <div className="wordmark" onClick={clearAll}>Poshak<span style={{ color:"#c9a96e" }}>.</span>pk</div>
+          <div className="wordmark" onClick={() => router.push("/")}>Poshak<span style={{ color:"#c9a96e" }}>.</span>pk</div>
         </div>
-        <div className="nav-desktop" style={{ display:"flex", gap:"8px", flexWrap:"wrap" }}>
-          {POPULATED_CATEGORIES.filter(c=>c!=="All").slice(0,6).map(cat => (
-            <button key={cat} className={`filter-btn ${activeCategory===cat?"active":""}`}
-              style={{ fontSize:".65rem", padding:"5px 12px" }}
-              onClick={() => router.push(`/category/${slugify(cat)}`)}>
-              {cat}
+
+        {/* Centre: All dropdown + search bar */}
+        <div style={{ flex:1, display:"flex", alignItems:"center", gap:"0", maxWidth:"640px", background:"#fff", border:"1px solid #e0d8d0", borderRadius:"8px", boxShadow:"0 2px 12px rgba(0,0,0,.05)", position:"relative" }}>
+
+          {/* "All" dropdown button */}
+          <div style={{ position:"relative", flexShrink:0 }}>
+            <button
+              onClick={() => setShowAllDropdown(v => !v)}
+              style={{ height:"44px", padding:"0 14px", background:"transparent", border:"none", borderRight:"1px solid #e0d8d0", cursor:"pointer", fontFamily:"'DM Sans',sans-serif", fontSize:".75rem", letterSpacing:".08em", color:"#555", display:"flex", alignItems:"center", gap:"6px", whiteSpace:"nowrap" }}>
+              All
+              <span style={{ fontSize:".6rem", color:"#aaa", transition:"transform .2s", transform: showAllDropdown?"rotate(180deg)":"none" }}>▾</span>
             </button>
-          ))}
+
+            {/* Mega dropdown */}
+            {showAllDropdown && (
+              <div style={{ position:"absolute", top:"calc(100% + 8px)", left:0, background:"#fff", border:"1px solid #e0d8d0", borderRadius:"10px", boxShadow:"0 12px 40px rgba(0,0,0,.12)", zIndex:300, padding:"20px", display:"flex", gap:"40px", minWidth:"420px" }}>
+                {/* Categories column */}
+                <div>
+                  <div style={{ fontSize:".6rem", letterSpacing:".22em", textTransform:"uppercase", color:"#c9a96e", marginBottom:"12px", fontWeight:600 }}>Categories</div>
+                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"2px 24px" }}>
+                    {CATEGORIES.filter(c => c !== "All").map(cat => (
+                      <button key={cat}
+                        onClick={() => { setShowAllDropdown(false); router.push(`/category/${slugify(cat)}`); }}
+                        style={{ background:"none", border:"none", cursor:"pointer", textAlign:"left", padding:"6px 0", fontSize:".78rem", color:"#555", fontFamily:"'DM Sans',sans-serif", whiteSpace:"nowrap", transition:"color .15s" }}
+                        onMouseOver={e => e.target.style.color="#c9a96e"}
+                        onMouseOut={e => e.target.style.color="#555"}>
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                {/* Brands column */}
+                <div>
+                  <div style={{ fontSize:".6rem", letterSpacing:".22em", textTransform:"uppercase", color:"#c9a96e", marginBottom:"12px", fontWeight:600 }}>Brands</div>
+                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"2px 24px", maxHeight:"280px", overflowY:"auto" }}>
+                    {allBrands.map(b => (
+                      <button key={b}
+                        onClick={() => { setShowAllDropdown(false); router.push(`/brand/${slugify(b)}`); }}
+                        style={{ background:"none", border:"none", cursor:"pointer", textAlign:"left", padding:"6px 0", fontSize:".78rem", color:"#555", fontFamily:"'DM Sans',sans-serif", whiteSpace:"nowrap", transition:"color .15s" }}
+                        onMouseOver={e => e.target.style.color="#c9a96e"}
+                        onMouseOut={e => e.target.style.color="#555"}>
+                        {b}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Search input */}
+          <div ref={searchRef} style={{ flex:1, position:"relative" }}>
+            <div style={{ display:"flex", alignItems:"center", padding:"0 14px", gap:"8px", height:"44px" }}>
+              <span style={{ color:"#ccc", fontSize:"1rem" }}>⊹</span>
+              <input className="search-box"
+                placeholder="Search: black lawn, kala suit, bridal chiffon…"
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+                onKeyDown={e => { if(e.key==="Enter" && query.trim()) { router.push(`/search?q=${encodeURIComponent(query.trim())}`); setShowSugg(false); }}}
+                onFocus={() => query.length>=2 && setShowSugg(true)}
+              />
+              {query && <button onClick={() => { setQuery(""); setSuggestions([]); }} style={{ background:"none", border:"none", color:"#ccc", cursor:"pointer", flexShrink:0 }}>✕</button>}
+            </div>
+            {showSugg && suggestions.length>0 && (
+              <div className="ac-box">
+                {suggestions.map((s,i) => (
+                  <div key={i} className="ac-item" onClick={() => { router.push(`/search?q=${encodeURIComponent(s.label)}`); setShowSugg(false); setQuery(s.label); }}>
+                    <span className="ac-item-type">{s.type}</span>
+                    <span style={{ fontSize:".82rem", color:"#2a2420" }}>{s.label}</span>
+                    {s.brand && <span style={{ fontSize:".7rem", color:"#bbb", marginLeft:"auto" }}>{s.brand}</span>}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
-        <div style={{ display:"flex", gap:"16px", alignItems:"center" }}>
-          {dataSource==="sheets" && <span style={{ fontSize:".66rem", color:"#3d8a60" }}>● Live</span>}
+
+        {/* Right: wishlist */}
+        <div style={{ display:"flex", gap:"16px", alignItems:"center", flexShrink:0 }}>
           {wishlist.length>0 && <span style={{ fontSize:".72rem", color:"#c9a96e" }}>♥ {wishlist.length}</span>}
         </div>
       </nav>
 
-      {/* ── LAYOUT: LEFT PANEL + MAIN CONTENT ── */}
-      <div style={{ display:"flex", alignItems:"flex-start" }}>
+      {/* Click-away to close All dropdown */}
+      {showAllDropdown && <div style={{ position:"fixed", inset:0, zIndex:299 }} onClick={() => setShowAllDropdown(false)} />}
 
-        {/* ── LEFT CATEGORY PANEL ── */}
-        <aside style={{
-          width: sidebarOpen ? "220px" : "0",
-          minWidth: sidebarOpen ? "220px" : "0",
-          overflow:"hidden",
-          transition:"width .32s cubic-bezier(.4,0,.2,1), min-width .32s cubic-bezier(.4,0,.2,1)",
-          background:"#fff",
-          borderRight:"1px solid #e8e0d8",
-          position:"sticky",
-          top:"60px",
-          height:"calc(100vh - 60px)",
-          overflowY:"auto",
-          flexShrink:0,
-          boxShadow: sidebarOpen ? "2px 0 12px rgba(0,0,0,.04)" : "none",
-        }}>
-          <div style={{ width:"220px", padding:"20px 0 40px" }}>
-            {/* All */}
-            <button
-              onClick={() => setActiveCategory("All")}
-              style={{
-                width:"100%", padding:"10px 20px", background:activeCategory==="All"?"#fdf7ef":"transparent",
-                border:"none", borderLeft:`3px solid ${activeCategory==="All"?"#c9a96e":"transparent"}`,
-                textAlign:"left", cursor:"pointer", fontSize:".8rem", letterSpacing:".06em",
-                color:activeCategory==="All"?"#c9a96e":"#555", fontFamily:"'DM Sans',sans-serif",
-                fontWeight:activeCategory==="All"?"500":"400", transition:"all .15s",
-              }}>
-              All Dresses
-            </button>
+      {/* ── SIDEBAR OVERLAY ── */}
+      <div className={`sb-overlay ${sidebarOpen?"open":""}`} onClick={() => setSidebarOpen(false)} />
 
-            <div style={{ padding:"14px 20px 6px", fontSize:".58rem", letterSpacing:".22em", textTransform:"uppercase", color:"#bbb" }}>
-              Categories
-            </div>
+      {/* ── SIDEBAR ── */}
+      <aside className={`sb ${sidebarOpen?"open":""}`}>
+        {/* Sidebar header */}
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"20px 20px 16px", borderBottom:"1px solid #f0ebe4" }}>
+          <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"1.2rem", color:"#2a2420", letterSpacing:".08em" }}>Browse</div>
+          <button onClick={() => setSidebarOpen(false)} style={{ background:"none", border:"none", cursor:"pointer", fontSize:"1.1rem", color:"#aaa", padding:"4px" }}>✕</button>
+        </div>
 
-            {/* Only populated categories */}
-            {POPULATED_CATEGORIES.filter(c => c !== "All").map(cat => {
-              const count = "";
-              const isActive = activeCategory === cat;
-              return (
-                <button key={cat}
-                  onClick={() => router.push(`/category/${slugify(cat)}`)}
-                  style={{
-                    width:"100%", padding:"9px 20px", background:isActive?"#fdf7ef":"transparent",
-                    border:"none", borderLeft:`3px solid ${isActive?"#c9a96e":"transparent"}`,
-                    textAlign:"left", cursor:"pointer", fontSize:".78rem", letterSpacing:".04em",
-                    color:isActive?"#c9a96e":"#666", fontFamily:"'DM Sans',sans-serif",
-                    fontWeight:isActive?"500":"400", transition:"all .15s", display:"flex",
-                    alignItems:"center", justifyContent:"space-between",
-                  }}>
-                  <span>{cat}</span>
-                  <span style={{ fontSize:".68rem", color:isActive?"#c9a96e":"#bbb" }}>{count}</span>
-                </button>
-              );
-            })}
+        <div style={{ padding:"12px 0 40px", flex:1 }}>
 
-            <div style={{ padding:"14px 20px 6px", fontSize:".58rem", letterSpacing:".22em", textTransform:"uppercase", color:"#bbb", marginTop:"8px", borderTop:"1px solid #f0ebe4" }}>
-              Brands
-            </div>
-            {BRANDS.filter(b => b !== "All Brands").map(b => {
-              const isActive = brand === b;
-              return (
-                <button key={b}
-                  onClick={() => setBrand(isActive ? "All Brands" : b)}
-                  style={{
-                    width:"100%", padding:"8px 20px", background:isActive?"#fdf7ef":"transparent",
-                    border:"none", borderLeft:`3px solid ${isActive?"#c9a96e":"transparent"}`,
-                    textAlign:"left", cursor:"pointer", fontSize:".75rem", letterSpacing:".04em",
-                    color:isActive?"#c9a96e":"#777", fontFamily:"'DM Sans',sans-serif",
-                    fontWeight:isActive?"500":"400", transition:"all .15s",
-                  }}>
-                  {b}
-                </button>
-              );
-            })}
-          </div>
-        </aside>
+          {/* All Dresses */}
+          <button onClick={() => { setSidebarOpen(false); router.push("/"); }}
+            style={{ width:"100%", padding:"11px 20px", background:"transparent", border:"none", borderLeft:"3px solid transparent", textAlign:"left", cursor:"pointer", fontSize:".8rem", color:"#555", fontFamily:"'DM Sans',sans-serif", transition:"all .15s" }}
+            onMouseOver={e => e.currentTarget.style.background="#fafaf8"}
+            onMouseOut={e => e.currentTarget.style.background="transparent"}>
+            All Dresses
+          </button>
 
-        {/* ── MAIN CONTENT ── */}
-        <div style={{ flex:1, minWidth:0 }}>
+          {/* Categories section */}
+          <SidebarSection
+            title="Categories"
+            items={POPULATED_CATEGORIES.filter(c => c !== "All")}
+            onItemClick={cat => { setSidebarOpen(false); router.push(`/category/${slugify(cat)}`); }}
+          />
+
+          {/* Brands section */}
+          <SidebarSection
+            title="Brands"
+            items={allBrands}
+            onItemClick={b => { setSidebarOpen(false); router.push(`/brand/${slugify(b)}`); }}
+          />
+        </div>
+      </aside>
+
+      {/* ── LAYOUT ── */}
+      <div>
 
           {/* HERO */}
-          <section style={{ textAlign:"center", padding:"56px 32px 40px", position:"relative", overflow:"hidden" }}>
+          <section style={{ textAlign:"center", padding:"48px 32px 32px", position:"relative", overflow:"hidden" }}>
             <div style={{ position:"absolute", inset:0, background:"radial-gradient(ellipse 75% 55% at 50% 0%,rgba(201,169,110,.09) 0%,transparent 72%)", pointerEvents:"none" }} />
             <p style={{ fontSize:".65rem", letterSpacing:".38em", textTransform:"uppercase", color:"#c9a96e", marginBottom:"14px" }}>Pakistan's Women's Fashion Discovery</p>
             <h1 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"clamp(1.8rem,4vw,3.2rem)", fontWeight:300, lineHeight:1.1, marginBottom:"4px" }}>Find Every Dress,</h1>
             <h1 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"clamp(1.8rem,4vw,3.2rem)", fontWeight:300, fontStyle:"italic", lineHeight:1.1, marginBottom:"24px", color:"#c9a96e" }}>Across Every Brand</h1>
-            <div style={{ width:"48px", height:"1px", background:"linear-gradient(90deg,transparent,#c9a96e,transparent)", margin:"0 auto 28px" }} />
-
-            {/* SEARCH */}
-            <div style={{ maxWidth:"580px", margin:"0 auto 16px" }}>
-              <div ref={searchRef} style={{ position:"relative" }}>
-                <div style={{ display:"flex", alignItems:"center", background:"#fff", border:"1px solid #e0d8d0", borderRadius:"8px", padding:"12px 18px", gap:"12px", boxShadow:"0 4px 22px rgba(0,0,0,.06)" }}>
-                  <span style={{ color:"#ccc", fontSize:"1.1rem" }}>⊹</span>
-                  <input className="search-box"
-                    placeholder="Search: black lawn, kala suit, bridal chiffon…"
-                    value={query}
-                    onChange={e => setQuery(e.target.value)}
-                    onFocus={() => query.length>=2 && setShowSugg(true)}
-                  />
-                  {query && <button onClick={() => { setQuery(""); setSuggestions([]); }} style={{ background:"none", border:"none", color:"#ccc", cursor:"pointer" }}>✕</button>}
-                </div>
-                {showSugg && suggestions.length>0 && (
-                  <div className="ac-box">
-                    {suggestions.map((s,i) => (
-                      <div key={i} className="ac-item" onClick={() => pickSugg(s.label)}>
-                        <span className="ac-item-type">{s.type}</span>
-                        <span style={{ fontSize:".82rem", color:"#2a2420" }}>{s.label}</span>
-                        {s.brand && <span style={{ fontSize:".7rem", color:"#bbb", marginLeft:"auto" }}>{s.brand}</span>}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-              {searchHint && query && (
-                <div style={{ fontSize:".68rem", color:"#c9a96e", letterSpacing:".06em", marginTop:"8px", textAlign:"left", paddingLeft:"4px" }}>
-                  ✦ Searching for: {searchHint}
-                </div>
-              )}
-            </div>
-
-            {/* QUICK TAGS */}
-            <div style={{ display:"flex", flexWrap:"wrap", gap:"8px", justifyContent:"center" }}>
-              {QUICK_TAGS.filter(t => POPULATED_CATEGORIES.includes(t)).map(t => (
-                <button key={t} className={`quick-tag ${activeCategory===t?"active":""}`}
-                  onClick={() => { setActiveCategory(activeCategory===t?"All":t); setQuery(""); router.push(`/category/${slugify(t)}`); }}>
-                  {t}
-                </button>
-              ))}
-            </div>
+            <div style={{ width:"48px", height:"1px", background:"linear-gradient(90deg,transparent,#c9a96e,transparent)", margin:"0 auto 0" }} />
           </section>
+
+          {/* CATEGORY CAROUSEL */}
+          <CategoryCarousel categories={CATEGORIES.filter(c=>c!=="All")} onNavigate={cat => router.push(`/category/${slugify(cat)}`)} />
 
           {/* ── PRODUCTS AREA ── */}
           <div style={{ padding:"0 24px 60px" }}>
@@ -1203,7 +1195,6 @@ export default function App() {
             )}
             </>)}
           </div>
-        </div>
       </div>
 
       {/* FOOTER */}
@@ -1341,7 +1332,81 @@ export default function App() {
   );
 }
 
-// ─── IMAGE WITH FALLBACK ──────────────────────────────────────────────────────
+// ─── SIDEBAR SECTION (collapsible) ───────────────────────────────────────────
+function SidebarSection({ title, items, onItemClick }) {
+  const [open, setOpen] = useState(true);
+  return (
+    <div style={{ borderTop:"1px solid #f0ebe4", marginTop:"4px" }}>
+      <button
+        onClick={() => setOpen(v => !v)}
+        style={{ width:"100%", padding:"12px 20px", background:"transparent", border:"none", textAlign:"left", cursor:"pointer", fontFamily:"'DM Sans',sans-serif", fontSize:".6rem", letterSpacing:".22em", textTransform:"uppercase", color:"#bbb", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+        {title}
+        <span style={{ transition:"transform .2s", transform: open?"rotate(180deg)":"none", fontSize:".7rem" }}>▾</span>
+      </button>
+      {open && (
+        <div>
+          {items.map(item => (
+            <button key={item}
+              onClick={() => onItemClick(item)}
+              className="sb-cat-btn">
+              {item}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── CATEGORY CAROUSEL (auto-scrolling) ───────────────────────────────────────
+function CategoryCarousel({ categories, onNavigate }) {
+  const scrollRef = useRef(null);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    let animId;
+    let pos = 0;
+    const speed = 0.5;
+    function tick() {
+      pos += speed;
+      if (pos >= el.scrollWidth / 2) pos = 0;
+      el.scrollLeft = pos;
+      animId = requestAnimationFrame(tick);
+    }
+    animId = requestAnimationFrame(tick);
+    el.addEventListener("mouseenter", () => cancelAnimationFrame(animId));
+    el.addEventListener("mouseleave", () => { animId = requestAnimationFrame(tick); });
+    return () => cancelAnimationFrame(animId);
+  }, []);
+
+  // Duplicate for seamless loop
+  const doubled = [...categories, ...categories];
+
+  const COLORS = ["#f5ebe0","#e8f0f5","#f0ebe5","#e8f5ec","#f5e8f0","#f5f0e8","#e8eef5","#f0f5e8","#f5e8e8","#e8f5f5","#f0e8f5","#f5f5e8"];
+
+  return (
+    <div style={{ overflow:"hidden", borderBottom:"1px solid #e8e0d8", borderTop:"1px solid #e8e0d8", background:"#fdfcfb" }}>
+      <div ref={scrollRef} style={{ display:"flex", overflowX:"hidden", gap:"0", userSelect:"none" }}>
+        {doubled.map((cat, i) => (
+          <button key={i}
+            onClick={() => onNavigate(cat)}
+            style={{
+              flexShrink:0, padding:"16px 28px", background:COLORS[i % COLORS.length],
+              border:"none", borderRight:"1px solid #e8e0d8", cursor:"pointer",
+              fontFamily:"'DM Sans',sans-serif", fontSize:".72rem", letterSpacing:".12em",
+              textTransform:"uppercase", color:"#555", whiteSpace:"nowrap",
+              transition:"background .2s, color .2s",
+            }}
+            onMouseOver={e => { e.currentTarget.style.background="#c9a96e"; e.currentTarget.style.color="#fff"; }}
+            onMouseOut={e => { e.currentTarget.style.background=COLORS[i % COLORS.length]; e.currentTarget.style.color="#555"; }}>
+            {cat}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
 function ImageWithFallback({ src, alt, className }) {
   const [imgSrc, setImgSrc] = useState(src);
   useEffect(() => { setImgSrc(src); }, [src]);
