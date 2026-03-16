@@ -46,14 +46,23 @@ export async function GET() {
           .limit(100)
 
         if (!error && data && data.length > 0) {
-          // Pick 1 product per brand, max 4
+          // Pick 1 product per brand up to 4, but if less than 4 brands fill with more products
           const seen = new Set()
           const mixed = []
+          // First pass: 1 per brand
           for (const p of data) {
             if (!seen.has(p.brand)) {
               seen.add(p.brand)
               mixed.push(p)
               if (mixed.length === 4) break
+            }
+          }
+          // Second pass: fill remaining slots if less than 4 brands
+          if (mixed.length < 4) {
+            for (const p of data) {
+              if (!mixed.find(m => m.id === p.id) && mixed.length < 4) {
+                mixed.push(p)
+              }
             }
           }
           sections[cat] = mixed
