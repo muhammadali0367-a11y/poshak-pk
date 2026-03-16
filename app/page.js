@@ -635,6 +635,7 @@ select{appearance:none;-webkit-appearance:none;background-image:url("data:image/
 export default function App() {
   const [products,        setProducts]        = useState([]);
   const [homepageSections,setHomepageSections]= useState({});   // { "Lawn": [...4 products] }
+  const [allBrands,        setAllBrands]        = useState([]);
   const [loading,         setLoading]         = useState(true);
   const [loadingMore,     setLoadingMore]     = useState(false);
   const [totalResults,    setTotalResults]    = useState(0);
@@ -732,6 +733,12 @@ export default function App() {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
+
+    // Fetch all brands for sidebar
+    fetch("/api/brands")
+      .then(r => r.json())
+      .then(json => { if (json.brands) setAllBrands(json.brands); })
+      .catch(() => {});
   }, []);
 
   // ── Load products when filter/search/category changes ─────────────────────
@@ -798,7 +805,7 @@ export default function App() {
     Object.values(homepageSections).flat(), [homepageSections]);
 
   const indexed  = useMemo(() => buildIndex(products.length > 0 ? products : allHomepageProducts), [products, allHomepageProducts]);
-  const BRANDS   = useMemo(() => ["All Brands", ...Array.from(new Set(allHomepageProducts.map(p => p.brand))).sort()], [allHomepageProducts]);
+  const BRANDS   = useMemo(() => ["All Brands", ...allBrands], [allBrands]);
 
   // Client-side filter on loaded products (color/fabric/occasion filters)
   const filtered = useMemo(() => {
