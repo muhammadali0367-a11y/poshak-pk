@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import SharedNav from "./SharedNav";
 
 // ═══════════════════════════════════════════════════════════════════════════════
 //  POSHAK.PK  —  v4.0  Women's Edition
@@ -755,26 +756,22 @@ export default function App() {
   }, []);
 
   // ── Load products when filter/search/category changes ─────────────────────
+  // NOTE: Search and category filtering now handled by dedicated pages
+  // This useEffect only handles brand/price filter on homepage
   useEffect(() => {
-    const hasFilter = activeCategory !== "All" || query.trim() || brand !== "All Brands" || priceRange !== "All Prices";
+    const hasFilter = brand !== "All Brands" || priceRange !== "All Prices";
     if (!hasFilter) return;
 
     setLoadingMore(true);
     setCurrentPage(1);
 
     const [minP, maxP] = parsePriceRange(priceRange);
-
-    const isSearching = query.trim().length > 0;
-    const endpoint = isSearching ? "/api/search" : "/api/products";
     const params = new URLSearchParams({ page: 1 });
+    if (brand !== "All Brands") params.set("brand", brand);
+    if (minP) params.set("min_price", minP);
+    if (maxP) params.set("max_price", maxP);
 
-    if (isSearching)              params.set("q", query.trim());
-    if (activeCategory !== "All") params.set("category", activeCategory);
-    if (brand !== "All Brands")   params.set("brand", brand);
-    if (minP)                     params.set("min_price", minP);
-    if (maxP)                     params.set("max_price", maxP);
-
-    fetch(`${endpoint}?${params}`)
+    fetch(`/api/products?${params}`)
       .then(r => r.json())
       .then(json => {
         const prods = (json.products || []).map(processProduct);
@@ -785,7 +782,7 @@ export default function App() {
       })
       .catch(() => {})
       .finally(() => setLoadingMore(false));
-  }, [query, activeCategory, color, fabric, occasion, priceRange, brand]);
+  }, [brand, priceRange]);
 
   // ── Lock scroll when modal open + trigger live stock check ──
   useEffect(() => {
@@ -799,7 +796,7 @@ export default function App() {
     return () => { document.body.style.overflow = ""; };
   }, [selectedProduct]);
 
-  // ── Autocomplete ──
+  // ── Autocomplete suggestions (display only, no in-page filtering) ──
   useEffect(() => {
     if (query.length >= 2) { setSuggestions(getSuggestions(query, indexed)); setShowSugg(true); }
     else { setSuggestions([]); setShowSugg(false); }
@@ -846,7 +843,7 @@ export default function App() {
       }).slice(0, 6)
     : [];
 
-  const isFiltering = query || activeCategory !== "All" || brand !== "All Brands" || color !== "All" || fabric !== "All Fabrics" || occasion !== "All Occasions" || priceRange !== "All Prices";
+  const isFiltering = brand !== "All Brands" || priceRange !== "All Prices";
 
   const activeFilterCount = [activeCategory!=="All", color!=="All", fabric!=="All Fabrics", occasion!=="All Occasions", priceRange!=="All Prices", brand!=="All Brands"].filter(Boolean).length;
 
@@ -877,139 +874,8 @@ export default function App() {
     <div style={{ fontFamily:"'DM Sans',sans-serif", background:"linear-gradient(160deg,#fdfcfb 0%,#f5f0eb 40%,#ede8e0 100%)", minHeight:"100vh", color:"#2a2420" }}>
       <style>{CSS}</style>
 
-      {/* Click-away to close All dropdown — must be BEFORE nav in DOM */}
-      {showAllDropdown && <div style={{ position:"fixed", inset:0, zIndex:199 }} onClick={() => setShowAllDropdown(false)} />}
-
-      {/* ── NAV ── */}
-      <nav className="nav" style={{ gap:"12px", zIndex:200 }}>
-        {/* Left: hamburger + logo */}
-        <div style={{ display:"flex", alignItems:"center", gap:"12px", flexShrink:0 }}>
-          <button className="hamburger" onClick={() => setSidebarOpen(v => !v)} aria-label="Toggle categories">
-            <span style={{ transform: sidebarOpen ? "rotate(45deg) translate(4px,4px)" : "none", transition:"transform .22s" }}/>
-            <span style={{ opacity: sidebarOpen ? 0 : 1, transition:"opacity .22s" }}/>
-            <span style={{ transform: sidebarOpen ? "rotate(-45deg) translate(4px,-4px)" : "none", transition:"transform .22s" }}/>
-          </button>
-          <div className="wordmark" onClick={() => router.push("/")}>Poshak<span style={{ color:"#c9a96e" }}>.</span>pk</div>
-        </div>
-
-        {/* Centre: All dropdown + search bar */}
-        <div style={{ flex:1, display:"flex", alignItems:"center", gap:"0", maxWidth:"640px", background:"#fff", border:"1px solid #e0d8d0", borderRadius:"8px", boxShadow:"0 2px 12px rgba(0,0,0,.05)", position:"relative" }}>
-
-          {/* "All" dropdown button */}
-          <div style={{ position:"relative", flexShrink:0 }}>
-            <button
-              onClick={() => setShowAllDropdown(v => !v)}
-              style={{ height:"44px", padding:"0 14px", background:"transparent", border:"none", borderRight:"1px solid #e0d8d0", cursor:"pointer", fontFamily:"'DM Sans',sans-serif", fontSize:".75rem", letterSpacing:".08em", color:"#555", display:"flex", alignItems:"center", gap:"6px", whiteSpace:"nowrap" }}>
-              All
-              <span style={{ fontSize:".6rem", color:"#aaa", transition:"transform .2s", transform: showAllDropdown?"rotate(180deg)":"none" }}>▾</span>
-            </button>
-
-            {/* Mega dropdown */}
-            {showAllDropdown && (
-              <div style={{ position:"fixed", top:"62px", left:"50%", transform:"translateX(-50%)", background:"#fff", border:"1px solid #e0d8d0", borderRadius:"10px", boxShadow:"0 12px 40px rgba(0,0,0,.15)", zIndex:300, padding:"20px 24px", display:"flex", gap:"32px", width:"min(520px, 95vw)", maxHeight:"80vh", overflowY:"auto" }}>
-                {/* Categories column */}
-                <div>
-                  <div style={{ fontSize:".6rem", letterSpacing:".22em", textTransform:"uppercase", color:"#c9a96e", marginBottom:"12px", fontWeight:600 }}>Categories</div>
-                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"2px 24px" }}>
-                    {CATEGORIES.filter(c => c !== "All").map(cat => (
-                      <button key={cat}
-                        onClick={() => { setShowAllDropdown(false); router.push(`/category/${slugify(cat)}`); }}
-                        style={{ background:"none", border:"none", cursor:"pointer", textAlign:"left", padding:"6px 0", fontSize:".78rem", color:"#555", fontFamily:"'DM Sans',sans-serif", whiteSpace:"nowrap", transition:"color .15s" }}
-                        onMouseOver={e => e.target.style.color="#c9a96e"}
-                        onMouseOut={e => e.target.style.color="#555"}>
-                        {cat}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                {/* Brands column */}
-                <div>
-                  <div style={{ fontSize:".6rem", letterSpacing:".22em", textTransform:"uppercase", color:"#c9a96e", marginBottom:"12px", fontWeight:600 }}>Brands</div>
-                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"2px 24px", maxHeight:"280px", overflowY:"auto" }}>
-                    {allBrands.map(b => (
-                      <button key={b}
-                        onClick={() => { setShowAllDropdown(false); router.push(`/brand/${slugify(b)}`); }}
-                        style={{ background:"none", border:"none", cursor:"pointer", textAlign:"left", padding:"6px 0", fontSize:".78rem", color:"#555", fontFamily:"'DM Sans',sans-serif", whiteSpace:"nowrap", transition:"color .15s" }}
-                        onMouseOver={e => e.target.style.color="#c9a96e"}
-                        onMouseOut={e => e.target.style.color="#555"}>
-                        {b}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Search input */}
-          <div ref={searchRef} style={{ flex:1, position:"relative" }}>
-            <div style={{ display:"flex", alignItems:"center", padding:"0 14px", gap:"8px", height:"44px" }}>
-              <span style={{ color:"#ccc", fontSize:"1rem" }}>⊹</span>
-              <input className="search-box"
-                placeholder="Search: black lawn, kala suit, bridal chiffon…"
-                value={query}
-                onChange={e => setQuery(e.target.value)}
-                onKeyDown={e => { if(e.key==="Enter" && query.trim()) { router.push(`/search?q=${encodeURIComponent(query.trim())}`); setShowSugg(false); }}}
-                onFocus={() => query.length>=2 && setShowSugg(true)}
-              />
-              {query && <button onClick={() => { setQuery(""); setSuggestions([]); }} style={{ background:"none", border:"none", color:"#ccc", cursor:"pointer", flexShrink:0 }}>✕</button>}
-            </div>
-            {showSugg && suggestions.length>0 && (
-              <div className="ac-box">
-                {suggestions.map((s,i) => (
-                  <div key={i} className="ac-item" onClick={() => { router.push(`/search?q=${encodeURIComponent(s.label)}`); setShowSugg(false); setQuery(s.label); }}>
-                    <span className="ac-item-type">{s.type}</span>
-                    <span style={{ fontSize:".82rem", color:"#2a2420" }}>{s.label}</span>
-                    {s.brand && <span style={{ fontSize:".7rem", color:"#bbb", marginLeft:"auto" }}>{s.brand}</span>}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Right: wishlist */}
-        <div style={{ display:"flex", gap:"16px", alignItems:"center", flexShrink:0 }}>
-          {wishlist.length>0 && <span style={{ fontSize:".72rem", color:"#c9a96e" }}>♥ {wishlist.length}</span>}
-        </div>
-      </nav>
-
-      {/* ── SIDEBAR OVERLAY ── */}
-      <div className={`sb-overlay ${sidebarOpen?"open":""}`} onClick={() => setSidebarOpen(false)} />
-
-      {/* ── SIDEBAR ── */}
-      <aside className={`sb ${sidebarOpen?"open":""}`}>
-        {/* Sidebar header */}
-        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"20px 20px 16px", borderBottom:"1px solid #f0ebe4" }}>
-          <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"1.2rem", color:"#2a2420", letterSpacing:".08em" }}>Browse</div>
-          <button onClick={() => setSidebarOpen(false)} style={{ background:"none", border:"none", cursor:"pointer", fontSize:"1.1rem", color:"#aaa", padding:"4px" }}>✕</button>
-        </div>
-
-        <div style={{ padding:"12px 0 40px", flex:1 }}>
-
-          {/* All Dresses */}
-          <button onClick={() => { setSidebarOpen(false); router.push("/"); }}
-            style={{ width:"100%", padding:"11px 20px", background:"transparent", border:"none", borderLeft:"3px solid transparent", textAlign:"left", cursor:"pointer", fontSize:".8rem", color:"#555", fontFamily:"'DM Sans',sans-serif", transition:"all .15s" }}
-            onMouseOver={e => e.currentTarget.style.background="#fafaf8"}
-            onMouseOut={e => e.currentTarget.style.background="transparent"}>
-            All Dresses
-          </button>
-
-          {/* Categories section */}
-          <SidebarSection
-            title="Categories"
-            items={POPULATED_CATEGORIES.filter(c => c !== "All")}
-            onItemClick={cat => { setSidebarOpen(false); router.push(`/category/${slugify(cat)}`); }}
-          />
-
-          {/* Brands section */}
-          <SidebarSection
-            title="Brands"
-            items={allBrands}
-            onItemClick={b => { setSidebarOpen(false); router.push(`/brand/${slugify(b)}`); }}
-          />
-        </div>
-      </aside>
+      {/* ── NAV (shared across all pages) ── */}
+      <SharedNav />
 
       {/* ── LAYOUT ── */}
       <div>
@@ -1178,9 +1044,9 @@ export default function App() {
                           View All {cat} →
                         </button>
                       </div>
-                      {/* 4 product preview */}
-                      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))", gap:"20px" }}>
-                        {catProducts.map((p, i) => (
+                      {/* 5 product preview — fixed 5 columns, no blank gap */}
+                      <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:"16px" }}>
+                        {catProducts.slice(0,5).map((p, i) => (
                           <ProductCard key={p.id} p={p} i={i} wishlist={wishlist} toggleWish={toggleWish} onClick={() => router.push(`/product/${p.id}`)} />
                         ))}
                       </div>

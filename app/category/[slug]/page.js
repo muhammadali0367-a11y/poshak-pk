@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
+import SharedNav from "../../SharedNav";
 
 const CATEGORIES = [
   "Lawn","Kurta","Co-ords","Pret / Ready to Wear","Luxury Pret",
@@ -157,10 +158,7 @@ export default function CategoryPage() {
         @media(max-width:768px){.card-img{height:220px;}.cats-row{display:none!important;}}
       `}</style>
 
-      <nav className="nav">
-        <div className="wordmark" onClick={() => router.push("/")}>Poshak<span style={{color:"#c9a96e"}}>.</span>pk</div>
-        <button onClick={() => router.back()} style={{ background:"none", border:"1px solid #e0d8d0", borderRadius:"3px", padding:"6px 14px", cursor:"pointer", fontSize:".7rem", letterSpacing:".1em", textTransform:"uppercase", color:"#888", fontFamily:"'DM Sans',sans-serif" }}>← Back</button>
-      </nav>
+      <SharedNav />
 
       <div style={{ maxWidth:"1240px", margin:"0 auto", padding:"28px 24px" }}>
 

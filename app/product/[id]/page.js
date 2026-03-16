@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
+import SharedNav from "../../SharedNav";
 
 const BADGE_COLORS = { Bestseller:"#b07d4a",New:"#3d8a60",Sale:"#b03030",Exclusive:"#6a4a8a",Premium:"#3a6a9a",Trending:"#9a6a30",Festive:"#8a5a2a" };
 
@@ -104,10 +105,7 @@ export default function ProductPage() {
         @media(max-width:768px){.product-layout{flex-direction:column !important;}.product-img{height:360px !important;}}
       `}</style>
 
-      <nav className="nav">
-        <div className="wordmark" onClick={() => router.push("/")}>Poshak<span style={{color:"#c9a96e"}}>.</span>pk</div>
-        <button onClick={() => router.back()} style={{ background:"none", border:"1px solid #e0d8d0", borderRadius:"3px", padding:"6px 14px", cursor:"pointer", fontSize:".7rem", letterSpacing:".1em", textTransform:"uppercase", color:"#888", fontFamily:"'DM Sans',sans-serif" }}>← Back</button>
-      </nav>
+      <SharedNav />
 
       <div style={{ maxWidth:"1100px", margin:"0 auto", padding:"28px 24px" }}>
 
