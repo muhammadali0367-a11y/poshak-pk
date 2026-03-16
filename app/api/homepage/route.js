@@ -6,7 +6,6 @@ const CATEGORIES = [
   "Luxury Pret", "Lawn", "Abaya", "Shalwar Kameez"
 ]
 
-// Same mapping as products/route.js
 const CATEGORY_FILTERS = {
   "Unstitched":           { product_types:["unstitched"],                                    collections:["unstitched"],                                            tags:["unstitched"] },
   "Bridal":               { product_types:["boutique","bridal","couture","wedding"],          collections:["bridal","wedding","boutique"],                            tags:["bridal","wedding","gharara","sharara","lehenga"] },
@@ -26,7 +25,8 @@ export async function GET() {
   try {
     const sections = {}
 
-    // Fetch 4 products for each category in parallel
+    // Fetch 4 products for each category in parallel — each query is independent
+    // This means we get products from ALL brands, not just Ethnic
     await Promise.all(
       CATEGORIES.map(async (cat) => {
         const f = CATEGORY_FILTERS[cat]
@@ -43,7 +43,7 @@ export async function GET() {
           .select('id, name, brand, price, original_price, product_type, tags, collection, image_url, product_url, in_stock')
           .eq('in_stock', true)
           .or(orParts.join(','))
-          .order('price', { ascending: false })
+          .order('created_at', { ascending: false })
           .limit(4)
 
         if (!error && data && data.length > 0) {
