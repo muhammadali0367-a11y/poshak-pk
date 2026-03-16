@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { useRouter } from "next/navigation";
 
 // ═══════════════════════════════════════════════════════════════════════════════
 //  POSHAK.PK  —  v4.0  Women's Edition
@@ -25,6 +26,10 @@ const BADGE_COLORS     = { Bestseller:"#b07d4a",New:"#3d8a60",Sale:"#b03030",Exc
 
 // ── Category quick tags shown in hero ──
 const QUICK_TAGS = ["Lawn","Bridal","Unstitched","Co-ords","Festive / Eid","Formal","Kurta","Winter Collection"];
+
+function slugify(cat) {
+  return (cat||"").toLowerCase().replace(/\s*\/\s*/g,"-").replace(/\s+/g,"-");
+}
 
 // ═══════════════════════════════════════════════════════════════════════════════
 //  SEARCH ENGINE
@@ -633,6 +638,7 @@ select{appearance:none;-webkit-appearance:none;background-image:url("data:image/
 //  ROOT COMPONENT
 // ═══════════════════════════════════════════════════════════════════════════════
 export default function App() {
+  const router = useRouter();
   const [products,        setProducts]        = useState([]);
   const [homepageSections,setHomepageSections]= useState({});   // { "Lawn": [...4 products] }
   const [allBrands,        setAllBrands]        = useState([]);
@@ -853,11 +859,11 @@ export default function App() {
 
   // ── Stock display helpers ──
   const stockLabel = {
-    checking: { dot:"checking", text:"Checking…",                    color:"#c9a96e" },
-    in_stock: { dot:"in",       text:"In Stock (at last import)",    color:"#3d8a60" },
-    sold_out: { dot:"out",      text:"Sold Out (at last import)",    color:"#b03030" },
-    removed:  { dot:"removed",  text:"Product removed by brand",     color:"#888"    },
-    unknown:  { dot:"in",       text:"Check brand site for stock",   color:"#888"    },
+    checking: { dot:"checking", text:"Checking availability…", color:"#c9a96e" },
+    in_stock: { dot:"in",       text:"In Stock",               color:"#3d8a60" },
+    sold_out: { dot:"out",      text:"Sold Out",               color:"#b03030" },
+    removed:  { dot:"removed",  text:"Product removed by brand", color:"#888"  },
+    unknown:  { dot:"in",       text:"Check brand website",    color:"#888"    },
   };
 
   return (
@@ -878,7 +884,7 @@ export default function App() {
           {POPULATED_CATEGORIES.filter(c=>c!=="All").slice(0,6).map(cat => (
             <button key={cat} className={`filter-btn ${activeCategory===cat?"active":""}`}
               style={{ fontSize:".65rem", padding:"5px 12px" }}
-              onClick={() => setActiveCategory(activeCategory===cat?"All":cat)}>
+              onClick={() => router.push(`/category/${slugify(cat)}`)}>
               {cat}
             </button>
           ))}
@@ -931,7 +937,7 @@ export default function App() {
               const isActive = activeCategory === cat;
               return (
                 <button key={cat}
-                  onClick={() => setActiveCategory(isActive ? "All" : cat)}
+                  onClick={() => router.push(`/category/${slugify(cat)}`)}
                   style={{
                     width:"100%", padding:"9px 20px", background:isActive?"#fdf7ef":"transparent",
                     border:"none", borderLeft:`3px solid ${isActive?"#c9a96e":"transparent"}`,
@@ -1015,7 +1021,7 @@ export default function App() {
             <div style={{ display:"flex", flexWrap:"wrap", gap:"8px", justifyContent:"center" }}>
               {QUICK_TAGS.filter(t => POPULATED_CATEGORIES.includes(t)).map(t => (
                 <button key={t} className={`quick-tag ${activeCategory===t?"active":""}`}
-                  onClick={() => { setActiveCategory(activeCategory===t?"All":t); setQuery(""); }}>
+                  onClick={() => { setActiveCategory(activeCategory===t?"All":t); setQuery(""); router.push(`/category/${slugify(t)}`); }}>
                   {t}
                 </button>
               ))}
@@ -1116,7 +1122,7 @@ export default function App() {
                     )}
                     <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))", gap:"20px" }}>
                       {filtered.map((p, i) => (
-                        <ProductCard key={p.id} p={p} i={i} wishlist={wishlist} toggleWish={toggleWish} onClick={() => setSelectedProduct(p)} />
+                        <ProductCard key={p.id} p={p} i={i} wishlist={wishlist} toggleWish={toggleWish} onClick={() => router.push(`/product/${p.id}`)} />
                       ))}
                     </div>
                     {totalPages > currentPage && (
@@ -1161,11 +1167,14 @@ export default function App() {
                       {/* Section header */}
                       <div style={{ display:"flex", alignItems:"flex-end", justifyContent:"space-between", marginBottom:"16px", paddingBottom:"12px", borderBottom:"1px solid #e8e0d8" }}>
                         <div>
-                          <h2 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"1.55rem", fontWeight:400, color:"#2a2420" }}>{cat}</h2>
+                          <h2 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"1.55rem", fontWeight:400, color:"#2a2420", cursor:"pointer" }}
+                            onClick={() => router.push(`/category/${slugify(cat)}`)}>
+                            {cat}
+                          </h2>
                           <p style={{ fontSize:".68rem", color:"#bbb", marginTop:"3px", letterSpacing:".08em" }}>{catProducts.length} dresses</p>
                         </div>
                         <button
-                          onClick={() => setActiveCategory(cat)}
+                          onClick={() => router.push(`/category/${slugify(cat)}`)}
                           className="filter-btn"
                           style={{ fontSize:".68rem", color:"#c9a96e", borderColor:"#e8d5b0" }}>
                           View All {cat} →
@@ -1174,13 +1183,13 @@ export default function App() {
                       {/* 4 product preview */}
                       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))", gap:"20px" }}>
                         {catProducts.map((p, i) => (
-                          <ProductCard key={p.id} p={p} i={i} wishlist={wishlist} toggleWish={toggleWish} onClick={() => setSelectedProduct(p)} />
+                          <ProductCard key={p.id} p={p} i={i} wishlist={wishlist} toggleWish={toggleWish} onClick={() => router.push(`/product/${p.id}`)} />
                         ))}
                       </div>
                       {/* View all button */}
                       <div style={{ textAlign:"center", marginTop:"16px" }}>
                         <button
-                          onClick={() => setActiveCategory(cat)}
+                          onClick={() => router.push(`/category/${slugify(cat)}`)}
                           style={{ background:"none", border:"1px solid #e0d8d0", borderRadius:"4px", padding:"10px 28px", cursor:"pointer", fontSize:".72rem", letterSpacing:".14em", textTransform:"uppercase", color:"#888", fontFamily:"'DM Sans',sans-serif", transition:"all .2s" }}
                           onMouseOver={e => { e.target.style.borderColor="#c9a96e"; e.target.style.color="#c9a96e"; }}
                           onMouseOut={e => { e.target.style.borderColor="#e0d8d0"; e.target.style.color="#888"; }}>
@@ -1258,7 +1267,6 @@ export default function App() {
                 <span style={{ fontSize:".72rem", color:stockLabel[liveStock]?.color||"#888", fontWeight:500 }}>
                   {stockLabel[liveStock]?.text || "Checking…"}
                 </span>
-                <span style={{ fontSize:".65rem", color:"#bbb", marginLeft:"auto" }}>Last import</span>
               </div>
 
               {/* Product details */}
