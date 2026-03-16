@@ -744,8 +744,10 @@ export default function App() {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
+  }, []);
 
-    // Fetch all brands for sidebar
+  // ── Fetch all brands separately — always runs regardless of homepage cache ──
+  useEffect(() => {
     fetch("/api/brands")
       .then(r => r.json())
       .then(json => { if (json.brands) setAllBrands(json.brands); })
