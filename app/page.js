@@ -912,7 +912,7 @@ export default function App() {
                 fontWeight:activeCategory==="All"?"500":"400", transition:"all .15s",
               }}>
               All Dresses
-              <span style={{ float:"right", fontSize:".7rem", color:"#bbb" }}>{products.length}</span>
+              <span style={{ float:"right", fontSize:".7rem", color:"#bbb" }}>{allHomepageProducts.length > 0 ? allHomepageProducts.length + "+" : ""}</span>
             </button>
 
             <div style={{ padding:"14px 20px 6px", fontSize:".58rem", letterSpacing:".22em", textTransform:"uppercase", color:"#bbb" }}>
@@ -921,7 +921,7 @@ export default function App() {
 
             {/* Only populated categories */}
             {POPULATED_CATEGORIES.filter(c => c !== "All").map(cat => {
-              const count = products.filter(p => (p.categories || [p.category]).includes(cat)).length;
+              const count = (homepageSections[cat] || []).length > 0 ? "✓" : "";
               const isActive = activeCategory === cat;
               return (
                 <button key={cat}
