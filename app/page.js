@@ -743,8 +743,8 @@ export default function App() {
 
   // ── Load products when filter/search/category changes ─────────────────────
   useEffect(() => {
-    if (activeCategory === "All" && !query && !color && !fabric && !occasion && !priceRange && !brand) return;
-    if (activeCategory === "All" && !query) return;
+    const hasFilter = activeCategory !== "All" || query.trim() || brand !== "All Brands" || priceRange !== "All Prices";
+    if (!hasFilter) return;
 
     setLoadingMore(true);
     setCurrentPage(1);
@@ -833,7 +833,7 @@ export default function App() {
       }).slice(0, 6)
     : [];
 
-  const isFiltering = query || activeCategory !== "All" || color !== "All" || fabric !== "All Fabrics" || occasion !== "All Occasions" || priceRange !== "All Prices" || brand !== "All Brands";
+  const isFiltering = query || activeCategory !== "All" || brand !== "All Brands" || color !== "All" || fabric !== "All Fabrics" || occasion !== "All Occasions" || priceRange !== "All Prices";
 
   const activeFilterCount = [activeCategory!=="All", color!=="All", fabric!=="All Fabrics", occasion!=="All Occasions", priceRange!=="All Prices", brand!=="All Brands"].filter(Boolean).length;
 
