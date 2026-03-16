@@ -10,9 +10,6 @@ import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 // ═══════════════════════════════════════════════════════════════════════════════
 
 // ── Replace YOUR_SHEET_ID with your Google Sheet published CSV ID ──
-const GOOGLE_SHEET_CSV_URL =
-  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQjuWejNvV1eOM9H1abXWMB-wAJMN2reQNNY1jWWx6dap-x2OTwdMzK5uK3DO05Bq6g0appKglzUDl4/pub?gid=0&single=true&output=csv";
-
 // ── Women's categories only ──
 const CATEGORIES = [
   "All","Lawn","Kurta","Co-ords","Pret / Ready to Wear","Luxury Pret",
@@ -637,7 +634,12 @@ select{appearance:none;-webkit-appearance:none;background-image:url("data:image/
 // ═══════════════════════════════════════════════════════════════════════════════
 export default function App() {
   const [products,        setProducts]        = useState([]);
+  const [homepageSections,setHomepageSections]= useState({});   // { "Lawn": [...4 products] }
   const [loading,         setLoading]         = useState(true);
+  const [loadingMore,     setLoadingMore]     = useState(false);
+  const [totalResults,    setTotalResults]    = useState(0);
+  const [currentPage,     setCurrentPage]     = useState(1);
+  const [totalPages,      setTotalPages]      = useState(1);
   const [dataSource,      setDataSource]      = useState("loading");
   const [sidebarOpen,     setSidebarOpen]     = useState(false);
   const [activeCategory,  setActiveCategory]  = useState("All");
@@ -652,36 +654,61 @@ export default function App() {
   const [filtersOpen,     setFiltersOpen]     = useState(false);
   const [suggestions,     setSuggestions]     = useState([]);
   const [showSugg,        setShowSugg]        = useState(false);
-  // Live stock state for open product
-  const [liveStock,       setLiveStock]       = useState("checking"); // checking|in_stock|sold_out|removed|unknown
+  const [liveStock,       setLiveStock]       = useState("checking");
   const searchRef = useRef(null);
 
-  // ── Load products from Google Sheet ──
-  useEffect(() => {
-    if (GOOGLE_SHEET_CSV_URL.includes("YOUR_SHEET_ID")) {
-      setLoading(false);
-      return;
-    }
+  // ── Parse price range ──────────────────────────────────────────────────────
+  function parsePriceRange(pr) {
+    if (!pr || pr === "All Prices") return [null, null];
+    const m = pr.match(/Rs\s*([\d,]+)\s*–\s*Rs\s*([\d,]+)/);
+    if (m) return [parseInt(m[1].replace(/,/g,'')), parseInt(m[2].replace(/,/g,''))];
+    const u = pr.match(/Under Rs\s*([\d,]+)/);
+    if (u) return [null, parseInt(u[1].replace(/,/g,''))];
+    const o = pr.match(/Over Rs\s*([\d,]+)/);
+    if (o) return [parseInt(o[1].replace(/,/g,'')), null];
+    return [null, null];
+  }
 
-    // Try cache first for instant load on repeat visits
-    const CACHE_KEY = "poshak_products_v1";
-    const CACHE_TTL = 30 * 60 * 1000; // 30 minutes
+  // ── Process raw product from API (derive category/color/fabric/etc) ────────
+  function processProduct(p) {
+    const categories = deriveCategory(p.product_type, p.tags, p.collection);
+    const color      = deriveColor(p.tags, p.name);
+    const fabric     = deriveFabric(p.tags, p.product_type, p.name);
+    const occasion   = deriveOccasion(p.tags, p.collection, categories[0], p.name);
+    const badge      = deriveBadge(p.tags, p.name, p.original_price, p.price);
+    return {
+      ...p,
+      categories,
+      category:  categories[0],
+      color, fabric, occasion, badge,
+      image: p.image_url,
+      in_stock: p.in_stock !== false,
+    };
+  }
+
+  // ── Load homepage sections ─────────────────────────────────────────────────
+  useEffect(() => {
+    const CACHE_KEY = "poshak_homepage_v2";
+    const CACHE_TTL = 30 * 60 * 1000;
+
     try {
       const cached = sessionStorage.getItem(CACHE_KEY);
       if (cached) {
         const { data, timestamp } = JSON.parse(cached);
-        if (Date.now() - timestamp < CACHE_TTL && data.length > 0) {
-          setProducts(data);
-          setDataSource("sheets");
+        if (Date.now() - timestamp < CACHE_TTL) {
+          setHomepageSections(data);
           setLoading(false);
-          // Still refresh in background silently
-          fetch(GOOGLE_SHEET_CSV_URL)
-            .then(r => r.text())
-            .then(csv => {
-              const p = parseCSV(csv);
-              if (p.length) {
-                setProducts(p);
-                sessionStorage.setItem(CACHE_KEY, JSON.stringify({ data: p, timestamp: Date.now() }));
+          // Refresh in background
+          fetch("/api/homepage")
+            .then(r => r.json())
+            .then(json => {
+              if (json.sections) {
+                const processed = {};
+                for (const [cat, prods] of Object.entries(json.sections)) {
+                  processed[cat] = prods.map(processProduct);
+                }
+                setHomepageSections(processed);
+                sessionStorage.setItem(CACHE_KEY, JSON.stringify({ data: processed, timestamp: Date.now() }));
               }
             }).catch(() => {});
           return;
@@ -689,22 +716,56 @@ export default function App() {
       }
     } catch(e) {}
 
-    // No cache — fetch fresh
-    fetch(GOOGLE_SHEET_CSV_URL)
-      .then(r => r.text())
-      .then(csv => {
-        const p = parseCSV(csv);
-        if (p.length) {
-          setProducts(p);
-          setDataSource("sheets");
+    fetch("/api/homepage")
+      .then(r => r.json())
+      .then(json => {
+        if (json.sections) {
+          const processed = {};
+          for (const [cat, prods] of Object.entries(json.sections)) {
+            processed[cat] = prods.map(processProduct);
+          }
+          setHomepageSections(processed);
           try {
-            sessionStorage.setItem(CACHE_KEY, JSON.stringify({ data: p, timestamp: Date.now() }));
+            sessionStorage.setItem(CACHE_KEY, JSON.stringify({ data: processed, timestamp: Date.now() }));
           } catch(e) {}
         }
       })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
+
+  // ── Load products when filter/search/category changes ─────────────────────
+  useEffect(() => {
+    if (activeCategory === "All" && !query && !color && !fabric && !occasion && !priceRange && !brand) return;
+    if (activeCategory === "All" && !query) return;
+
+    setLoadingMore(true);
+    setCurrentPage(1);
+
+    const [minP, maxP] = parsePriceRange(priceRange);
+
+    const isSearching = query.trim().length > 0;
+    const endpoint = isSearching ? "/api/search" : "/api/products";
+    const params = new URLSearchParams({ page: 1 });
+
+    if (isSearching)              params.set("q", query.trim());
+    if (activeCategory !== "All") params.set("category", activeCategory);
+    if (brand !== "All Brands")   params.set("brand", brand);
+    if (minP)                     params.set("min_price", minP);
+    if (maxP)                     params.set("max_price", maxP);
+
+    fetch(`${endpoint}?${params}`)
+      .then(r => r.json())
+      .then(json => {
+        const prods = (json.products || []).map(processProduct);
+        setProducts(prods);
+        setTotalResults(json.total || prods.length);
+        setTotalPages(json.pages || 1);
+        setDataSource("supabase");
+      })
+      .catch(() => {})
+      .finally(() => setLoadingMore(false));
+  }, [query, activeCategory, color, fabric, occasion, priceRange, brand]);
 
   // ── Lock scroll when modal open + trigger live stock check ──
   useEffect(() => {
@@ -730,27 +791,42 @@ export default function App() {
     return () => document.removeEventListener("mousedown", h);
   }, []);
 
-  // ── Derived state ──
-  const indexed  = useMemo(() => buildIndex(products), [products]);
-  const BRANDS   = useMemo(() => ["All Brands", ...Array.from(new Set(products.map(p => p.brand))).sort()], [products]);
-  const filters  = { category:activeCategory, color, fabric, occasion, priceRange, brand };
-  const filtered = useMemo(() => smartSearch(indexed, query, filters), [indexed, query, activeCategory, color, fabric, occasion, priceRange, brand]);
+  // ── Derived state ──────────────────────────────────────────────────────────
+  // For search/filter views use the loaded products
+  // For homepage use homepageSections
+  const allHomepageProducts = useMemo(() =>
+    Object.values(homepageSections).flat(), [homepageSections]);
 
-  // Only show categories that actually have products — auto-hides empty ones
+  const indexed  = useMemo(() => buildIndex(products.length > 0 ? products : allHomepageProducts), [products, allHomepageProducts]);
+  const BRANDS   = useMemo(() => ["All Brands", ...Array.from(new Set(allHomepageProducts.map(p => p.brand))).sort()], [allHomepageProducts]);
+
+  // Client-side filter on loaded products (color/fabric/occasion filters)
+  const filtered = useMemo(() => {
+    if (products.length === 0) return [];
+    return products.filter(p => {
+      if (color !== "All" && p.color !== color) return false;
+      if (fabric !== "All Fabrics" && p.fabric !== fabric) return false;
+      if (occasion !== "All Occasions" && p.occasion !== occasion) return false;
+      return true;
+    });
+  }, [products, color, fabric, occasion]);
+
   const POPULATED_CATEGORIES = useMemo(() => {
-    const withProducts = new Set();
-    products.forEach(p => (p.categories || [p.category]).forEach(c => withProducts.add(c)));
+    const withProducts = new Set(Object.keys(homepageSections));
     return CATEGORIES.filter(cat => cat === "All" || withProducts.has(cat));
-  }, [products]);
+  }, [homepageSections]);
 
+  // For similar products use homepage data
   const similar = selectedProduct
-    ? products.filter(p => {
+    ? allHomepageProducts.filter(p => {
         if (p.id === selectedProduct.id) return false;
         const pCats = p.categories || [p.category];
         const sCats = selectedProduct.categories || [selectedProduct.category];
         return pCats.some(c => sCats.includes(c));
       }).slice(0, 6)
     : [];
+
+  const isFiltering = query || activeCategory !== "All" || color !== "All" || fabric !== "All Fabrics" || occasion !== "All Occasions" || priceRange !== "All Prices" || brand !== "All Brands";
 
   const activeFilterCount = [activeCategory!=="All", color!=="All", fabric!=="All Fabrics", occasion!=="All Occasions", priceRange!=="All Prices", brand!=="All Brands"].filter(Boolean).length;
 
@@ -983,7 +1059,7 @@ export default function App() {
                 <button className="filter-btn" onClick={clearAll} style={{ color:"#b03030", borderColor:"#f0c0c0" }}>Clear All</button>
               )}
               <span style={{ fontSize:".7rem", color:"#bbb", marginLeft:"auto", letterSpacing:".08em" }}>
-                {filtered.length} dresses
+                {isFiltering ? `${totalResults} dresses` : ""}
               </span>
             </div>
 
@@ -1007,10 +1083,15 @@ export default function App() {
               </div>
             </div>
 
-            {/* ── SEARCH RESULTS — flat grid ── */}
-            {(query || activeCategory !== "All" || activeFilterCount > 0) ? (
+            {/* ── SEARCH/FILTER RESULTS — flat grid ── */}
+            {isFiltering ? (
               <>
-                {filtered.length === 0 ? (
+                {loadingMore ? (
+                  <div style={{ textAlign:"center", padding:"60px 0", color:"#c9a96e" }}>
+                    <div style={{ fontSize:"1.5rem", marginBottom:"12px" }}>◌</div>
+                    <p style={{ fontSize:".8rem", letterSpacing:".1em" }}>Searching...</p>
+                  </div>
+                ) : filtered.length === 0 ? (
                   <div style={{ textAlign:"center", padding:"80px 0", color:"#ccc" }}>
                     <div style={{ fontSize:"3rem", marginBottom:"16px" }}>◌</div>
                     <p style={{ fontSize:".85rem" }}>No dresses found</p>
@@ -1024,7 +1105,7 @@ export default function App() {
                         <h2 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"1.6rem", fontWeight:400, color:"#2a2420" }}>
                           {activeCategory}
                         </h2>
-                        <p style={{ fontSize:".7rem", color:"#aaa", marginTop:"4px", letterSpacing:".08em" }}>{filtered.length} dresses</p>
+                        <p style={{ fontSize:".7rem", color:"#aaa", marginTop:"4px", letterSpacing:".08em" }}>{totalResults} dresses</p>
                       </div>
                     )}
                     <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))", gap:"20px" }}>
@@ -1032,6 +1113,34 @@ export default function App() {
                         <ProductCard key={p.id} p={p} i={i} wishlist={wishlist} toggleWish={toggleWish} onClick={() => setSelectedProduct(p)} />
                       ))}
                     </div>
+                    {totalPages > currentPage && (
+                      <div style={{ textAlign:"center", marginTop:"32px" }}>
+                        <button
+                          onClick={() => {
+                            const nextPage = currentPage + 1;
+                            setCurrentPage(nextPage);
+                            const [minP, maxP] = parsePriceRange(priceRange);
+                            const params = new URLSearchParams({ page: nextPage });
+                            if (query)                    params.set("q", query);
+                            if (activeCategory !== "All") params.set("category", activeCategory);
+                            if (brand !== "All Brands")   params.set("brand", brand);
+                            if (minP) params.set("min_price", minP);
+                            if (maxP) params.set("max_price", maxP);
+                            const endpoint = query ? "/api/search" : "/api/products";
+                            fetch(`${endpoint}?${params}`)
+                              .then(r => r.json())
+                              .then(json => {
+                                const more = (json.products || []).map(processProduct);
+                                setProducts(prev => [...prev, ...more]);
+                                setTotalPages(json.pages || 1);
+                              });
+                          }}
+                          className="filter-btn"
+                          style={{ padding:"12px 40px", fontSize:".75rem" }}>
+                          Load More
+                        </button>
+                      </div>
+                    )}
                   </>
                 )}
               </>
@@ -1039,9 +1148,8 @@ export default function App() {
               /* ── HOMEPAGE — category sections with 4 products + View All ── */
               <div>
                 {POPULATED_CATEGORIES.filter(c => c !== "All").map(cat => {
-                  const catProducts = products.filter(p => (p.categories || [p.category]).includes(cat));
+                  const catProducts = homepageSections[cat] || [];
                   if (catProducts.length === 0) return null;
-                  const preview = catProducts.slice(0, 4);
                   return (
                     <div key={cat} style={{ marginBottom:"48px" }}>
                       {/* Section header */}
@@ -1059,22 +1167,20 @@ export default function App() {
                       </div>
                       {/* 4 product preview */}
                       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))", gap:"20px" }}>
-                        {preview.map((p, i) => (
+                        {catProducts.map((p, i) => (
                           <ProductCard key={p.id} p={p} i={i} wishlist={wishlist} toggleWish={toggleWish} onClick={() => setSelectedProduct(p)} />
                         ))}
                       </div>
-                      {/* View all link if more than 4 */}
-                      {catProducts.length > 4 && (
-                        <div style={{ textAlign:"center", marginTop:"16px" }}>
-                          <button
-                            onClick={() => setActiveCategory(cat)}
-                            style={{ background:"none", border:"1px solid #e0d8d0", borderRadius:"4px", padding:"10px 28px", cursor:"pointer", fontSize:".72rem", letterSpacing:".14em", textTransform:"uppercase", color:"#888", fontFamily:"'DM Sans',sans-serif", transition:"all .2s" }}
-                            onMouseOver={e => { e.target.style.borderColor="#c9a96e"; e.target.style.color="#c9a96e"; }}
-                            onMouseOut={e => { e.target.style.borderColor="#e0d8d0"; e.target.style.color="#888"; }}>
-                            View all {catProducts.length} {cat} dresses →
-                          </button>
-                        </div>
-                      )}
+                      {/* View all button */}
+                      <div style={{ textAlign:"center", marginTop:"16px" }}>
+                        <button
+                          onClick={() => setActiveCategory(cat)}
+                          style={{ background:"none", border:"1px solid #e0d8d0", borderRadius:"4px", padding:"10px 28px", cursor:"pointer", fontSize:".72rem", letterSpacing:".14em", textTransform:"uppercase", color:"#888", fontFamily:"'DM Sans',sans-serif", transition:"all .2s" }}
+                          onMouseOver={e => { e.target.style.borderColor="#c9a96e"; e.target.style.color="#c9a96e"; }}
+                          onMouseOut={e => { e.target.style.borderColor="#e0d8d0"; e.target.style.color="#888"; }}>
+                          View all {cat} dresses →
+                        </button>
+                      </div>
                     </div>
                   );
                 })}

@@ -1,88 +1,56 @@
 import { supabase } from '../supabaseClient'
 
 const CATEGORIES = [
-  "Lawn", "Pret / Ready to Wear", "Formal", "Festive / Eid",
-  "Unstitched", "Luxury Pret", "Winter Collection", "Bridal",
-  "Co-ords", "Kurta", "Abaya", "Shalwar Kameez"
+  "Pret / Ready to Wear", "Unstitched", "Kurta", "Formal",
+  "Bridal", "Co-ords", "Winter Collection", "Festive / Eid",
+  "Luxury Pret", "Lawn", "Abaya", "Shalwar Kameez"
 ]
 
-function getCategory(collection, tags, product_type) {
-  const col = (collection || "").toLowerCase()
-  const all = `${col} ${(tags||"").toLowerCase()} ${(product_type||"").toLowerCase()}`
-
-  const MAP = [
-    [["formal-pret","formal-wear","formals","semi-formal","evening-wear"], "Formal"],
-    [["luxury-pret","premium-pret","signature-collection","glam"],         "Luxury Pret"],
-    [["bridal","wedding-festive","wedding-collection","wedding-wear"],      "Bridal"],
-    [["eid-collection","festive","festive-pret","eid-festive","eid-pret"],  "Festive / Eid"],
-    [["winter-pret","khaddar-collection","karandi","winter-suits","winter-collection","winter"], "Winter Collection"],
-    [["unstitched","luxury-unstitched"],                                    "Unstitched"],
-    [["lawn","printed-pret-3","printed-pret-lawn","embroidered-pret-lawn"], "Lawn"],
-    [["abaya"],                                                             "Abaya"],
-    [["co-ord","coord-set"],                                                "Co-ords"],
-    [["kurta"],                                                             "Kurta"],
-    [["shalwar-kameez"],                                                    "Shalwar Kameez"],
-    [["pret","ready-to-wear","rtw","casual-pret","summer-pret"],            "Pret / Ready to Wear"],
-  ]
-  for (const [keys, cat] of MAP) {
-    if (keys.some(k => col.includes(k))) return cat
-  }
-  // Tags fallback
-  if (all.includes("unstitched"))                      return "Unstitched"
-  if (all.includes("luxury pret"))                     return "Luxury Pret"
-  if (all.match(/bridal|bride|gharara|sharara|lehenga/)) return "Bridal"
-  if (all.includes("abaya"))                           return "Abaya"
-  if (all.match(/\bco-ord\b|coord set/))               return "Co-ords"
-  if (all.match(/\bfestive\b|\beid\b/))                return "Festive / Eid"
-  if (all.match(/khaddar|karandi|\bwinter\b/))         return "Winter Collection"
-  if (all.includes("lawn"))                            return "Lawn"
-  if (all.match(/\bkurta\b|\bkurti\b/))                return "Kurta"
-  if (all.match(/shalwar|kameez/))                     return "Shalwar Kameez"
-  if (all.match(/\bformal\b|evening wear/))            return "Formal"
-  return "Pret / Ready to Wear"
+// Same mapping as products/route.js
+const CATEGORY_FILTERS = {
+  "Unstitched":           { product_types:["unstitched"],                                    collections:["unstitched"],                                            tags:["unstitched"] },
+  "Bridal":               { product_types:["boutique","bridal","couture","wedding"],          collections:["bridal","wedding","boutique"],                            tags:["bridal","wedding","gharara","sharara","lehenga"] },
+  "Formal":               { product_types:["semi-formal","formal","evening"],                 collections:["formal","semi-formal","evening"],                         tags:["semi-formal","formal wear"] },
+  "Luxury Pret":          { product_types:["luxury","premium","signature","glam"],            collections:["luxury-pret","premium","signature","glam"],               tags:["luxury pret","premium"] },
+  "Festive / Eid":        { product_types:["festive","eid"],                                  collections:["festive","eid"],                                          tags:["festive","eid"] },
+  "Winter Collection":    { product_types:["khaddar","karandi","winter","fleece"],            collections:["winter","khaddar","karandi"],                             tags:["khaddar","karandi","winter"] },
+  "Lawn":                 { product_types:["lawn"],                                           collections:["lawn"],                                                   tags:["lawn"] },
+  "Co-ords":              { product_types:["co-ord","coord"],                                 collections:["co-ord","coord"],                                         tags:["co-ord set","co-ord"] },
+  "Kurta":                { product_types:["boho","kurti","kurta","basic"],                   collections:["kurta","kurti","boho"],                                   tags:["kurti","kurta","boho"] },
+  "Abaya":                { product_types:["abaya"],                                          collections:["abaya"],                                                  tags:["abaya"] },
+  "Shalwar Kameez":       { product_types:["shalwar"],                                        collections:["shalwar-kameez"],                                         tags:["shalwar kameez"] },
+  "Pret / Ready to Wear": { product_types:["pret","ready","casual","special price","studio"], collections:["pret","ready-to-wear","women-eastern","women-view","casual","between-casual","flaws-all-pret"], tags:["pret","ready to wear"] },
 }
 
 export async function GET() {
   try {
-    const byCategory = {}
-    for (const cat of CATEGORIES) byCategory[cat] = []
-
-    // Fetch products in batches of 1000 until all categories have 4 products
-    let from = 0
-    const batchSize = 1000
-
-    while (true) {
-      // Check if all categories are filled
-      const allFilled = CATEGORIES.every(cat => byCategory[cat].length >= 4)
-      if (allFilled) break
-
-      const { data, error } = await supabase
-        .from('products')
-        .select('id, name, brand, price, original_price, product_type, tags, collection, image_url, product_url, in_stock')
-        .eq('in_stock', true)
-        .range(from, from + batchSize - 1)
-
-      if (error) throw error
-      if (!data || data.length === 0) break
-
-      for (const p of data) {
-        const cat = getCategory(p.collection, p.tags, p.product_type)
-        if (byCategory[cat] && byCategory[cat].length < 4) {
-          byCategory[cat].push(p)
-        }
-      }
-
-      from += batchSize
-      if (data.length < batchSize) break // last page
-    }
-
-    // Filter out empty categories
     const sections = {}
-    for (const cat of CATEGORIES) {
-      if (byCategory[cat].length > 0) {
-        sections[cat] = byCategory[cat]
-      }
-    }
+
+    // Fetch 4 products for each category in parallel
+    await Promise.all(
+      CATEGORIES.map(async (cat) => {
+        const f = CATEGORY_FILTERS[cat]
+        if (!f) return
+
+        const orParts = [
+          ...f.collections.map(k   => `collection.ilike.%${k}%`),
+          ...f.product_types.map(k => `product_type.ilike.%${k}%`),
+          ...f.tags.map(k          => `tags.ilike.%${k}%`),
+        ]
+
+        const { data, error } = await supabase
+          .from('products')
+          .select('id, name, brand, price, original_price, product_type, tags, collection, image_url, product_url, in_stock')
+          .eq('in_stock', true)
+          .or(orParts.join(','))
+          .order('price', { ascending: false })
+          .limit(4)
+
+        if (!error && data && data.length > 0) {
+          sections[cat] = data
+        }
+      })
+    )
 
     return Response.json({ sections })
   } catch (err) {
