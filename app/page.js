@@ -875,8 +875,11 @@ export default function App() {
     <div style={{ fontFamily:"'DM Sans',sans-serif", background:"linear-gradient(160deg,#fdfcfb 0%,#f5f0eb 40%,#ede8e0 100%)", minHeight:"100vh", color:"#2a2420" }}>
       <style>{CSS}</style>
 
+      {/* Click-away to close All dropdown — must be BEFORE nav in DOM */}
+      {showAllDropdown && <div style={{ position:"fixed", inset:0, zIndex:199 }} onClick={() => setShowAllDropdown(false)} />}
+
       {/* ── NAV ── */}
-      <nav className="nav" style={{ gap:"12px" }}>
+      <nav className="nav" style={{ gap:"12px", zIndex:200 }}>
         {/* Left: hamburger + logo */}
         <div style={{ display:"flex", alignItems:"center", gap:"12px", flexShrink:0 }}>
           <button className="hamburger" onClick={() => setSidebarOpen(v => !v)} aria-label="Toggle categories">
@@ -901,7 +904,7 @@ export default function App() {
 
             {/* Mega dropdown */}
             {showAllDropdown && (
-              <div style={{ position:"absolute", top:"calc(100% + 8px)", left:0, background:"#fff", border:"1px solid #e0d8d0", borderRadius:"10px", boxShadow:"0 12px 40px rgba(0,0,0,.12)", zIndex:400, padding:"20px", display:"flex", gap:"40px", minWidth:"420px" }}>
+              <div style={{ position:"fixed", top:"62px", left:"50%", transform:"translateX(-50%)", background:"#fff", border:"1px solid #e0d8d0", borderRadius:"10px", boxShadow:"0 12px 40px rgba(0,0,0,.15)", zIndex:300, padding:"20px 24px", display:"flex", gap:"32px", width:"min(520px, 95vw)", maxHeight:"80vh", overflowY:"auto" }}>
                 {/* Categories column */}
                 <div>
                   <div style={{ fontSize:".6rem", letterSpacing:".22em", textTransform:"uppercase", color:"#c9a96e", marginBottom:"12px", fontWeight:600 }}>Categories</div>
@@ -968,9 +971,6 @@ export default function App() {
           {wishlist.length>0 && <span style={{ fontSize:".72rem", color:"#c9a96e" }}>♥ {wishlist.length}</span>}
         </div>
       </nav>
-
-      {/* Click-away to close All dropdown */}
-      {showAllDropdown && <div style={{ position:"fixed", inset:0, zIndex:298 }} onClick={() => setShowAllDropdown(false)} />}
 
       {/* ── SIDEBAR OVERLAY ── */}
       <div className={`sb-overlay ${sidebarOpen?"open":""}`} onClick={() => setSidebarOpen(false)} />
