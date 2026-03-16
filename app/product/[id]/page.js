@@ -38,7 +38,11 @@ export default function ProductPage() {
       .then(r => r.json())
       .then(json => {
         if (json.product) {
-          setProduct(json.product);
+          setProduct({
+            ...json.product,
+            price: Number(json.product.price) || 0,
+            original_price: Number(json.product.original_price) || 0,
+          });
           // Check live stock after setting product
           checkLiveStock(json.product.product_url).then(setLiveStock);
           // Fetch similar products
@@ -143,9 +147,9 @@ export default function ProductPage() {
             <h1 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"2rem", fontWeight:400, color:"#2a2420", lineHeight:1.25, marginBottom:"16px" }}>{product.name}</h1>
 
             <div style={{ marginBottom:"20px" }}>
-              <span style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"2rem", color:"#2a2420" }}>Rs. {product.price.toLocaleString()}</span>
+              <span style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"2rem", color:"#2a2420" }}>Rs. {(product.price||0).toLocaleString()}</span>
               {product.original_price > product.price && (
-                <span style={{ fontSize:".95rem", textDecoration:"line-through", color:"#bbb", marginLeft:"12px" }}>Rs. {product.original_price.toLocaleString()}</span>
+                <span style={{ fontSize:".95rem", textDecoration:"line-through", color:"#bbb", marginLeft:"12px" }}>Rs. {(product.original_price||0).toLocaleString()}</span>
               )}
             </div>
 
@@ -198,7 +202,7 @@ export default function ProductPage() {
                   <div style={{ padding:"10px" }}>
                     <div style={{ fontSize:".56rem", letterSpacing:".12em", textTransform:"uppercase", color:"#c9a96e", marginBottom:"3px" }}>{sp.brand}</div>
                     <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:".88rem", color:"#2a2420", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", marginBottom:"4px" }}>{sp.name}</div>
-                    <div style={{ fontSize:".75rem", color:"#aaa" }}>Rs. {sp.price.toLocaleString()}</div>
+                    <div style={{ fontSize:".75rem", color:"#aaa" }}>Rs. {(sp.price||0).toLocaleString()}</div>
                   </div>
                 </div>
               ))}

@@ -684,12 +684,16 @@ export default function App() {
     const fabric     = deriveFabric(p.tags, p.product_type, p.name);
     const occasion   = deriveOccasion(p.tags, p.collection, categories[0], p.name);
     const badge      = deriveBadge(p.tags, p.name, p.original_price, p.price);
+    const price      = Number(p.price) || 0;
+    const original_price = Number(p.original_price) || 0;
     return {
       ...p,
+      price,
+      original_price,
       categories,
       category:  categories[0],
       color, fabric, occasion, badge,
-      image: p.image_url,
+      image: p.image_url || "",
       in_stock: p.in_stock !== false,
     };
   }
@@ -897,7 +901,7 @@ export default function App() {
 
             {/* Mega dropdown */}
             {showAllDropdown && (
-              <div style={{ position:"absolute", top:"calc(100% + 8px)", left:0, background:"#fff", border:"1px solid #e0d8d0", borderRadius:"10px", boxShadow:"0 12px 40px rgba(0,0,0,.12)", zIndex:300, padding:"20px", display:"flex", gap:"40px", minWidth:"420px" }}>
+              <div style={{ position:"absolute", top:"calc(100% + 8px)", left:0, background:"#fff", border:"1px solid #e0d8d0", borderRadius:"10px", boxShadow:"0 12px 40px rgba(0,0,0,.12)", zIndex:400, padding:"20px", display:"flex", gap:"40px", minWidth:"420px" }}>
                 {/* Categories column */}
                 <div>
                   <div style={{ fontSize:".6rem", letterSpacing:".22em", textTransform:"uppercase", color:"#c9a96e", marginBottom:"12px", fontWeight:600 }}>Categories</div>
@@ -966,7 +970,7 @@ export default function App() {
       </nav>
 
       {/* Click-away to close All dropdown */}
-      {showAllDropdown && <div style={{ position:"fixed", inset:0, zIndex:299 }} onClick={() => setShowAllDropdown(false)} />}
+      {showAllDropdown && <div style={{ position:"fixed", inset:0, zIndex:298 }} onClick={() => setShowAllDropdown(false)} />}
 
       {/* ── SIDEBAR OVERLAY ── */}
       <div className={`sb-overlay ${sidebarOpen?"open":""}`} onClick={() => setSidebarOpen(false)} />
@@ -1238,11 +1242,11 @@ export default function App() {
                 </div>
                 <div style={{ textAlign:"right", flexShrink:0 }}>
                   <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"1.55rem", color:"#2a2420" }}>
-                    Rs. {selectedProduct.price.toLocaleString()}
+                    Rs. {(selectedProduct.price||0).toLocaleString()}
                   </div>
                   {selectedProduct.original_price > selectedProduct.price && (
                     <div style={{ fontSize:".8rem", color:"#bbb", textDecoration:"line-through" }}>
-                      Rs. {selectedProduct.original_price.toLocaleString()}
+                      Rs. {(selectedProduct.original_price||0).toLocaleString()}
                     </div>
                   )}
                   <button onClick={e => toggleWish(selectedProduct.id, e)}
@@ -1317,7 +1321,7 @@ export default function App() {
                         <div style={{ padding:"8px" }}>
                           <div style={{ fontSize:".56rem", letterSpacing:".12em", textTransform:"uppercase", color:"#c9a96e", marginBottom:"2px" }}>{sp.brand}</div>
                           <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:".82rem", color:"#2a2420", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", marginBottom:"3px" }}>{sp.name}</div>
-                          <div style={{ fontSize:".7rem", color:"#aaa" }}>Rs. {sp.price.toLocaleString()}</div>
+                          <div style={{ fontSize:".7rem", color:"#aaa" }}>Rs. {(sp.price||0).toLocaleString()}</div>
                         </div>
                       </div>
                     ))}
@@ -1334,7 +1338,7 @@ export default function App() {
 
 // ─── SIDEBAR SECTION (collapsible) ───────────────────────────────────────────
 function SidebarSection({ title, items, onItemClick }) {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
   return (
     <div style={{ borderTop:"1px solid #f0ebe4", marginTop:"4px" }}>
       <button
@@ -1478,9 +1482,9 @@ function ProductCard({ p, i, wishlist, toggleWish, onClick }) {
             <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"1rem", color:"#2a2420", lineHeight:1.3, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical" }}>{p.name}</div>
           </div>
           <div style={{ textAlign:"right", flexShrink:0 }}>
-            <div style={{ fontSize:".88rem", fontWeight:500, color:"#2a2420" }}>Rs. {p.price.toLocaleString()}</div>
+            <div style={{ fontSize:".88rem", fontWeight:500, color:"#2a2420" }}>Rs. {(p.price||0).toLocaleString()}</div>
             {p.original_price > p.price && (
-              <div style={{ fontSize:".72rem", color:"#bbb", textDecoration:"line-through" }}>Rs. {p.original_price.toLocaleString()}</div>
+              <div style={{ fontSize:".72rem", color:"#bbb", textDecoration:"line-through" }}>Rs. {(p.original_price||0).toLocaleString()}</div>
             )}
           </div>
         </div>
