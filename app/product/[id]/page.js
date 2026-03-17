@@ -22,6 +22,11 @@ export default function ProductPage() {
   // Fix hydration: only read params after mount
   useEffect(() => {
     setMounted(true);
+    // Load wishlist from localStorage
+    try {
+      const saved = localStorage.getItem("poshak_wishlist");
+      if (saved) setWishlist(JSON.parse(saved));
+    } catch(e) {}
   }, []);
 
   useEffect(() => {
@@ -201,7 +206,22 @@ export default function ProductPage() {
               </button>
             </a>
 
-            <button onClick={() => setWishlist(w => w.includes(product.id)?w.filter(x=>x!==product.id):[...w,product.id])}
+            <button onClick={() => {
+                const id = product.id;
+                setWishlist(w => {
+                  const updated = w.includes(id) ? w.filter(x=>x!==id) : [...w, id];
+                  try {
+                    localStorage.setItem("poshak_wishlist", JSON.stringify(updated));
+                    const stored = JSON.parse(localStorage.getItem("poshak_wishlist_products") || "[]");
+                    const updatedProds = w.includes(id)
+                      ? stored.filter(p => p.id !== id)
+                      : [...stored, { ...product }];
+                    localStorage.setItem("poshak_wishlist_products", JSON.stringify(updatedProds));
+                    window.dispatchEvent(new Event("storage"));
+                  } catch(e) {}
+                  return updated;
+                });
+              }}
               style={{ width:"100%", background:"none", border:"1px solid #e0d8d0", borderRadius:"4px", padding:"12px", cursor:"pointer", fontSize:".72rem", letterSpacing:".1em", textTransform:"uppercase", color:wishlist.includes(product.id)?"#c9a96e":"#888", fontFamily:"'DM Sans',sans-serif", transition:"all .2s" }}>
               {wishlist.includes(product.id) ? "♥ Saved to Wishlist" : "♡ Save to Wishlist"}
             </button>
