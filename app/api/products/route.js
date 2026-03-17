@@ -51,9 +51,9 @@ export async function GET(request) {
     }
 
     // Exact column filters for color/fabric/occasion (now that we have dedicated columns)
-    if (color   && color   !== 'All' && color   !== 'All Colors')   query = query.ilike('color',   color)
-    if (fabric  && fabric  !== 'All Fabrics')                        query = query.ilike('fabric',  fabric)
-    if (occasion && occasion !== 'All Occasions')                    query = query.ilike('occasion', occasion)
+    if (color   && color   !== 'All' && color   !== 'All Colors')   query = query.ilike('color',   `%${color}%`)
+    if (fabric  && fabric  !== 'All Fabrics')                        query = query.ilike('fabric',  `%${fabric}%`)
+    if (occasion && occasion !== 'All Occasions')                    query = query.ilike('occasion', `%${occasion}%`)
 
     if (brand)     query = query.ilike('brand', `%${brand}%`)
     if (min_price) query = query.gte('price', parseInt(min_price))
