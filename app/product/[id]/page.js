@@ -46,22 +46,32 @@ export default function ProductPage() {
           });
           checkLiveStock(json.product.product_url).then(setLiveStock);
 
-          // Fetch similar products — same product_type, different brand, exclude current
-          const productType = encodeURIComponent(json.product.product_type || "");
-          const currentBrand = json.product.brand || "";
-          fetch(`/api/products?category=${productType}&page=1`)
+          // Fetch similar products — match by occasion first, then product_type
+          // Exclude current product, prefer different brands
+          const p = json.product;
+          const currentBrand = p.brand || "";
+          const occasion = encodeURIComponent(p.occasion || "");
+          const productType = encodeURIComponent(p.product_type || "");
+
+          // Try occasion-based similarity first, fall back to product_type
+          const similarUrl = p.occasion
+            ? `/api/products?occasion=${occasion}&page=1`
+            : `/api/products?category=${productType}&page=1`;
+
+          fetch(similarUrl)
             .then(r => r.json())
             .then(j => {
-              const filtered = (j.products || [])
-                .filter(p => p.id !== id)
-                // Prefer different brands first for variety
-                .sort((a, b) => {
-                  if (a.brand === currentBrand && b.brand !== currentBrand) return 1;
-                  if (a.brand !== currentBrand && b.brand === currentBrand) return -1;
-                  return 0;
-                })
-                .slice(0, 6);
-              setSimilar(filtered);
+              const candidates = (j.products || []).filter(sp => sp.id !== id);
+              // Sort: different brand first, then by price proximity
+              const currentPrice = Number(p.price) || 0;
+              candidates.sort((a, b) => {
+                const aDiff = Math.abs((Number(a.price)||0) - currentPrice);
+                const bDiff = Math.abs((Number(b.price)||0) - currentPrice);
+                if (a.brand !== currentBrand && b.brand === currentBrand) return -1;
+                if (a.brand === currentBrand && b.brand !== currentBrand) return 1;
+                return aDiff - bDiff;
+              });
+              setSimilar(candidates.slice(0, 6));
             })
             .catch(() => {});
         }

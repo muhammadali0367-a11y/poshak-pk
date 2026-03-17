@@ -184,8 +184,9 @@ export default function SharedNav() {
         </div>
         {/* Wishlist button */}
         <button onClick={() => router.push("/wishlist")}
-          style={{ background:"none", border:"none", cursor:"pointer", flexShrink:0, display:"flex", alignItems:"center", gap:"4px", color: wishCount>0?"#c9a96e":"#aaa", fontFamily:"'DM Sans',sans-serif", fontSize:".78rem", padding:"4px 8px" }}>
-          {wishCount > 0 ? `♥ ${wishCount}` : "♡"}
+          style={{ background:"none", border:"none", cursor:"pointer", flexShrink:0, display:"flex", alignItems:"center", gap:"5px", color: wishCount>0?"#c9a96e":"#888", fontFamily:"'DM Sans',sans-serif", fontSize:".75rem", padding:"4px 8px", whiteSpace:"nowrap" }}>
+          <span style={{ fontSize:".9rem" }}>{wishCount>0?"♥":"♡"}</span>
+          <span>Wishlist{wishCount>0?` (${wishCount})`:""}</span>
         </button>
       </nav>
     </>

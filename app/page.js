@@ -20,9 +20,10 @@ const CATEGORIES = [
 ];
 
 const PRICE_RANGES     = ["All Prices","Under 3,000","3,000–6,000","6,000–10,000","10,000–20,000","20,000+"];
-const STATIC_FABRICS   = ["All Fabrics","Lawn","Cotton","Chiffon","Silk","Organza","Velvet","Khaddar","Karandi","Linen","Cambric","Jacquard","Net","Raw Silk"];
-const STATIC_OCCASIONS = ["All Occasions","Casual / Everyday","Office / Work","Formal Event","Wedding","Eid / Festive","Party","Bridal","Winter"];
-const STATIC_COLORS    = ["All","Black","White","Navy","Red","Maroon","Pink","Peach","Mint","Teal","Mustard","Olive","Grey","Beige","Pastel","Multi / Printed"];
+// Colors/fabrics/occasions are now loaded dynamically from the database
+const STATIC_FABRICS   = ["All Fabrics"];
+const STATIC_OCCASIONS = ["All Occasions"];
+const STATIC_COLORS    = ["All"];
 const BADGE_COLORS     = { Bestseller:"#b07d4a",New:"#3d8a60",Sale:"#b03030",Exclusive:"#6a4a8a",Premium:"#3a6a9a",Trending:"#9a6a30",Festive:"#8a5a2a" };
 
 // ── Category quick tags shown in hero ──
@@ -672,6 +673,9 @@ export default function App() {
   const [showSugg,        setShowSugg]        = useState(false);
   const [showAllDropdown, setShowAllDropdown] = useState(false);
   const [liveStock,       setLiveStock]       = useState("checking");
+  const [dynamicColors,   setDynamicColors]   = useState([]);
+  const [dynamicFabrics,  setDynamicFabrics]  = useState([]);
+  const [dynamicOccasions,setDynamicOccasions]= useState([]);
   const searchRef = useRef(null);
 
   // ── Parse price range ──────────────────────────────────────────────────────
@@ -760,6 +764,16 @@ export default function App() {
     fetch("/api/brands")
       .then(r => r.json())
       .then(json => { if (json.brands) setAllBrands(json.brands); })
+      .catch(() => {});
+
+    // Fetch dynamic filter options from database
+    fetch("/api/filters")
+      .then(r => r.json())
+      .then(json => {
+        if (json.colors)   setDynamicColors(["All", ...json.colors]);
+        if (json.fabrics)  setDynamicFabrics(["All Fabrics", ...json.fabrics]);
+        if (json.occasions) setDynamicOccasions(["All Occasions", ...json.occasions]);
+      })
       .catch(() => {});
   }, []);
 
@@ -961,10 +975,10 @@ export default function App() {
               <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(185px,1fr))", gap:"18px" }}>
                 {[
                   { label:"Brand",       value:brand,     setter:setBrand,     options:BRANDS },
-                  { label:"Color",       value:color,     setter:setColor,     options:STATIC_COLORS },
+                  { label:"Color",       value:color,     setter:setColor,     options:dynamicColors.length > 1 ? dynamicColors : STATIC_COLORS },
                   { label:"Price Range", value:priceRange,setter:setPriceRange,options:PRICE_RANGES },
-                  { label:"Fabric",      value:fabric,    setter:setFabric,    options:STATIC_FABRICS },
-                  { label:"Occasion",    value:occasion,  setter:setOccasion,  options:STATIC_OCCASIONS },
+                  { label:"Fabric",      value:fabric,    setter:setFabric,    options:dynamicFabrics.length > 1 ? dynamicFabrics : STATIC_FABRICS },
+                  { label:"Occasion",    value:occasion,  setter:setOccasion,  options:dynamicOccasions.length > 1 ? dynamicOccasions : STATIC_OCCASIONS },
                 ].map(({ label, value, setter, options }) => (
                   <div key={label}>
                     <div style={{ fontSize:".6rem", letterSpacing:".2em", textTransform:"uppercase", color:"#aaa", marginBottom:"8px" }}>{label}</div>
