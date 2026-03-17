@@ -46,24 +46,25 @@ export default function ProductPage() {
           });
           checkLiveStock(json.product.product_url).then(setLiveStock);
 
-          // Fetch similar products — match by occasion first, then product_type
-          // Exclude current product, prefer different brands
+          // Fetch similar products — same occasion, similar price range, different brand
           const p = json.product;
+          const currentPrice = Number(p.price) || 0;
           const currentBrand = p.brand || "";
-          const occasion = encodeURIComponent(p.occasion || "");
-          const productType = encodeURIComponent(p.product_type || "");
 
-          // Try occasion-based similarity first, fall back to product_type
-          const similarUrl = p.occasion
-            ? `/api/products?occasion=${occasion}&page=1`
-            : `/api/products?category=${productType}&page=1`;
+          // Build URL — use occasion if available, otherwise fall back to product_type category
+          const qp = new URLSearchParams({ page: "1" });
+          if (p.occasion) qp.set("occasion", p.occasion);
+          // Price range: ±50% of current price to keep results relevant
+          if (currentPrice > 0) {
+            qp.set("min_price", Math.floor(currentPrice * 0.5));
+            qp.set("max_price", Math.ceil(currentPrice * 1.5));
+          }
 
-          fetch(similarUrl)
+          fetch(`/api/products?${qp}`)
             .then(r => r.json())
             .then(j => {
               const candidates = (j.products || []).filter(sp => sp.id !== id);
-              // Sort: different brand first, then by price proximity
-              const currentPrice = Number(p.price) || 0;
+              // Sort: different brand first, then closest price
               candidates.sort((a, b) => {
                 const aDiff = Math.abs((Number(a.price)||0) - currentPrice);
                 const bDiff = Math.abs((Number(b.price)||0) - currentPrice);

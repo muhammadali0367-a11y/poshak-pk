@@ -54,13 +54,13 @@ export async function GET() {
             if (!seen.has(p.brand)) {
               seen.add(p.brand)
               mixed.push(p)
-              if (mixed.length === 5) break
+              if (mixed.length === 6) break
             }
           }
           // Second pass: fill remaining slots if less than 4 brands
-          if (mixed.length < 5) {
+          if (mixed.length < 6) {
             for (const p of data) {
-              if (!mixed.find(m => m.id === p.id) && mixed.length < 5) {
+              if (!mixed.find(m => m.id === p.id) && mixed.length < 6) {
                 mixed.push(p)
               }
             }

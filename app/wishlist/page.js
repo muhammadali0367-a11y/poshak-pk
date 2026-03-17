@@ -16,37 +16,46 @@ export default function WishlistPage() {
 
   useEffect(() => { setMounted(true); }, []);
 
-  // Load wishlist IDs from localStorage
+  // Load wishlist products from localStorage
   useEffect(() => {
     if (!mounted) return;
     try {
-      const saved = localStorage.getItem("poshak_wishlist");
-      const ids = saved ? JSON.parse(saved) : [];
+      const ids = JSON.parse(localStorage.getItem("poshak_wishlist") || "[]");
+      const storedProds = JSON.parse(localStorage.getItem("poshak_wishlist_products") || "[]");
       setWishlist(ids);
+
       if (ids.length === 0) { setLoading(false); return; }
 
-      // Fetch all wishlisted products from Supabase in parallel batches
-      // Split into chunks of 10 to use .in() filter
-      const chunks = [];
-      for (let i = 0; i < ids.length; i += 20) chunks.push(ids.slice(i, i+20));
-
-      Promise.all(
-        chunks.map(chunk =>
-          fetch(`/api/products/batch?ids=${chunk.join(",")}`)
-            .then(r => r.json())
-            .then(j => j.products || [])
-            .catch(() => [])
-        )
-      ).then(results => {
-        const all = results.flat().map(p => ({
+      if (storedProds.length > 0) {
+        // Use locally stored products — instant, no API call needed
+        const ordered = ids.map(id => storedProds.find(p => p.id === id)).filter(Boolean);
+        setProducts(ordered.map(p => ({
           ...p,
           price: safePrice(p.price),
           original_price: safePrice(p.original_price),
-        }));
-        // Preserve wishlist order
-        const ordered = ids.map(id => all.find(p => p.id === id)).filter(Boolean);
-        setProducts(ordered);
-      }).finally(() => setLoading(false));
+        })));
+        setLoading(false);
+      } else {
+        // Fallback: fetch from batch API if no stored products
+        const chunks = [];
+        for (let i = 0; i < ids.length; i += 20) chunks.push(ids.slice(i, i+20));
+        Promise.all(
+          chunks.map(chunk =>
+            fetch(`/api/products/batch?ids=${chunk.join(",")}`)
+              .then(r => r.json())
+              .then(j => j.products || [])
+              .catch(() => [])
+          )
+        ).then(results => {
+          const all = results.flat().map(p => ({
+            ...p,
+            price: safePrice(p.price),
+            original_price: safePrice(p.original_price),
+          }));
+          const ordered = ids.map(id => all.find(p => p.id === id)).filter(Boolean);
+          setProducts(ordered);
+        }).finally(() => setLoading(false));
+      }
     } catch(e) {
       setLoading(false);
     }
@@ -56,15 +65,21 @@ export default function WishlistPage() {
     const updated = wishlist.filter(x => x !== id);
     setWishlist(updated);
     setProducts(prev => prev.filter(p => p.id !== id));
-    try { localStorage.setItem("poshak_wishlist", JSON.stringify(updated)); } catch(e) {}
-    // Trigger storage event so SharedNav count updates
+    try {
+      localStorage.setItem("poshak_wishlist", JSON.stringify(updated));
+      const stored = JSON.parse(localStorage.getItem("poshak_wishlist_products") || "[]");
+      localStorage.setItem("poshak_wishlist_products", JSON.stringify(stored.filter(p => p.id !== id)));
+    } catch(e) {}
     window.dispatchEvent(new Event("storage"));
   };
 
   const clearAll = () => {
     setWishlist([]);
     setProducts([]);
-    try { localStorage.removeItem("poshak_wishlist"); } catch(e) {}
+    try {
+      localStorage.removeItem("poshak_wishlist");
+      localStorage.removeItem("poshak_wishlist_products");
+    } catch(e) {}
     window.dispatchEvent(new Event("storage"));
   };
 
