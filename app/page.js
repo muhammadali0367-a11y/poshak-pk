@@ -658,6 +658,14 @@ export default function App() {
   const [color,           setColor]           = useState("All");
   const [brand,           setBrand]           = useState("All Brands");
   const [wishlist,        setWishlist]        = useState([]);
+
+  // Load wishlist from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("poshak_wishlist");
+      if (saved) setWishlist(JSON.parse(saved));
+    } catch(e) {}
+  }, []);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [filtersOpen,     setFiltersOpen]     = useState(false);
   const [suggestions,     setSuggestions]     = useState([]);
@@ -755,11 +763,10 @@ export default function App() {
       .catch(() => {});
   }, []);
 
-  // ── Load products when filter/search/category changes ─────────────────────
-  // NOTE: Search and category filtering now handled by dedicated pages
-  // This useEffect only handles brand/price filter on homepage
+  // ── Load products when filter changes ────────────────────────────────────
   useEffect(() => {
-    const hasFilter = brand !== "All Brands" || priceRange !== "All Prices";
+    const hasFilter = brand !== "All Brands" || priceRange !== "All Prices" ||
+                      color !== "All" || fabric !== "All Fabrics" || occasion !== "All Occasions";
     if (!hasFilter) return;
 
     setLoadingMore(true);
@@ -767,7 +774,10 @@ export default function App() {
 
     const [minP, maxP] = parsePriceRange(priceRange);
     const params = new URLSearchParams({ page: 1 });
-    if (brand !== "All Brands") params.set("brand", brand);
+    if (brand   !== "All Brands")     params.set("brand",    brand);
+    if (color   !== "All")            params.set("color",    color);
+    if (fabric  !== "All Fabrics")    params.set("fabric",   fabric);
+    if (occasion !== "All Occasions") params.set("occasion", occasion);
     if (minP) params.set("min_price", minP);
     if (maxP) params.set("max_price", maxP);
 
@@ -782,7 +792,7 @@ export default function App() {
       })
       .catch(() => {})
       .finally(() => setLoadingMore(false));
-  }, [brand, priceRange]);
+  }, [brand, priceRange, color, fabric, occasion]);
 
   // ── Lock scroll when modal open + trigger live stock check ──
   useEffect(() => {
@@ -843,7 +853,7 @@ export default function App() {
       }).slice(0, 6)
     : [];
 
-  const isFiltering = brand !== "All Brands" || priceRange !== "All Prices";
+  const isFiltering = brand !== "All Brands" || priceRange !== "All Prices" || color !== "All" || fabric !== "All Fabrics" || occasion !== "All Occasions";
 
   const activeFilterCount = [activeCategory!=="All", color!=="All", fabric!=="All Fabrics", occasion!=="All Occasions", priceRange!=="All Prices", brand!=="All Brands"].filter(Boolean).length;
 
@@ -857,7 +867,14 @@ export default function App() {
     return parts.length ? parts.join(" · ") : null;
   }, [query]);
 
-  const toggleWish  = (id, e) => { e?.stopPropagation(); setWishlist(w => w.includes(id) ? w.filter(x=>x!==id) : [...w,id]); };
+  const toggleWish = (id, e) => {
+    e?.stopPropagation();
+    setWishlist(w => {
+      const updated = w.includes(id) ? w.filter(x=>x!==id) : [...w,id];
+      try { localStorage.setItem("poshak_wishlist", JSON.stringify(updated)); } catch(e) {}
+      return updated;
+    });
+  };
   const clearAll    = () => { setActiveCategory("All"); setColor("All"); setFabric("All Fabrics"); setOccasion("All Occasions"); setPriceRange("All Prices"); setBrand("All Brands"); setQuery(""); };
   const pickSugg    = (label) => { setQuery(label); setShowSugg(false); };
 
@@ -1044,8 +1061,8 @@ export default function App() {
                           View All {cat} →
                         </button>
                       </div>
-                      {/* 5 product preview — fixed 5 columns, no blank gap */}
-                      <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:"16px" }}>
+                      {/* Responsive grid: 2 cols mobile, 3 cols tablet, 5 cols desktop */}
+                      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))", gap:"16px" }}>
                         {catProducts.slice(0,5).map((p, i) => (
                           <ProductCard key={p.id} p={p} i={i} wishlist={wishlist} toggleWish={toggleWish} onClick={() => router.push(`/product/${p.id}`)} />
                         ))}

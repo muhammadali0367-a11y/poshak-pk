@@ -41,6 +41,24 @@ export default function SharedNav() {
   const [sidebarOpen,   setSidebarOpen]   = useState(false);
   const [showDropdown,  setShowDropdown]  = useState(false);
   const [allBrands,     setAllBrands]     = useState([]);
+  const [wishCount,     setWishCount]     = useState(0);
+
+  // Read wishlist count from localStorage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("poshak_wishlist");
+      if (saved) setWishCount(JSON.parse(saved).length);
+    } catch(e) {}
+    // Update when storage changes (across tabs or from other pages)
+    const handler = () => {
+      try {
+        const saved = localStorage.getItem("poshak_wishlist");
+        setWishCount(saved ? JSON.parse(saved).length : 0);
+      } catch(e) {}
+    };
+    window.addEventListener("storage", handler);
+    return () => window.removeEventListener("storage", handler);
+  }, []);
 
   useEffect(() => {
     fetch("/api/brands")
@@ -164,6 +182,11 @@ export default function SharedNav() {
             </div>
           )}
         </div>
+        {/* Wishlist button */}
+        <button onClick={() => router.push("/wishlist")}
+          style={{ background:"none", border:"none", cursor:"pointer", flexShrink:0, display:"flex", alignItems:"center", gap:"4px", color: wishCount>0?"#c9a96e":"#aaa", fontFamily:"'DM Sans',sans-serif", fontSize:".78rem", padding:"4px 8px" }}>
+          {wishCount > 0 ? `♥ ${wishCount}` : "♡"}
+        </button>
       </nav>
     </>
   );

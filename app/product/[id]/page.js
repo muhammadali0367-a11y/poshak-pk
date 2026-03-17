@@ -44,13 +44,26 @@ export default function ProductPage() {
             price: Number(json.product.price) || 0,
             original_price: Number(json.product.original_price) || 0,
           });
-          // Check live stock after setting product
           checkLiveStock(json.product.product_url).then(setLiveStock);
-          // Fetch similar products
-          const col = encodeURIComponent(json.product.collection || "");
-          fetch(`/api/products?category=${col}&page=1`)
+
+          // Fetch similar products — same product_type, different brand, exclude current
+          const productType = encodeURIComponent(json.product.product_type || "");
+          const currentBrand = json.product.brand || "";
+          fetch(`/api/products?category=${productType}&page=1`)
             .then(r => r.json())
-            .then(j => setSimilar((j.products || []).filter(p => p.id !== id).slice(0, 6)));
+            .then(j => {
+              const filtered = (j.products || [])
+                .filter(p => p.id !== id)
+                // Prefer different brands first for variety
+                .sort((a, b) => {
+                  if (a.brand === currentBrand && b.brand !== currentBrand) return 1;
+                  if (a.brand !== currentBrand && b.brand === currentBrand) return -1;
+                  return 0;
+                })
+                .slice(0, 6);
+              setSimilar(filtered);
+            })
+            .catch(() => {});
         }
       })
       .catch(() => {})
