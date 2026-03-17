@@ -881,11 +881,20 @@ export default function App() {
     return parts.length ? parts.join(" · ") : null;
   }, [query]);
 
-  const toggleWish = (id, e) => {
+  const toggleWish = (id, e, product) => {
     e?.stopPropagation();
     setWishlist(w => {
       const updated = w.includes(id) ? w.filter(x=>x!==id) : [...w,id];
       try { localStorage.setItem("poshak_wishlist", JSON.stringify(updated)); } catch(e) {}
+      // Also store/remove full product object for wishlist page
+      try {
+        const stored = JSON.parse(localStorage.getItem("poshak_wishlist_products") || "[]");
+        const updatedProds = w.includes(id)
+          ? stored.filter(p => p.id !== id)
+          : product ? [...stored, product] : stored;
+        localStorage.setItem("poshak_wishlist_products", JSON.stringify(updatedProds));
+      } catch(e) {}
+      window.dispatchEvent(new Event("storage"));
       return updated;
     });
   };
@@ -1075,9 +1084,9 @@ export default function App() {
                           View All {cat} →
                         </button>
                       </div>
-                      {/* Responsive grid: 2 cols mobile, 3 cols tablet, 5 cols desktop */}
-                      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))", gap:"16px" }}>
-                        {catProducts.slice(0,5).map((p, i) => (
+                      {/* Responsive grid: 2 cols mobile, 3 tablet, 6 desktop */}
+                      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))", gap:"16px" }}>
+                        {catProducts.slice(0,6).map((p, i) => (
                           <ProductCard key={p.id} p={p} i={i} wishlist={wishlist} toggleWish={toggleWish} onClick={() => router.push(`/product/${p.id}`)} />
                         ))}
                       </div>
@@ -1367,7 +1376,7 @@ function ProductCard({ p, i, wishlist, toggleWish, onClick }) {
           </div>
         )}
 
-        <button className="wish-btn" onClick={e => toggleWish(p.id, e)}>
+        <button className="wish-btn" onClick={e => toggleWish(p.id, e, p)}>
           <span style={{ color:wishlist.includes(p.id)?"#c9a96e":"#ccc", fontSize:".9rem" }}>
             {wishlist.includes(p.id) ? "♥" : "♡"}
           </span>
