@@ -109,6 +109,8 @@ export default function SharedNav() {
           .poshak-wordmark{font-size:1.1rem;letter-spacing:.1em;}
           .poshak-dropdown{gap:16px;padding:16px;}
           .poshak-dd-btn{font-size:.72rem;}
+          .poshak-wish-label{display:none;}
+          .poshak-search-wrap{min-width:0;}
         }
       `}</style>
 
@@ -186,7 +188,7 @@ export default function SharedNav() {
         <button onClick={() => router.push("/wishlist")}
           style={{ background:"none", border:"none", cursor:"pointer", flexShrink:0, display:"flex", alignItems:"center", gap:"5px", color: wishCount>0?"#c9a96e":"#888", fontFamily:"'DM Sans',sans-serif", fontSize:".75rem", padding:"4px 8px", whiteSpace:"nowrap" }}>
           <span style={{ fontSize:".9rem" }}>{wishCount>0?"♥":"♡"}</span>
-          <span>Wishlist{wishCount>0?` (${wishCount})`:""}</span>
+          <span className="poshak-wish-label">Wishlist{wishCount>0?` (${wishCount})`:""}</span>
         </button>
       </nav>
     </>

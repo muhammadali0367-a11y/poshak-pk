@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import SharedNav from "../../SharedNav";
 
@@ -67,6 +67,7 @@ export default function CategoryPage() {
   const [priceRange, setPriceRange] = useState("All Prices");
   const [allBrands,  setAllBrands]  = useState([]);
   const [wishlist,   setWishlist]   = useState([]);
+  const sentinelRef = useRef(null);
 
   // Fix: only read params after mount to prevent hydration mismatch
   useEffect(() => {
@@ -89,11 +90,11 @@ export default function CategoryPage() {
       .catch(() => {});
   }, []);
 
-  useEffect(() => {
+  const loadProducts = useCallback((pageNum) => {
     if (!catName) return;
     setLoading(true);
     const [minP, maxP] = parsePriceRange(priceRange);
-    const qp = new URLSearchParams({ page: String(page), category: catName });
+    const qp = new URLSearchParams({ page: String(pageNum), category: catName });
     if (brand !== "All Brands") qp.set("brand", brand);
     if (minP) qp.set("min_price", String(minP));
     if (maxP) qp.set("max_price", String(maxP));
@@ -108,13 +109,36 @@ export default function CategoryPage() {
           image:          p.image_url || "",
           badge:          deriveBadge(p.tags, p.name, p.original_price, p.price),
         }));
-        setProducts(prev => page === 1 ? prods : [...prev, ...prods]);
+        setProducts(prev => pageNum === 1 ? prods : [...prev, ...prods]);
         setTotalPages(json.pages || 1);
         setTotal(json.total || 0);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
+  }, [catName, brand, priceRange]);
+
+  useEffect(() => {
+    loadProducts(page);
   }, [catName, page, brand, priceRange]);
+
+  // Infinite scroll — observe sentinel div at bottom of product grid
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (entry.isIntersecting && !loading && page < totalPages) {
+          setPage(p => p + 1);
+        }
+      },
+      { rootMargin: "200px" } // trigger 200px before hitting bottom
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [loading, page, totalPages]);
 
   const toggleWish = (id, e) => {
     e?.stopPropagation();
@@ -239,13 +263,12 @@ export default function CategoryPage() {
                 </div>
               ))}
             </div>
-            {page < totalPages && (
-              <div style={{ textAlign:"center", marginBottom:"60px" }}>
-                <button className="load-more" onClick={() => setPage(n => n + 1)} disabled={loading}>
-                  {loading ? "Loading…" : `Load More (${Math.max(0, total - products.length)} remaining)`}
-                </button>
-              </div>
-            )}
+            {/* Infinite scroll sentinel — triggers next page load when visible */}
+            <div ref={sentinelRef} style={{ height:"40px", display:"flex", alignItems:"center", justifyContent:"center", marginBottom:"40px" }}>
+              {loading && products.length > 0 && (
+                <div style={{ fontSize:".75rem", color:"#c9a96e", letterSpacing:".1em" }}>Loading more…</div>
+              )}
+            </div>
           </>
         )}
       </div>
