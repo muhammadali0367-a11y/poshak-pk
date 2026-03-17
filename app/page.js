@@ -693,9 +693,10 @@ export default function App() {
   // ── Process raw product from API (derive category/color/fabric/etc) ────────
   function processProduct(p) {
     const categories = deriveCategory(p.product_type, p.tags, p.collection);
-    const color      = deriveColor(p.tags, p.name);
-    const fabric     = deriveFabric(p.tags, p.product_type, p.name);
-    const occasion   = deriveOccasion(p.tags, p.collection, categories[0], p.name);
+    // Use stored column values first (from Supabase), fall back to derived values
+    const color      = p.color   || deriveColor(p.tags, p.name);
+    const fabric     = p.fabric  || deriveFabric(p.tags, p.product_type, p.name);
+    const occasion   = p.occasion || deriveOccasion(p.tags, p.collection, categories[0], p.name);
     const badge      = deriveBadge(p.tags, p.name, p.original_price, p.price);
     const price      = Number(p.price) || 0;
     const original_price = Number(p.original_price) || 0;
