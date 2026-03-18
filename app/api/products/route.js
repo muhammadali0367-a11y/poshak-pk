@@ -2,20 +2,106 @@ import { supabase } from '../supabaseClient'
 
 const PAGE_SIZE = 24
 
+// Category filters built from ACTUAL product_type and collection values in Supabase.
+// Strategy: use OR across product_type + tags only.
+// Collections are brand-specific internal codes — too unreliable for matching.
+// We use tags which are consistent across brands.
+//
+// IMPORTANT: ilike with % is a contains match — keep keywords specific enough
+// that they don't accidentally match other categories.
+
 const CATEGORY_FILTERS = {
-  "Unstitched":           { product_types:["unstitched"],                                                collections:["unstitched"],                                                          tags:["unstitched"] },
-  "Bridal":               { product_types:["boutique","bridal","couture","wedding"],                     collections:["bridal","wedding","boutique"],                                          tags:["bridal","wedding","gharara","sharara","lehenga"] },
-  "Formal":               { product_types:["semi-formal","formal","evening"],                            collections:["formal","semi-formal","evening"],                                       tags:["semi-formal","formal wear","evening"] },
-  "Luxury Pret":          { product_types:["luxury","premium","signature","glam"],                       collections:["luxury-pret","premium","signature","glam"],                             tags:["luxury pret","premium"] },
-  "Festive / Eid":        { product_types:["festive","eid"],                                             collections:["festive","eid"],                                                        tags:["festive","eid"] },
-  "Winter Collection":    { product_types:["khaddar","karandi","winter","fleece"],                       collections:["winter","khaddar","karandi"],                                            tags:["khaddar","karandi","winter"] },
-  "Lawn":                 { product_types:["lawn"],                                                      collections:["lawn"],                                                                  tags:["lawn"] },
-  "Co-ords":              { product_types:["co-ord","coord","studio"],                                   collections:["co-ord","coord","studio"],                                              tags:["co-ord set","co-ord"] },
-  "Kurta":                { product_types:["boho","kurti","kurta","basic","rozana"],                     collections:["kurta","kurti","boho","rozana"],                                        tags:["kurti","kurta","boho"] },
-  "Abaya":                { product_types:["abaya"],                                                     collections:["abaya"],                                                                tags:["abaya"] },
-  "Shalwar Kameez":       { product_types:["shalwar"],                                                   collections:["shalwar-kameez"],                                                       tags:["shalwar kameez"] },
-  "Pret / Ready to Wear": { product_types:["pret","ready","casual","special price","western","fusion"],  collections:["pret","ready-to-wear","women-eastern","women-view","flaws-all-pret"],   tags:["pret","ready to wear"] },
+
+  "Unstitched": {
+    product_types: ["Unstitched", "BT-UNSTITCH", "BT-UNSTITCHED", "Essential Unstitched",
+                    "Unstitched Printed", "Unstitched Embroidered", "Women Fabric",
+                    "Jacquard", "MORBAGH", "BT-MORBAGH"],
+    tags:          ["unstitched", "fabric"],
+    collections:   ["unstitched", "rgroup-unstitched", "shop-by-season-unstitched",
+                    "designer-picks-unstitched", "hot-sellers-unstitched",
+                    "new-in-unstitched", "unstitched-new-arrivals", "na-unstitched"],
+  },
+
+  "Pret / Ready to Wear": {
+    product_types: ["PRET", "Stitched", "RTW", "Essential Pret", "Ready To Wear",
+                    "SHIRT, TROUSER & DUPATTA", "SHIRT & TROUSER", "SHIRT & DUPATTA",
+                    "SHIRT", "Rozana", "M.Basics Casuals", "Casual", "1 PC",
+                    "2 PC", "3 PC", "SHIRT & CULOTTE", "Printed", "Embroidered",
+                    "Solid", "Special Price", "OLDSSEASON"],
+    tags:          ["pret", "ready to wear", "stitched"],
+    collections:   ["003-Ready-To-Wear", "pret", "ready-to-wear", "essential-pret",
+                    "embroidered-pret", "ready-to-wear-printed", "everyday-pret",
+                    "embroidered-daily-wear", "flaws-all-pret-view", "eid-pret-2026",
+                    "new-in-ready-to-wear", "1pc-us-pret", "1-piece-essential"],
+  },
+
+  "Luxury Pret": {
+    product_types: ["LUXURY-PRET"],
+    tags:          ["luxury pret", "luxury"],
+    collections:   ["rgroup-luxrypret-other", "rgroup-luxury-pret", "luxury-pret-batch",
+                    "batch-01-unstitched-luxury"],
+  },
+
+  "Kurta": {
+    product_types: ["KURTI", "Boho"],
+    tags:          ["kurta", "kurti"],
+    collections:   ["kurta", "kurti", "boho"],
+  },
+
+  "Co-ords": {
+    product_types: ["Co-ords"],
+    tags:          ["co-ord set", "co-ord", "coord"],
+    collections:   ["co-ord", "coord"],
+  },
+
+  "Lawn": {
+    product_types: [],
+    tags:          ["lawn"],
+    collections:   ["lawn-2026", "lawn"],
+  },
+
+  "Festive / Eid": {
+    product_types: [],
+    tags:          ["festive", "eid"],
+    collections:   ["eid-pret-2026", "eid-collection"],
+  },
+
+  "Winter Collection": {
+    product_types: [],
+    tags:          ["khaddar", "karandi", "winter"],
+    collections:   ["winter", "khaddar", "karandi"],
+  },
+
+  "Formal": {
+    product_types: [],
+    tags:          ["formal", "semi-formal"],
+    collections:   ["formal", "semi-formal"],
+  },
+
+  "Bridal": {
+    product_types: [],
+    tags:          ["bridal", "wedding", "gharara", "sharara", "lehenga"],
+    collections:   ["bridal", "wedding"],
+  },
+
+  "Abaya": {
+    product_types: [],
+    tags:          ["abaya"],
+    collections:   ["abaya"],
+  },
+
+  "Shalwar Kameez": {
+    product_types: [],
+    tags:          ["shalwar kameez"],
+    collections:   ["shalwar-kameez"],
+  },
 }
+
+// Product types that should NEVER appear regardless of category
+// These are western/standalone items that slipped through convert.py
+const EXCLUDED_PRODUCT_TYPES = [
+  "Western", "PRET LOWERS", "Salt",
+]
 
 export async function GET(request) {
   try {
@@ -39,20 +125,36 @@ export async function GET(request) {
         { count: 'exact' }
       )
 
-    // Category filter
-    if (category && category !== 'All' && CATEGORY_FILTERS[category]) {
-      const f = CATEGORY_FILTERS[category]
-      const orParts = [
-        ...f.collections.map(k   => `collection.ilike.%${k}%`),
-        ...f.product_types.map(k => `product_type.ilike.%${k}%`),
-        ...f.tags.map(k          => `tags.ilike.%${k}%`),
-      ]
-      query = query.or(orParts.join(','))
+    // Always exclude western/standalone product types
+    for (const ex of EXCLUDED_PRODUCT_TYPES) {
+      query = query.not('product_type', 'ilike', ex)
     }
 
-    // Exact column filters for color/fabric/occasion (now that we have dedicated columns)
-    if (color   && color   !== 'All' && color   !== 'All Colors')   query = query.ilike('color',   `%${color}%`)
-    if (fabric  && fabric  !== 'All Fabrics')                        query = query.ilike('fabric',  `%${fabric}%`)
+    // Category filter — OR across product_types + tags + collections
+    if (category && category !== 'All' && CATEGORY_FILTERS[category]) {
+      const f = CATEGORY_FILTERS[category]
+      const orParts = []
+
+      // product_type: exact case-insensitive match (eq via ilike without %)
+      for (const k of f.product_types) {
+        orParts.push(`product_type.ilike.${k}`)
+      }
+      // tags: contains match
+      for (const k of f.tags) {
+        orParts.push(`tags.ilike.%${k}%`)
+      }
+      // collections: contains match (collection handles are long strings)
+      for (const k of f.collections) {
+        orParts.push(`collection.ilike.%${k}%`)
+      }
+
+      if (orParts.length > 0) {
+        query = query.or(orParts.join(','))
+      }
+    }
+
+    if (color    && color    !== 'All' && color    !== 'All Colors') query = query.ilike('color',    `%${color}%`)
+    if (fabric   && fabric   !== 'All Fabrics')                      query = query.ilike('fabric',   `%${fabric}%`)
     if (occasion && occasion !== 'All Occasions')                    query = query.ilike('occasion', `%${occasion}%`)
 
     if (brand)     query = query.ilike('brand', `%${brand}%`)
