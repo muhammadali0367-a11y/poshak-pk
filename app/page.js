@@ -677,6 +677,7 @@ export default function App() {
   const [dynamicFabrics,  setDynamicFabrics]  = useState([]);
   const [dynamicOccasions,setDynamicOccasions]= useState([]);
   const searchRef = useRef(null);
+  const sentinelRef = useRef(null);
 
   // ── Parse price range ──────────────────────────────────────────────────────
   function parsePriceRange(pr) {
@@ -1292,7 +1293,6 @@ function SidebarSection({ title, items, onItemClick }) {
 // ─── CATEGORY CAROUSEL (auto-scrolling) ───────────────────────────────────────
 function CategoryCarousel({ categories, onNavigate }) {
   const scrollRef = useRef(null);
-  const sentinelRef = useRef(null);
 
   useEffect(() => {
     const el = scrollRef.current;
