@@ -681,11 +681,14 @@ export default function App() {
   // ── Parse price range ──────────────────────────────────────────────────────
   function parsePriceRange(pr) {
     if (!pr || pr === "All Prices") return [null, null];
-    const m = pr.match(/Rs\s*([\d,]+)\s*–\s*Rs\s*([\d,]+)/);
-    if (m) return [parseInt(m[1].replace(/,/g,'')), parseInt(m[2].replace(/,/g,''))];
-    const u = pr.match(/Under Rs\s*([\d,]+)/);
+    // Format: "Under 3,000"
+    const u = pr.match(/Under\s*([\d,]+)/);
     if (u) return [null, parseInt(u[1].replace(/,/g,''))];
-    const o = pr.match(/Over Rs\s*([\d,]+)/);
+    // Format: "3,000–6,000" or "3,000-6,000"
+    const m = pr.match(/([\d,]+)\s*[\u2013-]\s*([\d,]+)/);
+    if (m) return [parseInt(m[1].replace(/,/g,'')), parseInt(m[2].replace(/,/g,''))];
+    // Format: "20,000+"
+    const o = pr.match(/([\d,]+)\+/);
     if (o) return [parseInt(o[1].replace(/,/g,'')), null];
     return [null, null];
   }
@@ -693,10 +696,9 @@ export default function App() {
   // ── Process raw product from API (derive category/color/fabric/etc) ────────
   function processProduct(p) {
     const categories = deriveCategory(p.product_type, p.tags, p.collection);
-    // Use stored column values first (from Supabase), fall back to derived values
-    const color      = p.color   || deriveColor(p.tags, p.name);
-    const fabric     = p.fabric  || deriveFabric(p.tags, p.product_type, p.name);
-    const occasion   = p.occasion || deriveOccasion(p.tags, p.collection, categories[0], p.name);
+    const color      = deriveColor(p.tags, p.name);
+    const fabric     = deriveFabric(p.tags, p.product_type, p.name);
+    const occasion   = deriveOccasion(p.tags, p.collection, categories[0], p.name);
     const badge      = deriveBadge(p.tags, p.name, p.original_price, p.price);
     const price      = Number(p.price) || 0;
     const original_price = Number(p.original_price) || 0;
