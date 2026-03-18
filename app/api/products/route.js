@@ -2,106 +2,96 @@ import { supabase } from '../supabaseClient'
 
 const PAGE_SIZE = 24
 
-// Category filters built from ACTUAL product_type and collection values in Supabase.
-// Strategy: use OR across product_type + tags only.
-// Collections are brand-specific internal codes — too unreliable for matching.
-// We use tags which are consistent across brands.
+// ─────────────────────────────────────────────────────────────────────────────
+// CATEGORY FILTERS
 //
-// IMPORTANT: ilike with % is a contains match — keep keywords specific enough
-// that they don't accidentally match other categories.
+// Strategy: match ONLY on product_type using exact case-insensitive match.
+// We do NOT use tags or collections for category filtering because:
+//   - Tags are brand-assigned and can contain multiple categories on one product
+//     e.g. a product tagged "pret, unstitched, lawn" would match all 3 categories
+//   - Collections are brand-internal codes that change over time
+//   - product_type is the single most reliable signal — brands set it specifically
+//
+// Values taken directly from Supabase product_type column (top 40 by count).
+// When new brands are added, check their product_type values and add here.
+// ─────────────────────────────────────────────────────────────────────────────
 
-const CATEGORY_FILTERS = {
+const CATEGORY_PRODUCT_TYPES = {
 
-  "Unstitched": {
-    product_types: ["Unstitched", "BT-UNSTITCH", "BT-UNSTITCHED", "Essential Unstitched",
-                    "Unstitched Printed", "Unstitched Embroidered", "Women Fabric",
-                    "Jacquard", "MORBAGH", "BT-MORBAGH"],
-    tags:          ["unstitched", "fabric"],
-    collections:   ["unstitched", "rgroup-unstitched", "shop-by-season-unstitched",
-                    "designer-picks-unstitched", "hot-sellers-unstitched",
-                    "new-in-unstitched", "unstitched-new-arrivals", "na-unstitched"],
-  },
+  "Unstitched": [
+    "Unstitched",           // Alkaram, Saya, Limelight etc
+    "BT-UNSTITCH",          // Beechtree
+    "BT-UNSTITCHED",        // Beechtree variant
+    "Essential Unstitched", // Alkaram
+    "Unstitched Printed",   // Zellbury
+    "Unstitched Embroidered", // Zellbury
+    "Women Fabric",         // Gul Ahmed unstitched fabrics
+    "Jacquard",             // Unstitched jacquard fabric
+    "MORBAGH",              // Bonanza unstitched collection
+    "BT-MORBAGH",           // Beechtree unstitched
+  ],
 
-  "Pret / Ready to Wear": {
-    product_types: ["PRET", "Stitched", "RTW", "Essential Pret", "Ready To Wear",
-                    "SHIRT, TROUSER & DUPATTA", "SHIRT & TROUSER", "SHIRT & DUPATTA",
-                    "SHIRT", "Rozana", "M.Basics Casuals", "Casual", "1 PC",
-                    "2 PC", "3 PC", "SHIRT & CULOTTE", "Printed", "Embroidered",
-                    "Solid", "Special Price", "OLDSSEASON"],
-    tags:          ["pret", "ready to wear", "stitched"],
-    collections:   ["003-Ready-To-Wear", "pret", "ready-to-wear", "essential-pret",
-                    "embroidered-pret", "ready-to-wear-printed", "everyday-pret",
-                    "embroidered-daily-wear", "flaws-all-pret-view", "eid-pret-2026",
-                    "new-in-ready-to-wear", "1pc-us-pret", "1-piece-essential"],
-  },
+  "Pret / Ready to Wear": [
+    "PRET",                     // Ethnic, Limelight
+    "Stitched",                 // Alkaram stitched line
+    "RTW",                      // Zellbury ready to wear
+    "Essential Pret",           // Alkaram
+    "Ready To Wear",            // Sana Safinaz, So Kamal
+    "SHIRT, TROUSER & DUPATTA", // Ethnic 3pc
+    "SHIRT & TROUSER",          // Ethnic 2pc
+    "SHIRT & DUPATTA",          // Ethnic 2pc with dupatta
+    "SHIRT & CULOTTE",          // Ethnic
+    "SHIRT",                    // Ethnic single shirt
+    "M.Basics Casuals",         // Maria B basics
+    "Rozana",                   // Alkaram daily wear
+    "Casual",                   // Various
+    "1 PC",                     // Single piece pret
+    "2 PC",                     // 2 piece pret
+    "3 PC",                     // 3 piece pret
+    "Special Price",            // Sale pret items
+    "Printed",                  // Printed pret
+    "Embroidered",              // Embroidered pret
+    "Solid",                    // Solid pret
+    "OLDSEASON",                // Old season pret
+    "Women",                    // Generic women's pret
+  ],
 
-  "Luxury Pret": {
-    product_types: ["LUXURY-PRET"],
-    tags:          ["luxury pret", "luxury"],
-    collections:   ["rgroup-luxrypret-other", "rgroup-luxury-pret", "luxury-pret-batch",
-                    "batch-01-unstitched-luxury"],
-  },
+  "Luxury Pret": [
+    "LUXURY-PRET",  // Ethnic luxury line
+  ],
 
-  "Kurta": {
-    product_types: ["KURTI", "Boho"],
-    tags:          ["kurta", "kurti"],
-    collections:   ["kurta", "kurti", "boho"],
-  },
+  "Kurta": [
+    "KURTI",  // Standalone kurta/kurti
+    "Boho",   // Alkaram boho kurta line
+  ],
 
-  "Co-ords": {
-    product_types: ["Co-ords"],
-    tags:          ["co-ord set", "co-ord", "coord"],
-    collections:   ["co-ord", "coord"],
-  },
+  "Co-ords": [
+    "Co-ords",  // Co-ordinated sets
+  ],
 
-  "Lawn": {
-    product_types: [],
-    tags:          ["lawn"],
-    collections:   ["lawn-2026", "lawn"],
-  },
-
-  "Festive / Eid": {
-    product_types: [],
-    tags:          ["festive", "eid"],
-    collections:   ["eid-pret-2026", "eid-collection"],
-  },
-
-  "Winter Collection": {
-    product_types: [],
-    tags:          ["khaddar", "karandi", "winter"],
-    collections:   ["winter", "khaddar", "karandi"],
-  },
-
-  "Formal": {
-    product_types: [],
-    tags:          ["formal", "semi-formal"],
-    collections:   ["formal", "semi-formal"],
-  },
-
-  "Bridal": {
-    product_types: [],
-    tags:          ["bridal", "wedding", "gharara", "sharara", "lehenga"],
-    collections:   ["bridal", "wedding"],
-  },
-
-  "Abaya": {
-    product_types: [],
-    tags:          ["abaya"],
-    collections:   ["abaya"],
-  },
-
-  "Shalwar Kameez": {
-    product_types: [],
-    tags:          ["shalwar kameez"],
-    collections:   ["shalwar-kameez"],
-  },
+  // These categories have no specific product_type — use tags only
+  "Lawn":             null,
+  "Festive / Eid":    null,
+  "Winter Collection":null,
+  "Formal":           null,
+  "Bridal":           null,
+  "Abaya":            null,
+  "Shalwar Kameez":   null,
 }
 
-// Product types that should NEVER appear regardless of category
-// These are western/standalone items that slipped through convert.py
-const EXCLUDED_PRODUCT_TYPES = [
-  "Western", "PRET LOWERS", "Salt",
-]
+// For categories with no dedicated product_type, fall back to tag matching
+const CATEGORY_TAGS = {
+  "Lawn":              ["lawn"],
+  "Festive / Eid":     ["festive", "eid"],
+  "Winter Collection": ["khaddar", "karandi", "winter"],
+  "Formal":            ["formal", "semi-formal"],
+  "Bridal":            ["bridal", "wedding", "lehenga", "gharara", "sharara"],
+  "Abaya":             ["abaya"],
+  "Shalwar Kameez":    ["shalwar kameez"],
+}
+
+// Global exclusions — these product_types should never appear anywhere
+const EXCLUDED_PRODUCT_TYPES = ["Western", "PRET LOWERS", "Salt"]
 
 export async function GET(request) {
   try {
@@ -125,30 +115,24 @@ export async function GET(request) {
         { count: 'exact' }
       )
 
-    // Always exclude western/standalone product types
+    // Always exclude western/standalone product types globally
     for (const ex of EXCLUDED_PRODUCT_TYPES) {
       query = query.not('product_type', 'ilike', ex)
     }
 
-    // Category filter — OR across product_types + tags + collections
-    if (category && category !== 'All' && CATEGORY_FILTERS[category]) {
-      const f = CATEGORY_FILTERS[category]
-      const orParts = []
+    // Category filter
+    if (category && category !== 'All') {
+      const productTypes = CATEGORY_PRODUCT_TYPES[category]
+      const tagKeywords  = CATEGORY_TAGS[category]
 
-      // product_type: exact case-insensitive match (eq via ilike without %)
-      for (const k of f.product_types) {
-        orParts.push(`product_type.ilike.${k}`)
-      }
-      // tags: contains match
-      for (const k of f.tags) {
-        orParts.push(`tags.ilike.%${k}%`)
-      }
-      // collections: contains match (collection handles are long strings)
-      for (const k of f.collections) {
-        orParts.push(`collection.ilike.%${k}%`)
-      }
+      if (productTypes && productTypes.length > 0) {
+        // Use product_type exact matching — most reliable
+        const orParts = productTypes.map(t => `product_type.ilike.${t}`)
+        query = query.or(orParts.join(','))
 
-      if (orParts.length > 0) {
+      } else if (tagKeywords && tagKeywords.length > 0) {
+        // Fall back to tag matching for categories without dedicated product_types
+        const orParts = tagKeywords.map(t => `tags.ilike.%${t}%`)
         query = query.or(orParts.join(','))
       }
     }
