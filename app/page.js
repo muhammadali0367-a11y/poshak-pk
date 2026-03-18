@@ -811,6 +811,44 @@ export default function App() {
       .finally(() => setLoadingMore(false));
   }, [brand, priceRange, color, fabric, occasion]);
 
+  // ── Infinite scroll — auto-load next page when sentinel comes into view ──
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !loadingMore && currentPage < totalPages) {
+          const nextPage = currentPage + 1;
+          setCurrentPage(nextPage);
+          setLoadingMore(true);
+          const [minP, maxP] = parsePriceRange(priceRange);
+          const params = new URLSearchParams({ page: nextPage });
+          if (query)                    params.set("q", query);
+          if (activeCategory !== "All") params.set("category", activeCategory);
+          if (brand !== "All Brands")   params.set("brand", brand);
+          if (color !== "All")          params.set("color", color);
+          if (fabric !== "All Fabrics") params.set("fabric", fabric);
+          if (occasion !== "All Occasions") params.set("occasion", occasion);
+          if (minP) params.set("min_price", minP);
+          if (maxP) params.set("max_price", maxP);
+          const endpoint = query ? "/api/search" : "/api/products";
+          fetch(`${endpoint}?${params}`)
+            .then(r => r.json())
+            .then(json => {
+              const more = (json.products || []).map(processProduct);
+              setProducts(prev => [...prev, ...more]);
+              setTotalPages(json.pages || 1);
+            })
+            .catch(() => {})
+            .finally(() => setLoadingMore(false));
+        }
+      },
+      { rootMargin: "200px" }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [loadingMore, currentPage, totalPages, query, activeCategory, brand, color, fabric, occasion, priceRange]);
+
   // ── Lock scroll when modal open + trigger live stock check ──
   useEffect(() => {
     document.body.style.overflow = selectedProduct ? "hidden" : "";
@@ -1032,34 +1070,12 @@ export default function App() {
                         <ProductCard key={p.id} p={p} i={i} wishlist={wishlist} toggleWish={toggleWish} onClick={() => router.push(`/product/${p.id}`)} />
                       ))}
                     </div>
-                    {totalPages > currentPage && (
-                      <div style={{ textAlign:"center", marginTop:"32px" }}>
-                        <button
-                          onClick={() => {
-                            const nextPage = currentPage + 1;
-                            setCurrentPage(nextPage);
-                            const [minP, maxP] = parsePriceRange(priceRange);
-                            const params = new URLSearchParams({ page: nextPage });
-                            if (query)                    params.set("q", query);
-                            if (activeCategory !== "All") params.set("category", activeCategory);
-                            if (brand !== "All Brands")   params.set("brand", brand);
-                            if (minP) params.set("min_price", minP);
-                            if (maxP) params.set("max_price", maxP);
-                            const endpoint = query ? "/api/search" : "/api/products";
-                            fetch(`${endpoint}?${params}`)
-                              .then(r => r.json())
-                              .then(json => {
-                                const more = (json.products || []).map(processProduct);
-                                setProducts(prev => [...prev, ...more]);
-                                setTotalPages(json.pages || 1);
-                              });
-                          }}
-                          className="filter-btn"
-                          style={{ padding:"12px 40px", fontSize:".75rem" }}>
-                          Load More
-                        </button>
-                      </div>
-                    )}
+                    {/* Infinite scroll sentinel */}
+                    <div ref={sentinelRef} style={{ height:"40px", display:"flex", alignItems:"center", justifyContent:"center", marginTop:"24px" }}>
+                      {loadingMore && (
+                        <div style={{ fontSize:".75rem", color:"#c9a96e", letterSpacing:".1em" }}>Loading more…</div>
+                      )}
+                    </div>
                   </>
                 )}
               </>
@@ -1276,6 +1292,7 @@ function SidebarSection({ title, items, onItemClick }) {
 // ─── CATEGORY CAROUSEL (auto-scrolling) ───────────────────────────────────────
 function CategoryCarousel({ categories, onNavigate }) {
   const scrollRef = useRef(null);
+  const sentinelRef = useRef(null);
 
   useEffect(() => {
     const el = scrollRef.current;
