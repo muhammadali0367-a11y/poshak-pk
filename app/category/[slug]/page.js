@@ -126,7 +126,7 @@ export default function CategoryPage() {
 
   useEffect(() => {
     loadProducts(page);
-  }, [catName, page, brand, priceRange]);
+  }, [catName, page, brand, priceRange, sort]);
 
   // Infinite scroll — observe sentinel div at bottom of product grid
   useEffect(() => {

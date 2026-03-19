@@ -41,6 +41,7 @@ export default function SharedNav() {
   const [sidebarOpen,   setSidebarOpen]   = useState(false);
   const [showDropdown,  setShowDropdown]  = useState(false);
   const [allBrands,     setAllBrands]     = useState([]);
+  const [popCategories, setPopCategories] = useState(CATEGORIES); // default to all, update from API
   const [wishCount,     setWishCount]     = useState(0);
 
   // Read wishlist count from localStorage
@@ -65,6 +66,18 @@ export default function SharedNav() {
       .then(r => r.json())
       .then(j => { if (j.brands) setAllBrands(j.brands); })
       .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/homepage")
+      .then(r => r.json())
+      .then(j => {
+        if (j.sections) {
+          const withData = new Set(Object.keys(j.sections));
+          setPopCategories(CATEGORIES.filter(c => withData.has(c)));
+        }
+      })
+      .catch(() => {}); // fallback: keep showing all categories
   }, []);
 
   // Close dropdown on outside click
@@ -127,7 +140,7 @@ export default function SharedNav() {
           style={{ width:"100%", padding:"11px 20px", background:"transparent", border:"none", textAlign:"left", cursor:"pointer", fontSize:".8rem", color:"#555", fontFamily:"'DM Sans',sans-serif" }}>
           All Dresses
         </button>
-        <SidebarSection title="Categories" items={CATEGORIES}
+        <SidebarSection title="Categories" items={popCategories}
           onItemClick={cat => { setSidebarOpen(false); router.push(`/category/${slugify(cat)}`); }} />
         <SidebarSection title="Brands" items={allBrands}
           onItemClick={b => { setSidebarOpen(false); router.push(`/brand/${slugify(b)}`); }} />
@@ -165,7 +178,7 @@ export default function SharedNav() {
             <div className="poshak-dropdown">
               <div className="poshak-dd-col">
                 <div className="poshak-dd-title">Categories</div>
-                {CATEGORIES.map(cat => (
+                {popCategories.map(cat => (
                   <button key={cat} className="poshak-dd-btn"
                     onClick={() => { setShowDropdown(false); router.push(`/category/${slugify(cat)}`); }}>
                     {cat}

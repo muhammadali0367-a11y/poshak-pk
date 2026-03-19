@@ -983,7 +983,7 @@ export default function App() {
           </section>
 
           {/* CATEGORY CAROUSEL */}
-          <CategoryCarousel categories={CATEGORIES.filter(c=>c!=="All")} onNavigate={cat => router.push(`/category/${slugify(cat)}`)} />
+          <CategoryCarousel categories={POPULATED_CATEGORIES.filter(c=>c!=="All")} onNavigate={cat => router.push(`/category/${slugify(cat)}`)} />
 
           {/* ── PRODUCTS AREA ── */}
           <div style={{ padding:"0 24px 60px" }}>
