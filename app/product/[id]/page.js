@@ -49,7 +49,8 @@ export default function ProductPage() {
             price: Number(json.product.price) || 0,
             original_price: Number(json.product.original_price) || 0,
           });
-          checkLiveStock(json.product.product_url).then(setLiveStock);
+          // Use DB in_stock value directly — no-cors fetch is unreliable
+          setLiveStock(json.product.in_stock === false ? "sold_out" : "in_stock");
 
           // Fetch similar products — same occasion, similar price range, different brand
           const p = json.product;
@@ -174,7 +175,10 @@ export default function ProductPage() {
             <h1 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"2rem", fontWeight:400, color:"#2a2420", lineHeight:1.25, marginBottom:"16px" }}>{product.name}</h1>
 
             <div style={{ marginBottom:"20px" }}>
-              <span style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"2rem", color:"#2a2420" }}>Rs. {(product.price||0).toLocaleString()}</span>
+              {product.price > 0
+                ? <span style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"2rem", color:"#2a2420" }}>Rs. {product.price.toLocaleString()}</span>
+                : <span style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"1.4rem", color:"#bbb", fontStyle:"italic" }}>Price unavailable — check brand website</span>
+              }
               {product.original_price > product.price && (
                 <span style={{ fontSize:".95rem", textDecoration:"line-through", color:"#bbb", marginLeft:"12px" }}>Rs. {(product.original_price||0).toLocaleString()}</span>
               )}
@@ -261,18 +265,4 @@ export default function ProductPage() {
   );
 }
 
-async function checkLiveStock(product_url) {
-  if (!product_url) return "unknown";
-  try {
-    const handleMatch = product_url.match(/\/products\/([^/?#]+)/);
-    if (!handleMatch) return "unknown";
-    const handle  = handleMatch[1];
-    const baseUrl = product_url.split("/products/")[0];
-    const ctrl    = new AbortController();
-    setTimeout(() => ctrl.abort(), 5000);
-    await fetch(`${baseUrl}/products/${handle}.json`, { mode:"no-cors", signal:ctrl.signal });
-    return "in_stock";
-  } catch(e) {
-    return e.name === "AbortError" ? "unknown" : "sold_out";
-  }
-}
+

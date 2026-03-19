@@ -11,6 +11,12 @@ const CATEGORIES = [
 
 const BADGE_COLORS = { Bestseller:"#b07d4a",New:"#3d8a60",Sale:"#b03030",Exclusive:"#6a4a8a",Premium:"#3a6a9a",Trending:"#9a6a30",Festive:"#8a5a2a" };
 const PRICE_RANGES = ["All Prices","Under 3,000","3,000–6,000","6,000–10,000","10,000–20,000","20,000+"];
+const SORT_OPTIONS = [
+  { value:"price_desc", label:"Price: High to Low" },
+  { value:"price_asc",  label:"Price: Low to High" },
+  { value:"name_asc",   label:"Name: A to Z" },
+  { value:"name_desc",  label:"Name: Z to A" },
+];
 
 const SLUG_TO_CAT = {
   "lawn":"Lawn","kurta":"Kurta","co-ords":"Co-ords",
@@ -66,6 +72,7 @@ export default function CategoryPage() {
   const [brand,      setBrand]      = useState("All Brands");
   const [priceRange, setPriceRange] = useState("All Prices");
   const [allBrands,  setAllBrands]  = useState([]);
+  const [sort,       setSort]       = useState("price_desc");
   const [wishlist,   setWishlist]   = useState([]);
   const sentinelRef = useRef(null);
 
@@ -94,7 +101,7 @@ export default function CategoryPage() {
     if (!catName) return;
     setLoading(true);
     const [minP, maxP] = parsePriceRange(priceRange);
-    const qp = new URLSearchParams({ page: String(pageNum), category: catName });
+    const qp = new URLSearchParams({ page: String(pageNum), category: catName, sort });
     if (brand !== "All Brands") qp.set("brand", brand);
     if (minP) qp.set("min_price", String(minP));
     if (maxP) qp.set("max_price", String(maxP));
@@ -115,7 +122,7 @@ export default function CategoryPage() {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [catName, brand, priceRange]);
+  }, [catName, brand, priceRange, sort]);
 
   useEffect(() => {
     loadProducts(page);
@@ -203,6 +210,10 @@ export default function CategoryPage() {
             <select value={priceRange} onChange={e => { setPriceRange(e.target.value); setPage(1); setProducts([]); }}
               className="filter-btn" style={{ background:"#fff", cursor:"pointer" }}>
               {PRICE_RANGES.map(p => <option key={p}>{p}</option>)}
+            </select>
+            <select value={sort} onChange={e => { setSort(e.target.value); setPage(1); setProducts([]); }}
+              className="filter-btn" style={{ background:"#fff", cursor:"pointer" }}>
+              {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
           </div>
         </div>

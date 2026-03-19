@@ -20,6 +20,12 @@ const CATEGORIES = [
 ];
 
 const PRICE_RANGES     = ["All Prices","Under 3,000","3,000–6,000","6,000–10,000","10,000–20,000","20,000+"];
+const SORT_OPTIONS     = [
+  { value:"price_desc", label:"Price: High to Low" },
+  { value:"price_asc",  label:"Price: Low to High" },
+  { value:"name_asc",   label:"Name: A to Z" },
+  { value:"name_desc",  label:"Name: Z to A" },
+];
 // Colors/fabrics/occasions are now loaded dynamically from the database
 const STATIC_FABRICS   = ["All Fabrics"];
 const STATIC_OCCASIONS = ["All Occasions"];
@@ -654,6 +660,7 @@ export default function App() {
   const [activeCategory,  setActiveCategory]  = useState("All");
   const [query,           setQuery]           = useState("");
   const [priceRange,      setPriceRange]      = useState("All Prices");
+  const [sort,            setSort]            = useState("price_desc");
   const [fabric,          setFabric]          = useState("All Fabrics");
   const [occasion,        setOccasion]        = useState("All Occasions");
   const [color,           setColor]           = useState("All");
@@ -800,6 +807,7 @@ export default function App() {
     if (occasion !== "All Occasions") params.set("occasion", occasion);
     if (minP) params.set("min_price", minP);
     if (maxP) params.set("max_price", maxP);
+    params.set("sort", sort);
 
     fetch(`/api/products?${params}`)
       .then(r => r.json())
@@ -812,7 +820,7 @@ export default function App() {
       })
       .catch(() => {})
       .finally(() => setLoadingMore(false));
-  }, [brand, priceRange, color, fabric, occasion]);
+  }, [brand, priceRange, color, fabric, occasion, sort]);
 
   // ── Infinite scroll — auto-load next page when sentinel comes into view ──
   useEffect(() => {
@@ -834,6 +842,7 @@ export default function App() {
           if (occasion !== "All Occasions") params.set("occasion", occasion);
           if (minP) params.set("min_price", minP);
           if (maxP) params.set("max_price", maxP);
+          params.set("sort", sort);
           const endpoint = query ? "/api/search" : "/api/products";
           fetch(`${endpoint}?${params}`)
             .then(r => r.json())
@@ -850,7 +859,7 @@ export default function App() {
     );
     observer.observe(sentinel);
     return () => observer.disconnect();
-  }, [loadingMore, currentPage, totalPages, query, activeCategory, brand, color, fabric, occasion, priceRange]);
+  }, [loadingMore, currentPage, totalPages, query, activeCategory, brand, color, fabric, occasion, priceRange, sort]);
 
   // ── Lock scroll when modal open + trigger live stock check ──
   useEffect(() => {
@@ -942,7 +951,7 @@ export default function App() {
       return updated;
     });
   };
-  const clearAll    = () => { setActiveCategory("All"); setColor("All"); setFabric("All Fabrics"); setOccasion("All Occasions"); setPriceRange("All Prices"); setBrand("All Brands"); setQuery(""); };
+  const clearAll    = () => { setActiveCategory("All"); setColor("All"); setFabric("All Fabrics"); setOccasion("All Occasions"); setPriceRange("All Prices"); setBrand("All Brands"); setQuery(""); setSort("price_desc"); };
   const pickSugg    = (label) => { setQuery(label); setShowSugg(false); };
 
   // ── Stock display helpers ──
@@ -1040,6 +1049,12 @@ export default function App() {
                     </select>
                   </div>
                 ))}
+                <div>
+                  <div style={{ fontSize:".6rem", letterSpacing:".2em", textTransform:"uppercase", color:"#aaa", marginBottom:"8px" }}>Sort By</div>
+                  <select value={sort} onChange={e => { setSort(e.target.value); }} className="filter-btn" style={{ width:"100%", background:"#fff", cursor:"pointer" }}>
+                    {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </select>
+                </div>
               </div>
             </div>
 

@@ -16,6 +16,7 @@ export async function GET(request) {
     const color     = searchParams.get('color') || ''
     const fabric    = searchParams.get('fabric') || ''
     const occasion  = searchParams.get('occasion') || ''
+    const sort      = searchParams.get('sort') || 'price_desc'
 
     const from = (page - 1) * PAGE_SIZE
     const to   = from + PAGE_SIZE - 1
@@ -45,7 +46,14 @@ export async function GET(request) {
     if (min_price) query = query.gte('price', parseInt(min_price))
     if (max_price) query = query.lte('price', parseInt(max_price))
 
-    query = query.order('price', { ascending: false }).range(from, to)
+    // Sort
+    if      (sort === 'price_asc')  query = query.order('price', { ascending: true })
+    else if (sort === 'price_desc') query = query.order('price', { ascending: false })
+    else if (sort === 'name_asc')   query = query.order('name',  { ascending: true })
+    else if (sort === 'name_desc')  query = query.order('name',  { ascending: false })
+    else                            query = query.order('price', { ascending: false })
+
+    query = query.range(from, to)
 
     const { data, error, count } = await query
     if (error) throw error
