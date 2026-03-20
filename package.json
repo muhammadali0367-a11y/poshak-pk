@@ -8,6 +8,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "@pinecone-database/pinecone": "^7.1.0",
     "@supabase/supabase-js": "^2.99.1",
     "next": "14.2.5",
     "react": "^18",

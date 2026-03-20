@@ -1,9 +1,14 @@
 import { createClient } from '@supabase/supabase-js'
+import OpenAI from 'openai'
+import { Pinecone } from '@pinecone-database/pinecone'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 )
+
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+const pinecone = new Pinecone({ apiKey: process.env.PINECONE_API_KEY })
 
 const PAGE_SIZE = 24
 
@@ -32,7 +37,6 @@ const URDU_TO_ENGLISH = {
   "khaddar":"khaddar","karandi":"karandi",
 }
 
-// Canonical color names matching what convert.py stores in the color column
 const COLOR_CANONICAL = {
   "black":["black"],"white":["white"],"red":["red"],"blue":["blue"],
   "green":["green"],"yellow":["yellow"],"pink":["pink"],"purple":["purple"],
@@ -47,7 +51,6 @@ const COLOR_CANONICAL = {
   "bottle green":["bottle green"],"sky blue":["sky blue"],"royal blue":["royal blue"],
 }
 
-// Urdu color synonyms → canonical color
 const COLOR_SYNONYMS = {
   "kala":"black","kali":"black","safed":"white","lal":"red","surkh":"red",
   "neela":"navy blue","neeli":"navy blue","hara":"green","gulabi":"pink",
@@ -62,23 +65,18 @@ function translateQuery(q) {
   return t
 }
 
-// Detect if query is purely asking for a color
 function detectColor(q) {
   const lower = q.toLowerCase().trim()
-  // Check Urdu synonyms first
   if (COLOR_SYNONYMS[lower]) return COLOR_SYNONYMS[lower]
-  // Check canonical colors
   for (const [canonical, variants] of Object.entries(COLOR_CANONICAL)) {
     if (canonical === lower || variants.some(v => v === lower)) return canonical
   }
   return null
 }
 
-// Detect if query contains a color plus other terms
 function extractColorFromQuery(q) {
   const lower = q.toLowerCase().trim()
   const words = lower.split(/\s+/)
-  // Try multi-word colors first (e.g. "navy blue", "off white")
   for (let i = 0; i < words.length - 1; i++) {
     const twoWords = `${words[i]} ${words[i+1]}`
     if (COLOR_SYNONYMS[twoWords]) return { color: COLOR_SYNONYMS[twoWords], remaining: lower.replace(twoWords, '').trim() }
@@ -86,7 +84,6 @@ function extractColorFromQuery(q) {
       if (canonical === twoWords || variants.some(v => v === twoWords)) return { color: canonical, remaining: lower.replace(twoWords, '').trim() }
     }
   }
-  // Single word colors
   for (const word of words) {
     if (COLOR_SYNONYMS[word]) return { color: COLOR_SYNONYMS[word], remaining: lower.replace(word, '').trim() }
     for (const [canonical, variants] of Object.entries(COLOR_CANONICAL)) {
@@ -96,6 +93,108 @@ function extractColorFromQuery(q) {
   return null
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// GPT-4o mini: normalize the query into clean English search terms
+// ─────────────────────────────────────────────────────────────────────────────
+async function normalizeQuery(rawQuery) {
+  try {
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      max_tokens: 60,
+      temperature: 0,
+      messages: [
+        {
+          role: 'system',
+          content: `You are a search query normalizer for a Pakistani women's fashion website.
+Convert the user's query into clean English fashion search terms.
+Rules:
+- Translate Urdu/Roman Urdu to English
+- Fix typos and expand abbreviations
+- Keep it concise (max 8 words)
+- Preserve color, fabric, category, and occasion keywords
+- Return ONLY the normalized query, nothing else
+Examples:
+"kuch acha sa lawn" → "lawn kurta casual summer"
+"shaadi ka jora" → "wedding suit formal"
+"gulabi lawn kurta" → "pink lawn kurta"
+"sardi ke kapray" → "winter clothes warm"`,
+        },
+        { role: 'user', content: rawQuery }
+      ]
+    })
+    return response.choices[0].message.content.trim()
+  } catch {
+    // If GPT fails, fall back to basic translation
+    return translateQuery(rawQuery)
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Get vector embedding for a query string
+// ─────────────────────────────────────────────────────────────────────────────
+async function getQueryEmbedding(text) {
+  const response = await openai.embeddings.create({
+    input: text,
+    model: 'text-embedding-3-small'
+  })
+  return response.data[0].embedding
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Search Pinecone and return top product IDs with scores
+// ─────────────────────────────────────────────────────────────────────────────
+async function vectorSearch(embedding, topK = 50) {
+  try {
+    const index = pinecone.Index(process.env.PINECONE_INDEX_NAME || 'poshak-products')
+    const results = await index.query({
+      vector: embedding,
+      topK,
+      includeMetadata: true,
+    })
+    // Returns [{ id, score }, ...]
+    return results.matches.map(m => ({ id: m.id, vectorScore: m.score }))
+  } catch {
+    return []
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Keyword score: how well does a product match the query terms
+// ─────────────────────────────────────────────────────────────────────────────
+function keywordScore(product, terms) {
+  const searchableText = [
+    product.name,
+    product.brand,
+    product.tags,
+    product.category,
+    product.product_type,
+    product.collection,
+  ].join(' ').toLowerCase()
+
+  let score = 0
+  for (const term of terms) {
+    if (searchableText.includes(term)) score += 1
+  }
+  return score / Math.max(terms.length, 1)
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Hybrid rerank: combine vector score + keyword score
+// ─────────────────────────────────────────────────────────────────────────────
+function hybridRerank(products, vectorScoreMap, queryTerms) {
+  return products
+    .map(product => {
+      const vScore = vectorScoreMap[product.id] || 0
+      const kScore = keywordScore(product, queryTerms)
+      const finalScore = (0.6 * vScore) + (0.4 * kScore)
+      return { ...product, _score: finalScore }
+    })
+    .sort((a, b) => b._score - a._score)
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Main GET handler
+// ─────────────────────────────────────────────────────────────────────────────
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url)
@@ -107,32 +206,77 @@ export async function GET(request) {
 
     if (!rawQ) return Response.json({ products: [], total: 0, page: 1, pages: 0 })
 
-    const q    = translateQuery(rawQ)
     const from = (page - 1) * PAGE_SIZE
     const to   = from + PAGE_SIZE - 1
 
-    let query = supabase
-      .from('products')
-      .select(
-        'id, name, brand, price, original_price, product_type, tags, collection, color, fabric, occasion, image_url, product_url, in_stock',
-        { count: 'exact' }
-      )
+    // ── Step 1: Normalize query with GPT-4o mini ──────────────────────────────
+    const normalizedQ = await normalizeQuery(rawQ)
+    const translatedQ = translateQuery(rawQ)
 
-    // Detect pure color query (e.g. "black", "gulabi", "pink")
-    const pureColor = detectColor(q)
+    // ── Step 2: Detect color ──────────────────────────────────────────────────
+    const pureColor    = detectColor(normalizedQ) || detectColor(translatedQ)
+    const colorExtract = !pureColor ? (extractColorFromQuery(normalizedQ) || extractColorFromQuery(translatedQ)) : null
 
-    if (pureColor) {
-      // Use the dedicated color column — exact and accurate
-      query = query.ilike('color', pureColor)
-    } else {
-      // Check if query has a color component mixed with keywords (e.g. "black lawn suit")
-      const colorExtract = extractColorFromQuery(q)
+    // ── Step 3: Vector search via Pinecone ────────────────────────────────────
+    let vectorResults = []
+    let vectorScoreMap = {}
+    let vectorIds = []
 
-      if (colorExtract && colorExtract.remaining.length > 0) {
-        // Has color + other terms — filter by color column AND search remaining terms
-        query = query.ilike('color', colorExtract.color)
+    try {
+      const embedding = await getQueryEmbedding(normalizedQ)
+      vectorResults = await vectorSearch(embedding, 50)
+      vectorScoreMap = Object.fromEntries(vectorResults.map(r => [r.id, r.vectorScore]))
+      vectorIds = vectorResults.map(r => r.id)
+    } catch {
+      // Vector search failed — fall back to keyword only
+    }
+
+    // ── Step 4: Fetch products from Supabase ──────────────────────────────────
+    let products = []
+    let total = 0
+
+    if (vectorIds.length > 0) {
+      // Fetch the top vector candidates first
+      let vectorQuery = supabase
+        .from('products')
+        .select('id, name, brand, price, original_price, product_type, tags, collection, color, fabric, occasion, image_url, product_url, in_stock', { count: 'exact' })
+        .in('id', vectorIds)
+
+      if (brand)     vectorQuery = vectorQuery.ilike('brand', `%${brand}%`)
+      if (min_price) vectorQuery = vectorQuery.gte('price', parseInt(min_price))
+      if (max_price) vectorQuery = vectorQuery.lte('price', parseInt(max_price))
+      if (pureColor) vectorQuery = vectorQuery.ilike('color', pureColor)
+      else if (colorExtract) vectorQuery = vectorQuery.ilike('color', colorExtract.color)
+
+      const { data: vectorData, error: vectorError } = await vectorQuery
+
+      if (!vectorError && vectorData && vectorData.length > 0) {
+        // Hybrid rerank the results
+        const queryTerms = [...new Set([
+          ...normalizedQ.toLowerCase().split(/\s+/),
+          ...translatedQ.toLowerCase().split(/\s+/)
+        ])].filter(t => t.length > 2)
+
+        const reranked = hybridRerank(vectorData, vectorScoreMap, queryTerms)
+
+        // Paginate after reranking
+        total = reranked.length
+        products = reranked.slice(from, to + 1)
+      }
+    }
+
+    // ── Step 5: Fallback to keyword search if vector returned nothing ─────────
+    if (products.length === 0) {
+      let fallbackQuery = supabase
+        .from('products')
+        .select('id, name, brand, price, original_price, product_type, tags, collection, color, fabric, occasion, image_url, product_url, in_stock', { count: 'exact' })
+
+      if (pureColor) {
+        fallbackQuery = fallbackQuery.ilike('color', pureColor)
+      } else if (colorExtract && colorExtract.remaining.length > 0) {
+        fallbackQuery = fallbackQuery.ilike('color', colorExtract.color)
         const remaining = colorExtract.remaining
-        const orParts = [
+        fallbackQuery = fallbackQuery.or([
           `name.ilike.%${remaining}%`,
           `brand.ilike.%${remaining}%`,
           `tags.ilike.%${remaining}%`,
@@ -140,11 +284,9 @@ export async function GET(request) {
           `product_type.ilike.%${remaining}%`,
           `fabric.ilike.%${remaining}%`,
           `occasion.ilike.%${remaining}%`,
-        ]
-        query = query.or(orParts.join(','))
+        ].join(','))
       } else {
-        // General search — no color detected, search across all fields
-        const terms = [...new Set([rawQ.toLowerCase(), q])].filter(Boolean)
+        const terms = [...new Set([rawQ.toLowerCase(), normalizedQ.toLowerCase(), translatedQ])].filter(Boolean)
         const orParts = []
         for (const term of terms) {
           orParts.push(
@@ -158,25 +300,29 @@ export async function GET(request) {
             `occasion.ilike.%${term}%`,
           )
         }
-        query = query.or([...new Set(orParts)].join(','))
+        fallbackQuery = fallbackQuery.or([...new Set(orParts)].join(','))
       }
+
+      if (brand)     fallbackQuery = fallbackQuery.ilike('brand', `%${brand}%`)
+      if (min_price) fallbackQuery = fallbackQuery.gte('price', parseInt(min_price))
+      if (max_price) fallbackQuery = fallbackQuery.lte('price', parseInt(max_price))
+
+      fallbackQuery = fallbackQuery.order('created_at', { ascending: false }).range(from, to)
+
+      const { data, error, count } = await fallbackQuery
+      if (error) throw error
+
+      products = data || []
+      total = count || 0
     }
 
-    if (brand)     query = query.ilike('brand', `%${brand}%`)
-    if (min_price) query = query.gte('price', parseInt(min_price))
-    if (max_price) query = query.lte('price', parseInt(max_price))
-
-    query = query.order('created_at', { ascending: false }).range(from, to)
-
-    const { data, error, count } = await query
-    if (error) throw error
-
     return Response.json({
-      products: data || [],
-      total:    count || 0,
+      products,
+      total,
       page,
-      pages:    Math.ceil((count || 0) / PAGE_SIZE),
+      pages: Math.ceil(total / PAGE_SIZE),
     })
+
   } catch (err) {
     return Response.json({ error: err.message }, { status: 500 })
   }
