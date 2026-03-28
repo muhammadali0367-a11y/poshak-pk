@@ -975,6 +975,9 @@ export default function App() {
   );
 
   return (
+    <div style={{ fontFamily:"'DM Sans',sans-serif", background:"linear-gradient(160deg,#fdfcfb 0%,#f5f0eb 40%,#ede8e0 100%)", minHeight:"100vh", color:"#2a2420" }}>
+      <style>{CSS}</style>
+      <SharedNav />
 
       {/* ── LAYOUT ── */}
       <div>
