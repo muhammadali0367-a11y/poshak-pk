@@ -637,7 +637,10 @@ select{appearance:none;-webkit-appearance:none;background-image:url("data:image/
 .similar-card-img{width:100%;height:148px;object-fit:cover;display:block;background:#f5f0eb;}
 
 @media(max-width:768px){
-  .card-img{height:240px;}
+  .card-img{height:220px;}
+  .product-grid{grid-template-columns:repeat(2,1fr)!important;gap:12px!important;}
+  .card-info{padding:10px!important;}
+  .card-tag{display:none!important;}
   .nav-desktop{display:none!important;}
 }
 `;
@@ -1000,7 +1003,7 @@ export default function App() {
                   <div key={section} style={{ marginBottom:"48px" }}>
                     <div style={{ height:"28px", width:"180px", background:"#f0ebe4", borderRadius:"4px", marginBottom:"8px", animation:"shimmer 1.4s infinite" }} />
                     <div style={{ height:"14px", width:"80px", background:"#f5f0eb", borderRadius:"4px", marginBottom:"20px", animation:"shimmer 1.4s infinite" }} />
-                    <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))", gap:"20px" }}>
+                    <div className="product-grid" style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))", gap:"20px" }}>
                       {[1,2,3,4].map(i => (
                         <div key={i} style={{ background:"#fff", border:"1px solid #e8e0d8", borderRadius:"10px", overflow:"hidden" }}>
                           <div style={{ height:"300px", background:"linear-gradient(90deg,#f5f0eb 25%,#ede8e0 50%,#f5f0eb 75%)", backgroundSize:"200% 100%", animation:"shimmer 1.4s infinite" }} />
@@ -1083,7 +1086,7 @@ export default function App() {
                         <p style={{ fontSize:".7rem", color:"#aaa", marginTop:"4px", letterSpacing:".08em" }}>{totalResults} dresses</p>
                       </div>
                     )}
-                    <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))", gap:"20px" }}>
+                    <div className="product-grid" style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))", gap:"20px" }}>
                       {filtered.map((p, i) => (
                         <ProductCard key={p.id} p={p} i={i} wishlist={wishlist} toggleWish={toggleWish} onClick={() => router.push(`/product/${p.id}`)} />
                       ))}
@@ -1433,7 +1436,7 @@ function ProductCard({ p, i, wishlist, toggleWish, onClick }) {
             )}
           </div>
         </div>
-        <div style={{ display:"flex", gap:"5px", flexWrap:"wrap" }}>
+        <div className="card-tag" style={{ display:"flex", gap:"5px", flexWrap:"wrap" }}>
           <span className="tag">{p.category}</span>
           <span className="tag">{p.occasion}</span>
         </div>

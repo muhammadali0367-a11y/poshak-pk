@@ -174,7 +174,7 @@ export default function CategoryPage() {
         .card:hover{border-color:#c9a96e;transform:translateY(-5px);box-shadow:0 18px 44px rgba(180,140,90,.14);}
         .card-img{width:100%;height:280px;object-fit:cover;display:block;background:#f5f0eb;transition:transform .48s;}
         .card:hover .card-img{transform:scale(1.04);}
-        .badge-pill{position:absolute;top:10px;left:10px;font-family:'DM Sans',sans-serif;font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;padding:3px 9px;border-radius:20px;font-weight:600;color:#fff;z-index:2;}
+        .badge-pill{position:absolute;top:8px;left:8px;font-family:'DM Sans',sans-serif;font-size:.52rem;letter-spacing:.1em;text-transform:uppercase;padding:2px 7px;border-radius:20px;font-weight:600;color:#fff;z-index:2;}
         .wish-btn{position:absolute;top:10px;right:10px;background:rgba(255,255,255,.94);border:1px solid #e8e0d8;border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;z-index:2;}
         .wish-btn:hover{border-color:#c9a96e;}
         .filter-btn{background:#fff;border:1px solid #e0d8d0;color:#777;padding:7px 14px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;border-radius:3px;transition:all .2s;white-space:nowrap;}
@@ -186,7 +186,7 @@ export default function CategoryPage() {
         .breadcrumb{font-size:.7rem;color:#bbb;}
         .breadcrumb a{color:#c9a96e;text-decoration:none;}
         .breadcrumb a:hover{text-decoration:underline;}
-        @media(max-width:768px){.card-img{height:220px;}.cats-row{display:none!important;}}
+        @media(max-width:768px){.card-img{height:220px;}.cats-row{display:none!important;}.product-grid{grid-template-columns:repeat(2,1fr)!important;gap:12px!important;}.card-info{padding:10px!important;}.card-tag{display:none!important;}}
       `}</style>
 
       <SharedNav />
@@ -241,7 +241,7 @@ export default function CategoryPage() {
           </div>
         ) : (
           <>
-            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))", gap:"20px", marginBottom:"40px" }}>
+            <div className="product-grid" style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))", gap:"20px", marginBottom:"40px" }}>
               {products.map((p) => (
                 <div key={p.id} className="card" onClick={() => router.push(`/product/${p.id}`)}>
                   <div style={{ position:"relative", overflow:"hidden" }}>
@@ -256,7 +256,7 @@ export default function CategoryPage() {
                       <span style={{ color:wishlist.includes(p.id)?"#c9a96e":"#ccc", fontSize:".9rem" }}>{wishlist.includes(p.id)?"♥":"♡"}</span>
                     </button>
                   </div>
-                  <div style={{ padding:"14px" }}>
+                  <div className="card-info" style={{ padding:"14px" }}>
                     <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:"8px" }}>
                       <div style={{ flex:1, minWidth:0, paddingRight:"8px" }}>
                         <div style={{ fontSize:".6rem", letterSpacing:".14em", textTransform:"uppercase", color:"#c9a96e", marginBottom:"4px" }}>{p.brand}</div>
@@ -269,7 +269,6 @@ export default function CategoryPage() {
                         )}
                       </div>
                     </div>
-                    <span className="tag">{p.brand}</span>
                   </div>
                 </div>
               ))}
