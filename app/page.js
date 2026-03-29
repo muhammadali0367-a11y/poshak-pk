@@ -650,6 +650,7 @@ select{appearance:none;-webkit-appearance:none;background-image:url("data:image/
 // ═══════════════════════════════════════════════════════════════════════════════
 export default function App() {
   const router = useRouter();
+  const [mounted,         setMounted]         = useState(false);
   const [products,        setProducts]        = useState([]);
   const [homepageSections,setHomepageSections]= useState({});   // { "Lawn": [...4 products] }
   const [allBrands,        setAllBrands]        = useState([]);
@@ -969,6 +970,13 @@ export default function App() {
     removed:  { dot:"removed",  text:"Product removed by brand", color:"#888"  },
     unknown:  { dot:"in",       text:"Check brand website",    color:"#888"    },
   };
+
+  if (!mounted) return (
+    <div style={{ fontFamily:"'DM Sans',sans-serif", background:"linear-gradient(160deg,#fdfcfb 0%,#f5f0eb 40%,#ede8e0 100%)", minHeight:"100vh" }}>
+      <style>{CSS}</style>
+      <SharedNav />
+    </div>
+  );
 
   return (
     <div style={{ fontFamily:"'DM Sans',sans-serif", background:"linear-gradient(160deg,#fdfcfb 0%,#f5f0eb 40%,#ede8e0 100%)", minHeight:"100vh", color:"#2a2420" }}>
