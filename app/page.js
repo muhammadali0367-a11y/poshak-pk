@@ -1137,7 +1137,7 @@ export default function App() {
                         </button>
                       </div>
                       {/* Responsive grid: 2 cols mobile, 3 tablet, 6 desktop */}
-                      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))", gap:"16px" }}>
+                      <div className="product-grid" style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))", gap:"16px" }}>
                         {catProducts.slice(0,6).map((p, i) => (
                           <ProductCard key={p.id} p={p} i={i} wishlist={wishlist} toggleWish={toggleWish} onClick={() => router.push(`/product/${p.id}`)} />
                         ))}
