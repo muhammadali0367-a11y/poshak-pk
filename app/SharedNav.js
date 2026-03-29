@@ -43,14 +43,18 @@ export default function SharedNav() {
   const [allBrands,     setAllBrands]     = useState([]);
   const [popCategories, setPopCategories] = useState(CATEGORIES); // default to all, update from API
   const [wishCount,     setWishCount]     = useState(0);
+  const [mounted,       setMounted]       = useState(false);
 
-  // Read wishlist count from localStorage
+  // Set mounted on client only — prevents hydration mismatch
+  useEffect(() => { setMounted(true); }, []);
+
+  // Read wishlist count from localStorage — only after mount
   useEffect(() => {
+    if (!mounted) return;
     try {
       const saved = localStorage.getItem("poshak_wishlist");
       if (saved) setWishCount(JSON.parse(saved).length);
     } catch(e) {}
-    // Update when storage changes (across tabs or from other pages)
     const handler = () => {
       try {
         const saved = localStorage.getItem("poshak_wishlist");
@@ -59,7 +63,7 @@ export default function SharedNav() {
     };
     window.addEventListener("storage", handler);
     return () => window.removeEventListener("storage", handler);
-  }, []);
+  }, [mounted]);
 
   useEffect(() => {
     fetch("/api/brands")
