@@ -43,18 +43,14 @@ export default function SharedNav() {
   const [allBrands,     setAllBrands]     = useState([]);
   const [popCategories, setPopCategories] = useState(CATEGORIES); // default to all, update from API
   const [wishCount,     setWishCount]     = useState(0);
-  const [mounted,       setMounted]       = useState(false);
 
-  // Set mounted on client only — prevents hydration mismatch
-  useEffect(() => { setMounted(true); }, []);
-
-  // Read wishlist count from localStorage — only after mount
+  // Read wishlist count from localStorage
   useEffect(() => {
-    if (!mounted) return;
     try {
       const saved = localStorage.getItem("poshak_wishlist");
       if (saved) setWishCount(JSON.parse(saved).length);
     } catch(e) {}
+    // Update when storage changes (across tabs or from other pages)
     const handler = () => {
       try {
         const saved = localStorage.getItem("poshak_wishlist");
@@ -63,7 +59,7 @@ export default function SharedNav() {
     };
     window.addEventListener("storage", handler);
     return () => window.removeEventListener("storage", handler);
-  }, [mounted]);
+  }, []);
 
   useEffect(() => {
     fetch("/api/brands")
@@ -103,7 +99,7 @@ export default function SharedNav() {
 
   return (
     <>
-      <style>{`
+      <style suppressHydrationWarning>{`
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap');
         .poshak-nav{height:62px;border-bottom:1px solid #e8e0d8;display:flex;align-items:center;padding:0 20px;position:sticky;top:0;z-index:200;background:rgba(253,252,251,.97);backdrop-filter:blur(14px);gap:12px;font-family:'DM Sans',sans-serif;}
         .poshak-wordmark{font-family:'Cormorant Garamond',serif;font-size:1.45rem;font-weight:300;letter-spacing:.18em;cursor:pointer;color:#2a2420;user-select:none;white-space:nowrap;}
