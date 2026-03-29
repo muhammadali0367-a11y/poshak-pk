@@ -650,7 +650,6 @@ select{appearance:none;-webkit-appearance:none;background-image:url("data:image/
 // ═══════════════════════════════════════════════════════════════════════════════
 export default function App() {
   const router = useRouter();
-  const [mounted,         setMounted]         = useState(false);
   const [products,        setProducts]        = useState([]);
   const [homepageSections,setHomepageSections]= useState({});   // { "Lawn": [...4 products] }
   const [allBrands,        setAllBrands]        = useState([]);
@@ -671,13 +670,15 @@ export default function App() {
   const [brand,           setBrand]           = useState("All Brands");
   const [wishlist,        setWishlist]        = useState([]);
 
+  // Set mounted on client only — prevents hydration mismatch
+  useEffect(() => { setMounted(true); }, []);
+
   // Load wishlist from localStorage on mount
   useEffect(() => {
     try {
       const saved = localStorage.getItem("poshak_wishlist");
       if (saved) setWishlist(JSON.parse(saved));
     } catch(e) {}
-    setMounted(true);
   }, []);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [filtersOpen,     setFiltersOpen]     = useState(false);
@@ -731,6 +732,7 @@ export default function App() {
 
   // ── Load homepage sections ─────────────────────────────────────────────────
   useEffect(() => {
+    if (!mounted) return;
     const CACHE_KEY = "poshak_homepage_v2";
     const CACHE_TTL = 30 * 60 * 1000;
 
@@ -775,7 +777,7 @@ export default function App() {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, []);
+  }, [mounted]);
 
   // ── Fetch all brands separately — always runs regardless of homepage cache ──
   useEffect(() => {
@@ -968,15 +970,11 @@ export default function App() {
     unknown:  { dot:"in",       text:"Check brand website",    color:"#888"    },
   };
 
-  if (!mounted) return (
-    <div style={{ fontFamily:"'DM Sans',sans-serif", background:"linear-gradient(160deg,#fdfcfb 0%,#f5f0eb 40%,#ede8e0 100%)", minHeight:"100vh" }}>
-      <SharedNav />
-    </div>
-  );
-
   return (
     <div style={{ fontFamily:"'DM Sans',sans-serif", background:"linear-gradient(160deg,#fdfcfb 0%,#f5f0eb 40%,#ede8e0 100%)", minHeight:"100vh", color:"#2a2420" }}>
       <style>{CSS}</style>
+
+      {/* ── NAV (shared across all pages) ── */}
       <SharedNav />
 
       {/* ── LAYOUT ── */}
