@@ -10,6 +10,7 @@
   "dependencies": {
     "@pinecone-database/pinecone": "^7.1.0",
     "@supabase/supabase-js": "^2.99.1",
+    "@vercel/analytics": "^2.0.1",
     "next": "14.2.5",
     "openai": "^6.32.0",
     "react": "^18",
