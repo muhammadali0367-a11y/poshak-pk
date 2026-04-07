@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import SharedNav from "../../SharedNav";
 
@@ -50,6 +50,8 @@ export default function BrandPage() {
   const [category,   setCategory]   = useState("All Categories");
   const [priceRange, setPriceRange] = useState("All Prices");
   const [wishlist,   setWishlist]   = useState([]);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const sentinelRef = useRef(null);
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -92,6 +94,19 @@ export default function BrandPage() {
     setWishlist(w => w.includes(id) ? w.filter(x=>x!==id) : [...w,id]);
   };
 
+  // Infinite scroll sentinel
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && !loadingMore && !loading && page < totalPages) {
+        setPage(n => n + 1);
+      }
+    }, { rootMargin: "200px" });
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [loadingMore, loading, page, totalPages]);
+
   if (!mounted) return (
     <div style={{ display:"flex", alignItems:"center", justifyContent:"center", height:"100vh", fontFamily:"'DM Sans',sans-serif", color:"#c9a96e" }}>
       <div style={{ textAlign:"center" }}>
@@ -124,7 +139,7 @@ export default function BrandPage() {
         .breadcrumb{font-size:.7rem;color:#bbb;}
         .breadcrumb a{color:#c9a96e;text-decoration:none;}
         .breadcrumb a:hover{text-decoration:underline;}
-        @media(max-width:768px){.card-img{height:220px;}}
+        @media(max-width:768px){.card-img{height:220px;}.product-grid{grid-template-columns:repeat(2,1fr)!important;gap:12px!important;}.card-tag{display:none!important;}}
       `}</style>
 
       <SharedNav />
@@ -163,7 +178,7 @@ export default function BrandPage() {
           </div>
         ) : (
           <>
-            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))", gap:"20px", marginBottom:"40px" }}>
+            <div className="product-grid" style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))", gap:"20px", marginBottom:"40px" }}>
               {products.map(p => (
                 <div key={p.id} className="card" onClick={() => router.push(`/product/${p.id}`)}>
                   <div style={{ position:"relative", overflow:"hidden" }}>
@@ -191,18 +206,17 @@ export default function BrandPage() {
                         )}
                       </div>
                     </div>
-                    <span className="tag">{p.product_type || p.collection || p.brand}</span>
+                    <span className="tag card-tag">{p.product_type || p.collection || p.brand}</span>
                   </div>
                 </div>
               ))}
             </div>
-            {page < totalPages && (
-              <div style={{ textAlign:"center", marginBottom:"60px" }}>
-                <button className="load-more" onClick={() => setPage(n => n + 1)} disabled={loading}>
-                  {loading ? "Loading…" : `Load More (${Math.max(0, total - products.length)} remaining)`}
-                </button>
-              </div>
-            )}
+            {/* Infinite scroll sentinel */}
+            <div ref={sentinelRef} style={{ height:"40px", display:"flex", alignItems:"center", justifyContent:"center", marginBottom:"40px" }}>
+              {loading && products.length > 0 && (
+                <div style={{ fontSize:".75rem", color:"#c9a96e", letterSpacing:".1em" }}>Loading more…</div>
+              )}
+            </div>
           </>
         )}
       </div>
