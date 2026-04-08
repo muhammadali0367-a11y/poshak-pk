@@ -19,25 +19,26 @@ export async function GET() {
           .eq('category', cat)
           .eq('in_stock', true)
           .order('brand')
-          .limit(100)
+          .limit(200)
 
         if (!error && data && data.length > 0) {
-          // Pick 1 product per brand up to 6, fill remaining slots if fewer brands
+          // Pick 1 product per brand up to 8, fill remaining slots if fewer brands
+          const TARGET = 8
           const seen  = new Set()
           const mixed = []
 
-          // First pass: 1 per brand
+          // First pass: 1 per brand (ensures brand diversity)
           for (const p of data) {
             if (!seen.has(p.brand)) {
               seen.add(p.brand)
               mixed.push(p)
-              if (mixed.length === 6) break
+              if (mixed.length === TARGET) break
             }
           }
           // Second pass: fill remaining slots
-          if (mixed.length < 6) {
+          if (mixed.length < TARGET) {
             for (const p of data) {
-              if (!mixed.find(m => m.id === p.id) && mixed.length < 6) {
+              if (!mixed.find(m => m.id === p.id) && mixed.length < TARGET) {
                 mixed.push(p)
               }
             }

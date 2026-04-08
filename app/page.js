@@ -993,7 +993,10 @@ export default function App() {
             <p style={{ fontSize:".65rem", letterSpacing:".38em", textTransform:"uppercase", color:"#c9a96e", marginBottom:"14px" }}>Pakistan's Women's Fashion Discovery</p>
             <h1 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"clamp(1.8rem,4vw,3.2rem)", fontWeight:300, lineHeight:1.1, marginBottom:"4px" }}>Find Every Dress,</h1>
             <h1 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"clamp(1.8rem,4vw,3.2rem)", fontWeight:300, fontStyle:"italic", lineHeight:1.1, marginBottom:"24px", color:"#c9a96e" }}>Across Every Brand</h1>
-            <div style={{ width:"48px", height:"1px", background:"linear-gradient(90deg,transparent,#c9a96e,transparent)", margin:"0 auto 0" }} />
+            <div style={{ width:"48px", height:"1px", background:"linear-gradient(90deg,transparent,#c9a96e,transparent)", margin:"0 auto 16px" }} />
+            <p style={{ fontSize:".72rem", color:"#aaa", letterSpacing:".12em", textTransform:"uppercase" }}>
+              Updated daily · 25,000+ products · 15+ brands
+            </p>
           </section>
 
           {/* CATEGORY CAROUSEL */}
@@ -1014,8 +1017,8 @@ export default function App() {
                   <div key={section} style={{ marginBottom:"48px" }}>
                     <div style={{ height:"28px", width:"180px", background:"#f0ebe4", borderRadius:"4px", marginBottom:"8px", animation:"shimmer 1.4s infinite" }} />
                     <div style={{ height:"14px", width:"80px", background:"#f5f0eb", borderRadius:"4px", marginBottom:"20px", animation:"shimmer 1.4s infinite" }} />
-                    <div className="product-grid" style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))", gap:"20px" }}>
-                      {[1,2,3,4].map(i => (
+                    <div className="product-grid" style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))", gap:"16px" }}>
+                      {[1,2,3,4,5,6,7,8].map(i => (
                         <div key={i} style={{ background:"#fff", border:"1px solid #e8e0d8", borderRadius:"10px", overflow:"hidden" }}>
                           <div style={{ height:"300px", background:"linear-gradient(90deg,#f5f0eb 25%,#ede8e0 50%,#f5f0eb 75%)", backgroundSize:"200% 100%", animation:"shimmer 1.4s infinite" }} />
                           <div style={{ padding:"14px" }}>
@@ -1126,7 +1129,9 @@ export default function App() {
                             onClick={() => router.push(`/category/${slugify(cat)}`)}>
                             {cat}
                           </h2>
-                          <p style={{ fontSize:".68rem", color:"#bbb", marginTop:"3px", letterSpacing:".08em" }}>{catProducts.length} dresses</p>
+                          <p style={{ fontSize:".68rem", color:"#bbb", marginTop:"3px", letterSpacing:".08em" }}>
+                            {catProducts.length} of many — <span style={{ color:"#c9a96e", cursor:"pointer" }} onClick={() => router.push(`/category/${slugify(cat)}`)}>view all</span>
+                          </p>
                         </div>
                         <button
                           onClick={() => router.push(`/category/${slugify(cat)}`)}
@@ -1137,7 +1142,7 @@ export default function App() {
                       </div>
                       {/* Responsive grid: 2 cols mobile, 3 tablet, 6 desktop */}
                       <div className="product-grid" style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))", gap:"16px" }}>
-                        {catProducts.slice(0,6).map((p, i) => (
+                        {catProducts.slice(0,8).map((p, i) => (
                           <ProductCard key={p.id} p={p} i={i} wishlist={wishlist} toggleWish={toggleWish} onClick={() => router.push(`/product/${p.id}`)} />
                         ))}
                       </div>
@@ -1349,7 +1354,9 @@ function CategoryCarousel({ categories, onNavigate }) {
   const COLORS = ["#f5ebe0","#e8f0f5","#f0ebe5","#e8f5ec","#f5e8f0","#f5f0e8","#e8eef5","#f0f5e8","#f5e8e8","#e8f5f5","#f0e8f5","#f5f5e8"];
 
   return (
-    <div style={{ overflow:"hidden", borderBottom:"1px solid #e8e0d8", borderTop:"1px solid #e8e0d8", background:"#fdfcfb" }}>
+    <div style={{ overflow:"hidden", borderBottom:"1px solid #e8e0d8", borderTop:"1px solid #e8e0d8", background:"#fdfcfb", position:"relative" }}>
+      <div style={{ position:"absolute", left:0, top:0, bottom:0, width:"32px", background:"linear-gradient(90deg,#fdfcfb,transparent)", zIndex:2, pointerEvents:"none" }} />
+      <div style={{ position:"absolute", right:0, top:0, bottom:0, width:"32px", background:"linear-gradient(270deg,#fdfcfb,transparent)", zIndex:2, pointerEvents:"none" }} />
       <div ref={scrollRef} style={{ display:"flex", overflowX:"hidden", gap:"0", userSelect:"none" }}>
         {doubled.map((cat, i) => (
           <button key={i}
