@@ -1125,6 +1125,10 @@ export default function App() {
                       {/* Section header */}
                       <div style={{ display:"flex", alignItems:"flex-end", justifyContent:"space-between", marginBottom:"16px", paddingBottom:"12px", borderBottom:"1px solid #e8e0d8" }}>
                         <div>
+                          <div style={{ display:"inline-flex", alignItems:"center", gap:"6px", background:"#fdf7ef", border:"1px solid #e8d5b0", borderRadius:"20px", padding:"2px 8px", fontSize:".65rem", color:"#9a6a30", marginBottom:"4px", letterSpacing:".04em" }}>
+                            <span style={{ width:"5px", height:"5px", background:"#c9a96e", borderRadius:"50%", display:"inline-block" }}></span>
+                            Updated daily
+                          </div>
                           <h2 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"1.55rem", fontWeight:400, color:"#2a2420", cursor:"pointer" }}
                             onClick={() => router.push(`/category/${slugify(cat)}`)}>
                             {cat}
@@ -1166,10 +1170,39 @@ export default function App() {
       </div>
 
       {/* FOOTER */}
-      <footer style={{ borderTop:"1px solid #e8e0d8", padding:"40px 24px", textAlign:"center", background:"rgba(255,255,255,.55)" }}>
-        <div className="wordmark" style={{ color:"#c9a96e", fontSize:"1.35rem", marginBottom:"6px" }}>Poshak.pk</div>
-        <p style={{ fontSize:".62rem", letterSpacing:".15em", color:"#bbb", textTransform:"uppercase" }}>Pakistan's Women's Fashion Discovery · v4.0</p>
-        <p style={{ fontSize:".6rem", color:"#ccc", marginTop:"6px" }}>All products link to official brand websites. Stock availability is checked live.</p>
+      <footer style={{ borderTop:"1px solid #e8e0d8", padding:"40px 24px 32px", background:"rgba(255,255,255,.55)" }}>
+        <div style={{ maxWidth:"1240px", margin:"0 auto" }}>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))", gap:"32px", marginBottom:"32px" }}>
+            <div>
+              <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"1.4rem", color:"#c9a96e", marginBottom:"8px", fontWeight:300 }}>Poshak</div>
+              <p style={{ fontSize:".72rem", color:"#aaa", lineHeight:1.6, letterSpacing:".02em" }}>Every brand. One place.<br/>Pakistan's first women's fashion search engine.</p>
+            </div>
+            <div>
+              <div style={{ fontSize:".6rem", letterSpacing:".2em", textTransform:"uppercase", color:"#c9a96e", marginBottom:"10px" }}>Top Brands</div>
+              {["Khaadi","Gul Ahmed","Maria B","Sana Safinaz","Limelight","Beechtree"].map(b => (
+                <div key={b} style={{ fontSize:".75rem", color:"#aaa", marginBottom:"5px", cursor:"pointer" }}
+                  onClick={() => router.push(`/brand/${slugify(b)}`)}>{b}</div>
+              ))}
+            </div>
+            <div>
+              <div style={{ fontSize:".6rem", letterSpacing:".2em", textTransform:"uppercase", color:"#c9a96e", marginBottom:"10px" }}>Categories</div>
+              {["Lawn","Bridal","Pret / Ready to Wear","Unstitched","Festive / Eid","Formal"].map(cat => (
+                <div key={cat} style={{ fontSize:".75rem", color:"#aaa", marginBottom:"5px", cursor:"pointer" }}
+                  onClick={() => router.push(`/category/${slugify(cat)}`)}>{cat}</div>
+              ))}
+            </div>
+            <div>
+              <div style={{ fontSize:".6rem", letterSpacing:".2em", textTransform:"uppercase", color:"#c9a96e", marginBottom:"10px" }}>About</div>
+              <div style={{ fontSize:".75rem", color:"#aaa", marginBottom:"5px" }}>About Poshak</div>
+              <div style={{ fontSize:".75rem", color:"#aaa", marginBottom:"5px" }}>Contact</div>
+              <div style={{ fontSize:".75rem", color:"#aaa", marginBottom:"5px" }}>theposhak.pk</div>
+            </div>
+          </div>
+          <div style={{ borderTop:"1px solid #e8e0d8", paddingTop:"16px", display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:"8px" }}>
+            <p style={{ fontSize:".62rem", letterSpacing:".12em", color:"#ccc", textTransform:"uppercase" }}>© 2026 Poshak · Pakistan's Women's Fashion Discovery</p>
+            <p style={{ fontSize:".62rem", color:"#ccc" }}>Updated daily from 15+ brands</p>
+          </div>
+        </div>
       </footer>
 
       {/* ════ PRODUCT MODAL ════ */}

@@ -107,6 +107,14 @@ function SearchResults() {
           </h1>
           <p style={{ fontSize:".72rem", color:"#bbb", marginTop:"4px" }}>{total.toLocaleString()} dresses found</p>
         </div>
+        <div style={{ display:"flex", gap:"6px", flexWrap:"wrap", marginBottom:"8px" }}>
+          {["All Prices","Under 3,000","3,000–6,000","6,000–10,000","20,000+"].map(pr => (
+            <button key={pr} onClick={() => { setPriceRange(pr); setPage(1); setProducts([]); }}
+              style={{ padding:"5px 12px", borderRadius:"20px", border:"1px solid", fontSize:".68rem", cursor:"pointer", fontFamily:"'DM Sans',sans-serif", background: priceRange===pr?"#2a2420":"#fff", color: priceRange===pr?"#f5f0eb":"#777", borderColor: priceRange===pr?"#2a2420":"#e0d8d0", transition:"all .15s" }}>
+              {pr}
+            </button>
+          ))}
+        </div>
         <div style={{ display:"flex", gap:"10px", flexWrap:"wrap" }}>
           <select value={brand} onChange={e=>{setBrand(e.target.value);setPage(1);setProducts([]);}}
             style={{ background:"#fff",border:"1px solid #e0d8d0",color:"#777",padding:"7px 28px 7px 10px",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontSize:".72rem",letterSpacing:".08em",borderRadius:"3px",appearance:"none",backgroundImage:"url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23aaa'/%3E%3C/svg%3E\")",backgroundRepeat:"no-repeat",backgroundPosition:"right 10px center" }}>
@@ -142,7 +150,7 @@ function SearchResults() {
                 <div style={{ position:"relative", overflow:"hidden" }}>
                   <img src={p.image_url||"https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=500&q=80"}
                     alt={p.name||"Product"} loading="lazy" className="card-img"
-                    style={{ width:"100%", height:"280px", objectFit:"cover", display:"block", background:"#f5f0eb", transition:"transform .48s" }}
+                    style={{ width:"100%", aspectRatio:"3/4", objectFit:"cover", display:"block", background:"#f5f0eb", transition:"transform .48s" }}
                     onError={e=>{e.currentTarget.src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=500&q=80";}}
                   />
                   {p.badge && <div style={{ position:"absolute",top:"10px",left:"10px",background:BADGE_COLORS[p.badge]||"#888",color:"#fff",fontSize:".58rem",letterSpacing:".14em",textTransform:"uppercase",padding:"3px 9px",borderRadius:"20px",fontWeight:600 }}>{p.badge}</div>}
@@ -183,16 +191,38 @@ export default function SearchPage() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap');
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-        .product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:20px;margin-bottom:40px;}
+        .product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:20px;margin-bottom:40px;}.card-img{aspect-ratio:3/4!important;height:auto!important;}
         @media(max-width:768px){.product-grid{grid-template-columns:repeat(2,1fr)!important;gap:12px!important;}.card-img{height:180px!important;}.card-tag{display:none!important;}}
       `}</style>
       <SharedNav />
       <Suspense fallback={<div style={{height:"62px",borderBottom:"1px solid #e8e0d8"}} />}>
         <SearchResults />
       </Suspense>
-      <footer style={{ borderTop:"1px solid #e8e0d8",padding:"40px 24px",textAlign:"center",background:"rgba(255,255,255,.55)" }}>
-        <div style={{ fontFamily:"'Cormorant Garamond',serif",fontSize:"1.35rem",color:"#c9a96e",marginBottom:"6px" }}>Poshak.pk</div>
-        <p style={{ fontSize:".62rem",letterSpacing:".15em",color:"#bbb",textTransform:"uppercase" }}>Pakistan's Women's Fashion Discovery</p>
+      <footer style={{ borderTop:"1px solid #e8e0d8", padding:"40px 24px 32px", background:"rgba(255,255,255,.55)" }}>
+        <div style={{ maxWidth:"1240px", margin:"0 auto" }}>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))", gap:"32px", marginBottom:"32px" }}>
+            <div>
+              <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"1.4rem", color:"#c9a96e", marginBottom:"8px", fontWeight:300 }}>Poshak</div>
+              <p style={{ fontSize:".72rem", color:"#aaa", lineHeight:1.6 }}>Every brand. One place.</p>
+            </div>
+            <div>
+              <div style={{ fontSize:".6rem", letterSpacing:".2em", textTransform:"uppercase", color:"#c9a96e", marginBottom:"10px" }}>Top Brands</div>
+              {["Khaadi","Gul Ahmed","Maria B","Sana Safinaz","Limelight"].map(b => (
+                <div key={b} style={{ fontSize:".75rem", color:"#aaa", marginBottom:"5px", cursor:"pointer" }}>{b}</div>
+              ))}
+            </div>
+            <div>
+              <div style={{ fontSize:".6rem", letterSpacing:".2em", textTransform:"uppercase", color:"#c9a96e", marginBottom:"10px" }}>Categories</div>
+              {["Lawn","Bridal","Pret / Ready to Wear","Unstitched","Festive / Eid"].map(cat => (
+                <div key={cat} style={{ fontSize:".75rem", color:"#aaa", marginBottom:"5px", cursor:"pointer" }}>{cat}</div>
+              ))}
+            </div>
+          </div>
+          <div style={{ borderTop:"1px solid #e8e0d8", paddingTop:"16px", display:"flex", justifyContent:"space-between", flexWrap:"wrap", gap:"8px" }}>
+            <p style={{ fontSize:".62rem", letterSpacing:".12em", color:"#ccc", textTransform:"uppercase" }}>© 2026 Poshak · Pakistan's Women's Fashion Discovery</p>
+            <p style={{ fontSize:".62rem", color:"#ccc" }}>Updated daily from 15+ brands</p>
+          </div>
+        </div>
       </footer>
     </div>
   );

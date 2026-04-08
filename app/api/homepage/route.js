@@ -52,6 +52,28 @@ export async function GET() {
       })
     )
 
+    // New Arrivals — most recently added products across all brands
+    const { data: newData } = await supabase
+      .from('products')
+      .select('id, name, brand, price, original_price, product_type, tags, collection, category, color, fabric, occasion, image_url, product_url, in_stock')
+      .eq('in_stock', true)
+      .order('created_at', { ascending: false })
+      .limit(16)
+
+    if (newData && newData.length > 0) {
+      // 1 per brand for diversity
+      const seen = new Set()
+      const newArrivals = []
+      for (const p of newData) {
+        if (!seen.has(p.brand)) {
+          seen.add(p.brand)
+          newArrivals.push(p)
+          if (newArrivals.length === 8) break
+        }
+      }
+      if (newArrivals.length > 0) sections['New Arrivals'] = newArrivals
+    }
+
     return Response.json({ sections })
   } catch (err) {
     return Response.json({ error: err.message }, { status: 500 })

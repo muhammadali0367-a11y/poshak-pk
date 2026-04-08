@@ -180,7 +180,7 @@ export default function CategoryPage() {
         .wordmark{font-family:'Cormorant Garamond',serif;font-size:1.45rem;font-weight:300;letter-spacing:.18em;cursor:pointer;color:#2a2420;}
         .card{background:#fff;border:1px solid #e8e0d8;border-radius:10px;overflow:hidden;cursor:pointer;position:relative;box-shadow:0 2px 10px rgba(0,0,0,.04);transition:transform .28s,box-shadow .28s,border-color .2s;}
         .card:hover{border-color:#c9a96e;transform:translateY(-5px);box-shadow:0 18px 44px rgba(180,140,90,.14);}
-        .card-img{width:100%;height:280px;object-fit:cover;display:block;background:#f5f0eb;transition:transform .48s;}
+        .card-img{width:100%;aspect-ratio:3/4;object-fit:cover;display:block;background:#f5f0eb;transition:transform .48s;}
         .card:hover .card-img{transform:scale(1.04);}
         .badge-pill{position:absolute;top:8px;left:8px;font-family:'DM Sans',sans-serif;font-size:.52rem;letter-spacing:.1em;text-transform:uppercase;padding:2px 7px;border-radius:20px;font-weight:600;color:#fff;z-index:2;}
         .wish-btn{position:absolute;top:10px;right:10px;background:rgba(255,255,255,.94);border:1px solid #e8e0d8;border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;z-index:2;}
@@ -194,7 +194,7 @@ export default function CategoryPage() {
         .breadcrumb{font-size:.7rem;color:#bbb;}
         .breadcrumb a{color:#c9a96e;text-decoration:none;}
         .breadcrumb a:hover{text-decoration:underline;}
-        @media(max-width:768px){.card-img{height:220px;}.cats-row{display:none!important;}.product-grid{grid-template-columns:repeat(2,1fr)!important;gap:12px!important;}.card-info{padding:10px!important;}.card-tag{display:none!important;}}
+        @media(max-width:768px){.card-img{aspect-ratio:3/4;}.cats-row{display:none!important;}.product-grid{grid-template-columns:repeat(2,1fr)!important;gap:12px!important;}.card-info{padding:10px!important;}.card-tag{display:none!important;}}
       `}</style>
 
       <SharedNav />
@@ -291,9 +291,33 @@ export default function CategoryPage() {
         )}
       </div>
 
-      <footer style={{ borderTop:"1px solid #e8e0d8", padding:"40px 24px", textAlign:"center", background:"rgba(255,255,255,.55)", marginTop:"20px" }}>
-        <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"1.35rem", color:"#c9a96e", marginBottom:"6px" }}>Poshak.pk</div>
-        <p style={{ fontSize:".62rem", letterSpacing:".15em", color:"#bbb", textTransform:"uppercase" }}>Pakistan's Women's Fashion Discovery</p>
+      <footer style={{ borderTop:"1px solid #e8e0d8", padding:"40px 24px 32px", background:"rgba(255,255,255,.55)" }}>
+        <div style={{ maxWidth:"1240px", margin:"0 auto" }}>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))", gap:"32px", marginBottom:"32px" }}>
+            <div>
+              <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"1.4rem", color:"#c9a96e", marginBottom:"8px", fontWeight:300 }}>Poshak</div>
+              <p style={{ fontSize:".72rem", color:"#aaa", lineHeight:1.6 }}>Every brand. One place.</p>
+            </div>
+            <div>
+              <div style={{ fontSize:".6rem", letterSpacing:".2em", textTransform:"uppercase", color:"#c9a96e", marginBottom:"10px" }}>Top Brands</div>
+              {["Khaadi","Gul Ahmed","Maria B","Sana Safinaz","Limelight"].map(b => (
+                <div key={b} style={{ fontSize:".75rem", color:"#aaa", marginBottom:"5px", cursor:"pointer" }}
+                  onClick={() => router.push(`/brand/${b.toLowerCase().replace(/\s+/g,"-")}`)}>{b}</div>
+              ))}
+            </div>
+            <div>
+              <div style={{ fontSize:".6rem", letterSpacing:".2em", textTransform:"uppercase", color:"#c9a96e", marginBottom:"10px" }}>Categories</div>
+              {["Lawn","Bridal","Pret / Ready to Wear","Unstitched","Festive / Eid"].map(cat => (
+                <div key={cat} style={{ fontSize:".75rem", color:"#aaa", marginBottom:"5px", cursor:"pointer" }}
+                  onClick={() => router.push(`/category/${cat.toLowerCase().replace(/\s*\/\s*/g,"-").replace(/\s+/g,"-")}`)}>{cat}</div>
+              ))}
+            </div>
+          </div>
+          <div style={{ borderTop:"1px solid #e8e0d8", paddingTop:"16px", display:"flex", justifyContent:"space-between", flexWrap:"wrap", gap:"8px" }}>
+            <p style={{ fontSize:".62rem", letterSpacing:".12em", color:"#ccc", textTransform:"uppercase" }}>© 2026 Poshak · Pakistan's Women's Fashion Discovery</p>
+            <p style={{ fontSize:".62rem", color:"#ccc" }}>Updated daily from 15+ brands</p>
+          </div>
+        </div>
       </footer>
     </div>
   );

@@ -284,9 +284,12 @@ export default function ProductPage() {
         )}
       </div>
 
-      <footer style={{ borderTop:"1px solid #e8e0d8", padding:"40px 24px", textAlign:"center", background:"rgba(255,255,255,.55)" }}>
-        <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"1.35rem", color:"#c9a96e", marginBottom:"6px" }}>Poshak.pk</div>
-        <p style={{ fontSize:".62rem", letterSpacing:".15em", color:"#bbb", textTransform:"uppercase" }}>Pakistan's Women's Fashion Discovery</p>
+      <footer style={{ borderTop:"1px solid #e8e0d8", padding:"32px 24px", background:"rgba(255,255,255,.55)" }}>
+        <div style={{ maxWidth:"1240px", margin:"0 auto", display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:"12px" }}>
+          <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"1.2rem", color:"#c9a96e", fontWeight:300 }}>Poshak</div>
+          <p style={{ fontSize:".62rem", letterSpacing:".12em", color:"#ccc", textTransform:"uppercase" }}>Every brand. One place.</p>
+          <p style={{ fontSize:".62rem", color:"#ccc" }}>Updated daily from 15+ brands</p>
+        </div>
       </footer>
     </div>
   );

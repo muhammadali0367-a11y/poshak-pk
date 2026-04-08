@@ -101,7 +101,7 @@ export default function SharedNav() {
     <>
       <style suppressHydrationWarning>{`
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap');
-        .poshak-nav{height:62px;border-bottom:1px solid #e8e0d8;display:flex;align-items:center;padding:0 20px;position:sticky;top:0;z-index:200;background:rgba(253,252,251,.97);backdrop-filter:blur(14px);gap:12px;font-family:'DM Sans',sans-serif;}
+        .poshak-nav{height:62px;border-bottom:1px solid #e8e0d8;display:grid;grid-template-columns:auto auto 1fr auto;align-items:center;padding:0 20px;position:sticky;top:0;z-index:200;background:rgba(253,252,251,.97);backdrop-filter:blur(14px);gap:12px;font-family:'DM Sans',sans-serif;}
         .poshak-wordmark{font-family:'Cormorant Garamond',serif;font-size:1.45rem;font-weight:300;letter-spacing:.18em;cursor:pointer;color:#2a2420;user-select:none;white-space:nowrap;}
         .poshak-hamburger{background:none;border:none;cursor:pointer;padding:8px;display:flex;flex-direction:column;gap:5px;flex-shrink:0;}
         .poshak-hamburger span{display:block;width:22px;height:1.5px;background:#2a2420;border-radius:2px;transition:all .22s;}
@@ -109,9 +109,9 @@ export default function SharedNav() {
         .poshak-sb.open{transform:translateX(0);}
         .poshak-overlay{position:fixed;inset:0;background:rgba(20,14,8,.35);z-index:299;opacity:0;pointer-events:none;transition:opacity .28s;}
         .poshak-overlay.open{opacity:1;pointer-events:all;}
-        .poshak-search-wrap{flex:1;display:flex;align-items:center;background:#fff;border:1px solid #e0d8d0;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.04);max-width:620px;position:relative;}
-        .poshak-all-btn{height:44px;padding:0 12px;background:transparent;border:none;border-right:1px solid #e0d8d0;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.75rem;color:#555;display:flex;align-items:center;gap:5px;white-space:nowrap;flex-shrink:0;}
-        .poshak-search-input{flex:1;height:44px;border:none;outline:none;background:transparent;font-family:'DM Sans',sans-serif;font-size:.88rem;color:#2a2420;padding:0 12px;}
+        .poshak-search-wrap{display:flex;align-items:center;background:#fff;border:1px solid #e0d8d0;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.04);width:100%;max-width:560px;margin:0 auto;position:relative;}
+        .poshak-all-btn{height:46px;padding:0 12px;background:transparent;border:none;border-right:1px solid #e0d8d0;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.75rem;color:#555;display:flex;align-items:center;gap:5px;white-space:nowrap;flex-shrink:0;}
+        .poshak-search-input{flex:1;height:46px;border:none;outline:none;background:transparent;font-family:'DM Sans',sans-serif;font-size:.9rem;color:#2a2420;padding:0 12px;}
         .poshak-search-input::placeholder{color:#c8c0b8;}
         .poshak-dropdown{position:fixed;top:62px;left:50%;transform:translateX(-50%);background:#fff;border:1px solid #e0d8d0;border-radius:10px;box-shadow:0 12px 40px rgba(0,0,0,.14);z-index:201;padding:20px 24px;display:flex;gap:32px;width:min(520px,94vw);max-height:80vh;overflow-y:auto;}
         .poshak-dd-col{flex:1;min-width:0;}
@@ -155,7 +155,7 @@ export default function SharedNav() {
           <span style={{ transform:sidebarOpen?"rotate(-45deg) translate(4px,-4px)":"none" }}/>
         </button>
         <div className="poshak-wordmark" onClick={() => router.push("/")}>
-          Poshak<span style={{color:"#c9a96e"}}>.</span>pk
+          Poshak
         </div>
 
         {/* Search */}
