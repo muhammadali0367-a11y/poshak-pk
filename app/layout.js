@@ -18,9 +18,6 @@ export const metadata = {
     locale: "en_PK",
     type: "website",
   },
-  other: {
-    "dns-prefetch": "//cdn.shopify.com",
-  },
 };
 
 const websiteSchema = {
@@ -58,12 +55,6 @@ export default function RootLayout({ children }) {
 
   return (
     <html lang="en">
-      <head>
-        <link rel="preconnect" href="https://cdn.shopify.com" />
-        <link rel="preconnect" href="https://pk.khaadi.com" />
-        <link rel="dns-prefetch" href="//cdn.shopify.com" />
-        <link rel="dns-prefetch" href="//pk.khaadi.com" />
-      </head>
       <body>
         {/* Structured Data */}
         <script
