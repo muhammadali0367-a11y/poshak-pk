@@ -1370,7 +1370,7 @@ function CategoryCarousel({ categories, onNavigate }) {
     </div>
   );
 }
-function ImageWithFallback({ src, alt, className }) {
+function ImageWithFallback({ src, alt, className, priority = false }) {
   const [imgSrc, setImgSrc] = useState(src);
   useEffect(() => { setImgSrc(src); }, [src]);
   return (
@@ -1378,7 +1378,8 @@ function ImageWithFallback({ src, alt, className }) {
       className={className}
       src={imgSrc}
       alt={alt}
-      loading="lazy"
+      loading={priority ? "eager" : "lazy"}
+      fetchPriority={priority ? "high" : "auto"}
       onError={() => {
         setImgSrc("https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=500&q=80");
       }}
@@ -1388,6 +1389,7 @@ function ImageWithFallback({ src, alt, className }) {
 
 // ─── PRODUCT CARD ─────────────────────────────────────────────────────────────
 function ProductCard({ p, i, wishlist, toggleWish, onClick }) {
+  const priority = i < 4;
   return (
     <div
       className={`card animate-in ${!p.in_stock ? "sold-out" : ""}`}
@@ -1395,7 +1397,7 @@ function ProductCard({ p, i, wishlist, toggleWish, onClick }) {
       onClick={onClick}>
       <div style={{ position:"relative", overflow:"hidden" }}>
         {/* Image — always show regardless of stock status */}
-        <ImageWithFallback src={p.image} alt={p.name} className="card-img" />
+        <ImageWithFallback src={p.image} alt={p.name} className="card-img" priority={priority} />
 
         {/* Sold Out badge — top-right, small, doesn't cover image */}
         {!p.in_stock && (
