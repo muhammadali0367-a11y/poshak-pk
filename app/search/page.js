@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import SharedNav from "../SharedNav";
 
@@ -45,6 +45,7 @@ function SearchResults() {
   const [allBrands,  setAllBrands]  = useState([]);
   const [brand,      setBrand]      = useState("All Brands");
   const [wishlist,   setWishlist]   = useState([]);
+  const sentinelRef = useRef(null);
 
   useEffect(() => {
     fetch("/api/brands").then(r=>r.json()).then(j=>{ if(j.brands) setAllBrands(j.brands); }).catch(()=>{});
@@ -83,6 +84,18 @@ function SearchResults() {
   }, [rawQ]);
 
   const toggleWish = (id,e) => { e?.stopPropagation(); setWishlist(w=>w.includes(id)?w.filter(x=>x!==id):[...w,id]); };
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && !loading && page < totalPages) {
+        setPage(n => n + 1);
+      }
+    }, { rootMargin: "200px" });
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [loading, page, totalPages]);
   const BRANDS = ["All Brands",...allBrands];
 
   return (
@@ -119,7 +132,7 @@ function SearchResults() {
         </div>
       ) : (
         <>
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))", gap:"20px", marginBottom:"40px" }}>
+          <div className="product-grid">
             {products.map(p => (
               <div key={p.id}
                 style={{ background:"#fff", border:"1px solid #e8e0d8", borderRadius:"10px", overflow:"hidden", cursor:"pointer", position:"relative", boxShadow:"0 2px 10px rgba(0,0,0,.04)", transition:"transform .28s,box-shadow .28s,border-color .2s" }}
@@ -128,7 +141,7 @@ function SearchResults() {
                 onMouseOut={e => { e.currentTarget.style.transform="none"; e.currentTarget.style.borderColor="#e8e0d8"; e.currentTarget.style.boxShadow="0 2px 10px rgba(0,0,0,.04)"; }}>
                 <div style={{ position:"relative", overflow:"hidden" }}>
                   <img src={p.image_url||"https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=500&q=80"}
-                    alt={p.name||"Product"} loading="lazy"
+                    alt={p.name||"Product"} loading="lazy" className="card-img"
                     style={{ width:"100%", height:"280px", objectFit:"cover", display:"block", background:"#f5f0eb", transition:"transform .48s" }}
                     onError={e=>{e.currentTarget.src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=500&q=80";}}
                   />
@@ -153,14 +166,11 @@ function SearchResults() {
               </div>
             ))}
           </div>
-          {page < totalPages && (
-            <div style={{ textAlign:"center", marginBottom:"60px" }}>
-              <button onClick={()=>setPage(n=>n+1)} disabled={loading}
-                style={{ background:"none",border:"1px solid #e0d8d0",borderRadius:"4px",padding:"12px 40px",cursor:"pointer",fontSize:".72rem",letterSpacing:".14em",textTransform:"uppercase",color:"#888",fontFamily:"'DM Sans',sans-serif",transition:"all .2s" }}>
-                {loading ? "Loading…" : `Load More (${Math.max(0,total-products.length)} remaining)`}
-              </button>
-            </div>
-          )}
+          <div ref={sentinelRef} style={{ height:"40px", display:"flex", alignItems:"center", justifyContent:"center", marginBottom:"40px" }}>
+            {loading && products.length > 0 && (
+              <div style={{ fontSize:".75rem", color:"#c9a96e", letterSpacing:".1em" }}>Loading more…</div>
+            )}
+          </div>
         </>
       )}
     </div>
@@ -173,6 +183,8 @@ export default function SearchPage() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap');
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+        .product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:20px;margin-bottom:40px;}
+        @media(max-width:768px){.product-grid{grid-template-columns:repeat(2,1fr)!important;gap:12px!important;}.card-img{height:180px!important;}.card-tag{display:none!important;}}
       `}</style>
       <SharedNav />
       <Suspense fallback={<div style={{height:"62px",borderBottom:"1px solid #e8e0d8"}} />}>
