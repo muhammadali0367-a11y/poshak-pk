@@ -1,4 +1,5 @@
 import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import Script from "next/script";
 
 export const metadata = {
@@ -85,38 +86,9 @@ export default function RootLayout({ children }) {
 
         {children}
 
-        {/* Vercel Analytics */}
+        {/* Vercel Analytics + Speed Insights */}
         <Analytics />
-      </body>
-    </html>
-  );
-}
-
-  return (
-    <html lang="en">
-      <body>
-        {/* Google Analytics 4 */}
-        {GA_ID && (
-          <>
-            <Script
-              src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
-              strategy="afterInteractive"
-            />
-            <Script id="google-analytics" strategy="afterInteractive">
-              {`
-                window.dataLayer = window.dataLayer || [];
-                function gtag(){dataLayer.push(arguments);}
-                gtag('js', new Date());
-                gtag('config', '${GA_ID}');
-              `}
-            </Script>
-          </>
-        )}
-
-        {children}
-
-        {/* Vercel Analytics */}
-        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
