@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import SharedNav from "../../SharedNav";
 
@@ -133,18 +133,19 @@ export default function CategoryPage() {
     const sentinel = sentinelRef.current;
     if (!sentinel) return;
 
+    let timer = null;
     const observer = new IntersectionObserver(
       (entries) => {
         const entry = entries[0];
         if (entry.isIntersecting && !loading && page < totalPages) {
-          setPage(p => p + 1);
+          timer = setTimeout(() => setPage(p => p + 1), 100);
         }
       },
-      { rootMargin: "200px" } // trigger 200px before hitting bottom
+      { rootMargin: "400px" }
     );
 
     observer.observe(sentinel);
-    return () => observer.disconnect();
+    return () => { observer.disconnect(); if (timer) clearTimeout(timer); };
   }, [loading, page, totalPages]);
 
   const toggleWish = (id, e) => {
@@ -153,6 +154,13 @@ export default function CategoryPage() {
   };
 
   const BRANDS = ["All Brands", ...allBrands];
+
+  // Virtualization: keep only last 72 products in DOM to reduce INP
+  const WINDOW_SIZE = 72;
+  const visibleProducts = useMemo(() => {
+    if (products.length <= WINDOW_SIZE) return products;
+    return products.slice(products.length - WINDOW_SIZE);
+  }, [products]);
 
   if (!mounted) return (
     <div style={{ display:"flex", alignItems:"center", justifyContent:"center", height:"100vh", fontFamily:"'DM Sans',sans-serif", color:"#c9a96e" }}>
@@ -242,7 +250,7 @@ export default function CategoryPage() {
         ) : (
           <>
             <div className="product-grid" style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))", gap:"20px", marginBottom:"40px" }}>
-              {products.map((p) => (
+              {visibleProducts.map((p) => (
                 <div key={p.id} className="card" onClick={() => router.push(`/product/${p.id}`)}>
                   <div style={{ position:"relative", overflow:"hidden" }}>
                     <img className="card-img"

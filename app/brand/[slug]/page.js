@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import SharedNav from "../../SharedNav";
 
@@ -94,17 +94,25 @@ export default function BrandPage() {
     setWishlist(w => w.includes(id) ? w.filter(x=>x!==id) : [...w,id]);
   };
 
-  // Infinite scroll sentinel
+  // Virtualization: keep only last 3 pages in DOM (72 products max)
+  const WINDOW_SIZE = 72;
+  const visibleProducts = useMemo(() => {
+    if (products.length <= WINDOW_SIZE) return products;
+    return products.slice(products.length - WINDOW_SIZE);
+  }, [products]);
+
+  // Infinite scroll — debounced to avoid blocking main thread
   useEffect(() => {
     const sentinel = sentinelRef.current;
     if (!sentinel) return;
+    let timer = null;
     const observer = new IntersectionObserver(entries => {
       if (entries[0].isIntersecting && !loadingMore && !loading && page < totalPages) {
-        setPage(n => n + 1);
+        timer = setTimeout(() => setPage(n => n + 1), 100);
       }
-    }, { rootMargin: "200px" });
+    }, { rootMargin: "400px" });
     observer.observe(sentinel);
-    return () => observer.disconnect();
+    return () => { observer.disconnect(); if (timer) clearTimeout(timer); };
   }, [loadingMore, loading, page, totalPages]);
 
   if (!mounted) return (
@@ -179,7 +187,7 @@ export default function BrandPage() {
         ) : (
           <>
             <div className="product-grid" style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))", gap:"20px", marginBottom:"40px" }}>
-              {products.map(p => (
+              {visibleProducts.map(p => (
                 <div key={p.id} className="card" onClick={() => router.push(`/product/${p.id}`)}>
                   <div style={{ position:"relative", overflow:"hidden" }}>
                     <img className="card-img"
