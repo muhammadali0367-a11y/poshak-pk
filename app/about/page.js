@@ -12,16 +12,15 @@ export default function AboutPage() {
   const router = useRouter();
 
   return (
-    <div style={{ fontFamily:"'DM Sans',sans-serif", background:"linear-gradient(160deg,#fdfcfb 0%,#f5f0eb 100%)", minHeight:"100vh", color:"#2a2420" }}>
+    <div style={{ fontFamily:"'DM Sans',sans-serif", background:"#fdfcfb", minHeight:"100vh", color:"#2a2420" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap');
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
         .about-section{padding:60px 24px;max-width:760px;margin:0 auto;}
         .about-divider{width:48px;height:1px;background:#c9a96e;margin:24px 0;}
-        .brand-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:20px;}
+        .brand-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:20px;min-height:200px;}
         .brand-pill{background:#fff;border:1px solid #e8e0d8;border-radius:6px;padding:10px 14px;font-size:.78rem;color:#555;cursor:pointer;transition:all .18s;text-align:center;}
         .brand-pill:hover{border-color:#c9a96e;color:#9a6a30;background:#fdf7ef;}
-        .contact-card{background:#fff;border:1px solid #e8e0d8;border-radius:12px;padding:28px 32px;margin-top:20px;}
+        .contact-card{background:#fff;border:1px solid #e8e0d8;border-radius:12px;padding:28px 32px;margin-top:20px;min-height:120px;}
         @media(max-width:600px){.about-section{padding:40px 20px;}.contact-card{padding:20px;}}
       `}</style>
 

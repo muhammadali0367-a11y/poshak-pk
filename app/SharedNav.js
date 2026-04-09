@@ -148,7 +148,7 @@ export default function SharedNav() {
         .poshak-sug-item{display:block;width:100%;padding:9px 14px;background:none;border:none;text-align:left;font-size:.82rem;color:#2a2420;font-family:'DM Sans',sans-serif;cursor:pointer;transition:background .12s;}
         .poshak-sug-item:hover{background:#fdf7ef;color:#9a6a30;}
         .poshak-sug-label{font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:#c9a96e;padding:8px 14px 4px;display:block;}
-        .poshak-toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#2a2420;color:#f5f0eb;padding:10px 20px;border-radius:24px;font-size:.78rem;font-family:'DM Sans',sans-serif;z-index:999;pointer-events:none;white-space:nowrap;border:1px solid #c9a96e;transition:opacity .3s;}
+        .poshak-toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#2a2420;color:#f5f0eb;padding:10px 20px;border-radius:24px;font-size:.78rem;font-family:'DM Sans',sans-serif;z-index:999;pointer-events:none;white-space:nowrap;border:1px solid #c9a96e;transition:opacity .3s;opacity:0;}
         @media(max-width:600px){
           .poshak-dropdown{gap:16px;padding:16px;}
           .poshak-dd-btn{font-size:.72rem;}
@@ -269,9 +269,9 @@ export default function SharedNav() {
           <span className="poshak-wish-label">Wishlist{wishCount>0?` (${wishCount})`:""}</span>
         </button>
       </nav>
-      {toast && (
-        <div className="poshak-toast">{toast}</div>
-      )}
+      <div className="poshak-toast" style={{ opacity: toast ? 1 : 0 }}>
+        {toast || ""}
+      </div>
     </>
   );
 }

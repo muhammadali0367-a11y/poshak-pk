@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import SharedNav from "./SharedNav";
 
@@ -1219,10 +1220,9 @@ export default function App() {
             {recentlyViewed.slice(0, 6).map(p => (
               <div key={p.id} style={{ background:"#fff", border:"1px solid #e8e0d8", borderRadius:"8px", overflow:"hidden", cursor:"pointer" }}
                 onClick={() => openProduct(p)}>
-                <img src={p.image || p.image_url || "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=300&q=70"}
-                  alt={p.name} loading="lazy"
-                  style={{ width:"100%", aspectRatio:"3/4", objectFit:"cover", display:"block", background:"#f5f0eb" }}
-                  onError={e => { e.currentTarget.src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=300&q=70"; }} />
+                <div style={{ position:"relative", width:"100%", aspectRatio:"3/4", background:"#f5f0eb" }}>
+                  <Image src={p.image || p.image_url || "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=300&q=70"} alt={p.name || "Product"} fill sizes="(max-width:768px) 33vw, 160px" style={{ objectFit:"cover" }} onError={()=>{}} />
+                </div>
                 <div style={{ padding:"8px" }}>
                   <div style={{ fontSize:".58rem", color:"#c9a96e", textTransform:"uppercase", letterSpacing:".1em", marginBottom:"2px" }}>{p.brand}</div>
                   <div style={{ fontSize:".78rem", color:"#2a2420", lineHeight:1.3, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical" }}>{p.name}</div>
@@ -1293,7 +1293,10 @@ export default function App() {
         <div className="modal-overlay" onClick={e => { if(e.target===e.currentTarget) setSelectedProduct(null); }}>
           <div className="modal">
             <div style={{ position:"relative" }}>
-              <img src={selectedProduct.image} alt={selectedProduct.name}
+              <div style={{ position:"relative", width:"100%", aspectRatio:"3/4", background:"#f5f0eb" }}>
+              <Image src={selectedProduct.image || "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=600&q=80"} alt={selectedProduct.name || "Product"} fill priority sizes="(max-width:768px) 100vw, 50vw" style={{ objectFit:"cover" }} onError={()=>{}} />
+              </div>
+              <div style={{ display:"none" }}
                 style={{ width:"100%", height:"420px", objectFit:"cover", display:"block",
                   filter: liveStock==="sold_out" ? "grayscale(25%)" : "none",
                   transition:"filter .3s" }} />
@@ -1397,7 +1400,9 @@ export default function App() {
                   <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(126px,1fr))", gap:"10px" }}>
                     {similar.map(sp => (
                       <div key={sp.id} className="similar-card" onClick={() => setSelectedProduct(sp)}>
-                        <img className="similar-card-img" src={sp.image} alt={sp.name} />
+                        <div style={{ position:"relative", width:"100%", aspectRatio:"3/4", background:"#f5f0eb" }}>
+                          <Image src={sp.image || "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=300&q=70"} alt={sp.name || "Product"} fill sizes="25vw" style={{ objectFit:"cover" }} onError={()=>{}} />
+                        </div>
                         <div style={{ padding:"8px" }}>
                           <div style={{ fontSize:".56rem", letterSpacing:".12em", textTransform:"uppercase", color:"#c9a96e", marginBottom:"2px" }}>{sp.brand}</div>
                           <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:".82rem", color:"#2a2420", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", marginBottom:"3px" }}>{sp.name}</div>
@@ -1476,24 +1481,24 @@ function CategoryCarousel({ categories, onNavigate, activeCategory }) {
     </div>
   );
 }
-function ImageWithFallback({ src, alt, className, priority = false }) {
-  const [imgSrc, setImgSrc] = useState(src);
-  useEffect(() => { setImgSrc(src); }, [src]);
+function ImageWithFallback({ src, alt, priority = false }) {
+  const [imgSrc, setImgSrc] = useState(src || "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=500&q=80");
+  useEffect(() => { if (src) setImgSrc(src); }, [src]);
   return (
-    <img
-      className={className}
+    <Image
       src={imgSrc}
-      alt={alt}
+      alt={alt || "Product"}
+      fill
+      sizes="(max-width:768px) 50vw, 220px"
+      style={{ objectFit:"cover" }}
+      priority={priority}
       loading={priority ? "eager" : "lazy"}
-      fetchPriority={priority ? "high" : "auto"}
-      onError={() => {
-        setImgSrc("https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=500&q=80");
-      }}
+      onError={() => setImgSrc("https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=500&q=80")}
     />
   );
 }
 
-// ─── PRODUCT CARD ─────────────────────────────────────────────────────────────
+// ─── PRODUCT CARD — wraps shared ProductCard ───────────────────────────────────
 function ProductCard({ p, i, wishlist, toggleWish, onClick }) {
   const priority = i < 4;
   return (
@@ -1501,9 +1506,9 @@ function ProductCard({ p, i, wishlist, toggleWish, onClick }) {
       className={`card animate-in ${!p.in_stock ? "sold-out" : ""}`}
       style={{ animationDelay:`${Math.min(i,12)*.055}s` }}
       onClick={onClick}>
-      <div style={{ position:"relative", overflow:"hidden" }}>
-        {/* Image — always show regardless of stock status */}
-        <ImageWithFallback src={p.image} alt={p.name} className="card-img" priority={priority} />
+      <div style={{ position:"relative", aspectRatio:"3/4", overflow:"hidden", background:"#f5f0eb" }}>
+        {/* Image — next/image with fill for zero CLS */}
+        <ImageWithFallback src={p.image} alt={p.name} priority={priority} />
 
         {/* Sold Out badge — top-right, small, doesn't cover image */}
         {!p.in_stock && (

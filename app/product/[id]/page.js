@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import SharedNav from "../../SharedNav";
 
@@ -172,8 +173,8 @@ export default function ProductPage() {
         .breadcrumb{font-size:.7rem;color:#bbb;}
         .breadcrumb a{color:#c9a96e;text-decoration:none;}
         .breadcrumb a:hover{text-decoration:underline;}
-        @media(max-width:768px){.desktop-cta{display:none;}.product-layout{flex-direction:column !important;}.product-img{height:auto !important;aspect-ratio:3/4;}}
-        .sticky-cta{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e8e0d8;padding:12px 20px;z-index:100;display:flex;gap:10px;align-items:center;}
+        @media(max-width:768px){.desktop-cta{display:none;}.product-layout{flex-direction:column !important;}}
+        .sticky-cta{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e8e0d8;padding:12px 20px;z-index:100;display:flex;gap:10px;align-items:center;transform:translateZ(0);will-change:transform;}
         .share-btn{background:none;border:1px solid #e0d8d0;color:#777;padding:10px 14px;border-radius:4px;cursor:pointer;font-size:.75rem;font-family:'DM Sans',sans-serif;white-space:nowrap;transition:all .2s;flex-shrink:0;}
         .share-btn:hover{border-color:#c9a96e;color:#c9a96e;}
         @media(min-width:769px){.sticky-cta{display:none;}}@media(max-width:768px){.product-actions{padding-bottom:80px;}}
@@ -194,10 +195,14 @@ export default function ProductPage() {
           {/* Image */}
           <div style={{ flex:"0 0 460px" }}>
             <div style={{ position:"relative", borderRadius:"12px", overflow:"hidden", boxShadow:"0 8px 40px rgba(0,0,0,.1)" }}>
-              <img className="product-img" src={product.image_url} alt={product.name}
-                fetchPriority="high"
-                loading="eager"
-                style={{ width:"100%", height:"540px", objectFit:"cover", display:"block", background:"#f5f0eb", filter: liveStock==="sold_out"?"grayscale(20%)":"none" }}
+              <div style={{ position:"relative", width:"100%", aspectRatio:"3/4", background:"#f5f0eb" }}>
+              <Image src={product.image_url || "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&q=80"}
+                alt={product.name || "Product"}
+                fill
+                priority
+                sizes="(max-width:768px) 100vw, 50vw"
+                style={{ objectFit:"cover", filter: liveStock==="sold_out"?"grayscale(20%)":"none" }}
+                onError={() => {}}
                 onError={e => { e.target.src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=500&q=80"; }} />
               {discountPct && (
                 <div style={{ position:"absolute", top:"14px", left:"14px", background:BADGE_COLORS.Sale, color:"#fff", fontSize:".62rem", letterSpacing:".14em", textTransform:"uppercase", padding:"4px 12px", borderRadius:"20px", fontWeight:600 }}>
@@ -289,7 +294,9 @@ export default function ProductPage() {
             <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))", gap:"16px" }}>
               {similar.map(sp => (
                 <div key={sp.id} className="similar-card" onClick={() => router.push(`/product/${sp.id}`)}>
-                  <img src={sp.image_url} alt={sp.name} style={{ width:"100%", height:"180px", objectFit:"cover", display:"block" }}
+                  <div style={{ position:"relative", width:"100%", aspectRatio:"3/4", background:"#f5f0eb" }}>
+                    <Image src={sp.image_url || "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=400&q=70"} alt={sp.name || "Product"} fill sizes="25vw" style={{ objectFit:"cover" }} onError={()=>{}} />
+                  </div
                     onError={e => { e.target.src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=500&q=80"; }} />
                   <div style={{ padding:"10px" }}>
                     <div style={{ fontSize:".56rem", letterSpacing:".12em", textTransform:"uppercase", color:"#c9a96e", marginBottom:"3px" }}>{sp.brand}</div>

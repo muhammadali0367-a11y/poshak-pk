@@ -1,5 +1,7 @@
 "use client";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import Image from "next/image";
+import ProductCard from "../../components/ProductCard";
 import { useParams, useRouter } from "next/navigation";
 import SharedNav from "../../SharedNav";
 
@@ -149,7 +151,7 @@ export default function BrandPage() {
         select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23aaa'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px !important;}
         .load-more{background:none;border:1px solid #e0d8d0;border-radius:4px;padding:12px 40px;cursor:pointer;font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:#888;font-family:'DM Sans',sans-serif;transition:all .2s;}
         .load-more:hover{border-color:#c9a96e;color:#c9a96e;}
-        .breadcrumb{font-size:.7rem;color:#bbb;}.back-to-top{position:fixed;bottom:24px;right:20px;width:40px;height:40px;background:#2a2420;border:1px solid #c9a96e;border-radius:50%;cursor:pointer;display:none;align-items:center;justify-content:center;z-index:90;}.back-to-top.visible{display:flex;}
+        .breadcrumb{font-size:.7rem;color:#bbb;}.back-to-top{position:fixed;bottom:24px;right:20px;width:40px;height:40px;background:#2a2420;border:1px solid #c9a96e;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:90;opacity:0;pointer-events:none;transition:opacity .3s;}.back-to-top.visible{opacity:1;pointer-events:all;}
         .breadcrumb a{color:#c9a96e;text-decoration:none;}
         .breadcrumb a:hover{text-decoration:underline;}
         @media(max-width:768px){.card-img{aspect-ratio:3/4;}.product-grid{grid-template-columns:repeat(2,1fr)!important;gap:12px!important;}.card-tag{display:none!important;}}

@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import ProductCard from "../../components/ProductCard";
 import { useParams, useRouter } from "next/navigation";
 import SharedNav from "../../SharedNav";
 

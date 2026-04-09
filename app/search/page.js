@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useRef, Suspense } from "react";
+import ProductCard from "../components/ProductCard";
 import { useRouter, useSearchParams } from "next/navigation";
 import SharedNav from "../SharedNav";
 
@@ -142,36 +143,7 @@ function SearchResults() {
         <>
           <div className="product-grid">
             {products.map((p, idx) => (
-              <div key={p.id}
-                style={{ background:"#fff", border:"1px solid #e8e0d8", borderRadius:"10px", overflow:"hidden", cursor:"pointer", position:"relative", boxShadow:"0 2px 10px rgba(0,0,0,.04)", transition:"transform .28s,box-shadow .28s,border-color .2s" }}
-                onClick={() => router.push(`/product/${p.id}`)}
-                onMouseOver={e => { e.currentTarget.style.transform="translateY(-5px)"; e.currentTarget.style.borderColor="#c9a96e"; e.currentTarget.style.boxShadow="0 18px 44px rgba(180,140,90,.14)"; }}
-                onMouseOut={e => { e.currentTarget.style.transform="none"; e.currentTarget.style.borderColor="#e8e0d8"; e.currentTarget.style.boxShadow="0 2px 10px rgba(0,0,0,.04)"; }}>
-                <div style={{ position:"relative", overflow:"hidden" }}>
-                  <img src={p.image_url||"https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=500&q=80"}
-                    alt={p.name||"Product"} loading={idx < 4 ? "eager" : "lazy"} fetchPriority={idx < 4 ? "high" : "auto"} className="card-img"
-                    style={{ width:"100%", aspectRatio:"3/4", objectFit:"cover", display:"block", background:"#f5f0eb", transition:"transform .48s" }}
-                    onError={e=>{e.currentTarget.src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=500&q=80";}}
-                  />
-                  {p.badge && <div style={{ position:"absolute",top:"10px",left:"10px",background:BADGE_COLORS[p.badge]||"#888",color:"#fff",fontSize:".58rem",letterSpacing:".14em",textTransform:"uppercase",padding:"3px 9px",borderRadius:"20px",fontWeight:600 }}>{p.badge}</div>}
-                  <button onClick={e=>toggleWish(p.id,e)}
-                    style={{ position:"absolute",top:"10px",right:"10px",background:"rgba(255,255,255,.94)",border:"1px solid #e8e0d8",borderRadius:"50%",width:"34px",height:"34px",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer" }}>
-                    <span style={{ color:wishlist.includes(p.id)?"#c9a96e":"#ccc",fontSize:".9rem" }}>{wishlist.includes(p.id)?"♥":"♡"}</span>
-                  </button>
-                </div>
-                <div style={{ padding:"14px" }}>
-                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
-                    <div style={{ flex:1, minWidth:0, paddingRight:"8px" }}>
-                      <div style={{ fontSize:".6rem",letterSpacing:".14em",textTransform:"uppercase",color:"#c9a96e",marginBottom:"4px" }}>{p.brand}</div>
-                      <div style={{ fontFamily:"'Cormorant Garamond',serif",fontSize:"1rem",color:"#2a2420",lineHeight:1.3,overflow:"hidden",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical" }}>{p.name}</div>
-                    </div>
-                    <div style={{ textAlign:"right",flexShrink:0 }}>
-                      <div style={{ fontSize:".88rem",fontWeight:500 }}>Rs. {p.price.toLocaleString()}</div>
-                      {p.original_price>p.price && <div style={{ fontSize:".72rem",textDecoration:"line-through",color:"#bbb" }}>Rs. {p.original_price.toLocaleString()}</div>}
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <ProductCard key={p.id} p={p} idx={idx} wishlist={wishlist} onWish={toggleWish} />
             ))}
           </div>
           <div ref={sentinelRef} style={{ height:"40px", display:"flex", alignItems:"center", justifyContent:"center", marginBottom:"40px" }}>
