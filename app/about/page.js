@@ -130,13 +130,30 @@ export default function AboutPage() {
               </div>
               <div>
                 <div style={{ fontSize:".6rem", letterSpacing:".2em", textTransform:"uppercase", color:"#c9a96e", marginBottom:"8px" }}>Follow us</div>
-                <div style={{ display:"flex", gap:"12px" }}>
-                  <a href="https://www.instagram.com/poshak.pk" target="_blank"
-                    style={{ fontSize:".82rem", color:"#555", textDecoration:"none" }}>Instagram</a>
-                  <a href="https://www.facebook.com/poshak.pk" target="_blank"
-                    style={{ fontSize:".82rem", color:"#555", textDecoration:"none" }}>Facebook</a>
-                  <a href="https://www.tiktok.com/@poshak.pk" target="_blank"
-                    style={{ fontSize:".82rem", color:"#555", textDecoration:"none" }}>TikTok</a>
+                <div style={{ display:"flex", flexDirection:"column", gap:"10px" }}>
+                  <a href="https://www.instagram.com/poshak_pk_/" target="_blank"
+                    style={{ fontSize:".82rem", color:"#555", textDecoration:"none", display:"flex", alignItems:"center", gap:"8px" }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c9a96e" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+                      <circle cx="12" cy="12" r="4"/>
+                      <circle cx="17.5" cy="6.5" r="1" fill="#c9a96e" stroke="none"/>
+                    </svg>
+                    @poshak_pk_
+                  </a>
+                  <a href="https://www.facebook.com/profile.php?id=61574287538656" target="_blank"
+                    style={{ fontSize:".82rem", color:"#555", textDecoration:"none", display:"flex", alignItems:"center", gap:"8px" }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c9a96e" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
+                    </svg>
+                    Poshak on Facebook
+                  </a>
+                  <a href="https://www.tiktok.com/@poshak93" target="_blank"
+                    style={{ fontSize:".82rem", color:"#555", textDecoration:"none", display:"flex", alignItems:"center", gap:"8px" }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c9a96e" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"/>
+                    </svg>
+                    @poshak93
+                  </a>
                 </div>
               </div>
             </div>
