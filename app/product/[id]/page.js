@@ -33,20 +33,6 @@ export default function ProductPage() {
       });
     }
   }
-  const [shareMsg,  setShareMsg]  = useState("");
-
-  function handleShare() {
-    const url = window.location.href;
-    const text = product ? `Check out ${product.name} by ${product.brand} on Poshak!` : "Check this out on Poshak!";
-    if (navigator.share) {
-      navigator.share({ title: product?.name || "Poshak", text, url }).catch(() => {});
-    } else {
-      navigator.clipboard.writeText(url).then(() => {
-        setShareMsg("Link copied!");
-        setTimeout(() => setShareMsg(""), 2000);
-      });
-    }
-  }
 
   // Fix hydration: only read params after mount
   useEffect(() => {
