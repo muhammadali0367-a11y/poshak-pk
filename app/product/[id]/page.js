@@ -296,8 +296,7 @@ export default function ProductPage() {
                 <div key={sp.id} className="similar-card" onClick={() => router.push(`/product/${sp.id}`)}>
                   <div style={{ position:"relative", width:"100%", aspectRatio:"3/4", background:"#f5f0eb" }}>
                     <Image src={sp.image_url || "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=400&q=70"} alt={sp.name || "Product"} fill sizes="25vw" style={{ objectFit:"cover" }} onError={()=>{}} />
-                  </div
-                    onError={e => { e.target.src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=500&q=80"; }} />
+                  </div>
                   <div style={{ padding:"10px" }}>
                     <div style={{ fontSize:".56rem", letterSpacing:".12em", textTransform:"uppercase", color:"#c9a96e", marginBottom:"3px" }}>{sp.brand}</div>
                     <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:".88rem", color:"#2a2420", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", marginBottom:"4px" }}>{sp.name}</div>
