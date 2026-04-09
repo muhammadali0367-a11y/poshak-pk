@@ -1016,10 +1016,9 @@ export default function App() {
           {/* HERO */}
           <section style={{ textAlign:"center", padding:"48px 32px 32px", position:"relative", overflow:"hidden" }}>
             <div style={{ position:"absolute", inset:0, background:"radial-gradient(ellipse 75% 55% at 50% 0%,rgba(201,169,110,.09) 0%,transparent 72%)", pointerEvents:"none" }} />
-            <p style={{ fontSize:".65rem", letterSpacing:".38em", textTransform:"uppercase", color:"#9a6a30", marginBottom:"14px" }}>Pakistan's Women's Fashion Discovery</p>
-            <h1 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"clamp(1.8rem,4vw,3.2rem)", fontWeight:400, lineHeight:1.1, marginBottom:"4px", color:"#1a1210" }}>Find Every Dress,</h1>
-            <h1 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"clamp(1.8rem,4vw,3.2rem)", fontWeight:400, fontStyle:"italic", lineHeight:1.1, marginBottom:"24px", color:"#a07840" }}>Across Every Brand</h1>
-            <div style={{ width:"48px", height:"1px", background:"linear-gradient(90deg,transparent,#c9a96e,transparent)", margin:"0 auto 16px" }} />
+            <h1 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"clamp(2.4rem,6vw,4.2rem)", fontWeight:300, lineHeight:1, marginBottom:"8px", color:"#1a1210", letterSpacing:".18em", textTransform:"uppercase" }}>Poshak</h1>
+            <div style={{ width:"48px", height:"1px", background:"#c9a96e", margin:"0 auto 14px" }} />
+            <p style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"clamp(1rem,2.5vw,1.4rem)", fontWeight:300, fontStyle:"italic", color:"#a07840", marginBottom:"20px", letterSpacing:".06em" }}>Every brand. One place.</p>
             <p style={{ fontSize:".72rem", color:"#888", letterSpacing:".12em", textTransform:"uppercase" }}>
               Updated daily · 25,000+ products · 15+ brands
             </p>
@@ -1028,14 +1027,11 @@ export default function App() {
                 style={{ background:"#b03030", color:"#fff", border:"none", borderRadius:"20px", padding:"6px 16px", fontSize:".72rem", letterSpacing:".08em", cursor:"pointer", fontFamily:"'DM Sans',sans-serif" }}>
                 On Sale
               </button>
-              <button onClick={() => router.push("/search?q=new+arrivals")}
+              <button onClick={() => router.push("/new-arrivals")}
                 style={{ background:"#3d8a60", color:"#fff", border:"none", borderRadius:"20px", padding:"6px 16px", fontSize:".72rem", letterSpacing:".08em", cursor:"pointer", fontFamily:"'DM Sans',sans-serif" }}>
                 New Arrivals
               </button>
-              <button onClick={() => router.push("/search?q=bridal")}
-                style={{ background:"#2a2420", color:"#c9a96e", border:"1px solid #c9a96e", borderRadius:"20px", padding:"6px 16px", fontSize:".72rem", letterSpacing:".08em", cursor:"pointer", fontFamily:"'DM Sans',sans-serif" }}>
-                Bridal
-              </button>
+
             </div>
           </section>
 

@@ -127,7 +127,7 @@ export default function SharedNav() {
   return (
     <>
       <style suppressHydrationWarning>{`
-        .poshak-nav{height:62px;border-bottom:1px solid #e8e0d8;display:grid;grid-template-columns:auto auto 1fr auto;align-items:center;padding:0 20px;position:sticky;top:0;z-index:200;background:rgba(253,252,251,.97);gap:12px;font-family:'DM Sans',sans-serif;}
+        .poshak-nav{height:62px;border-bottom:1px solid #e8e0d8;display:grid;grid-template-columns:auto 1fr auto;align-items:center;padding:0 20px;position:sticky;top:0;z-index:200;background:rgba(253,252,251,.97);gap:12px;font-family:'DM Sans',sans-serif;}
         .poshak-wordmark{font-family:'Cormorant Garamond',serif;font-size:1.45rem;font-weight:300;letter-spacing:.18em;cursor:pointer;color:#2a2420;user-select:none;white-space:nowrap;}
         .poshak-hamburger{background:none;border:none;cursor:pointer;padding:8px;display:flex;flex-direction:column;gap:5px;flex-shrink:0;}
         .poshak-hamburger span{display:block;width:22px;height:1.5px;background:#2a2420;border-radius:2px;transition:all .22s;}
@@ -150,7 +150,6 @@ export default function SharedNav() {
         .poshak-sug-label{font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:#c9a96e;padding:8px 14px 4px;display:block;}
         .poshak-toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#2a2420;color:#f5f0eb;padding:10px 20px;border-radius:24px;font-size:.78rem;font-family:'DM Sans',sans-serif;z-index:999;pointer-events:none;white-space:nowrap;border:1px solid #c9a96e;transition:opacity .3s;}
         @media(max-width:600px){
-          .poshak-wordmark{font-size:1.1rem;letter-spacing:.1em;}
           .poshak-dropdown{gap:16px;padding:16px;}
           .poshak-dd-btn{font-size:.72rem;}
           .poshak-wish-label{display:none;}
@@ -187,10 +186,6 @@ export default function SharedNav() {
           <span style={{ opacity:sidebarOpen?0:1 }}/>
           <span style={{ transform:sidebarOpen?"rotate(-45deg) translate(4px,-4px)":"none" }}/>
         </button>
-        <div className="poshak-wordmark" onClick={() => router.push("/")}>
-          Poshak
-        </div>
-
         {/* Search */}
         <div ref={searchRef} className="poshak-search-wrap">
           <button className="poshak-all-btn" onClick={() => setShowDropdown(v=>!v)}>

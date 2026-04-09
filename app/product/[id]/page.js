@@ -176,7 +176,7 @@ export default function ProductPage() {
         .sticky-cta{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e8e0d8;padding:12px 20px;z-index:100;display:flex;gap:10px;align-items:center;}
         .share-btn{background:none;border:1px solid #e0d8d0;color:#777;padding:10px 14px;border-radius:4px;cursor:pointer;font-size:.75rem;font-family:'DM Sans',sans-serif;white-space:nowrap;transition:all .2s;flex-shrink:0;}
         .share-btn:hover{border-color:#c9a96e;color:#c9a96e;}
-        @media(min-width:769px){.sticky-cta{display:none;}}
+        @media(min-width:769px){.sticky-cta{display:none;}}@media(max-width:768px){.product-actions{padding-bottom:80px;}}
       `}</style>
 
       <SharedNav />
@@ -246,15 +246,9 @@ export default function ProductPage() {
               ) : null)}
             </div>
 
-            <div style={{ background:"#fffbf0", border:"1px solid #f0e0b0", borderRadius:"8px", padding:"12px 16px", marginBottom:"24px", fontSize:".7rem", color:"#888", lineHeight:1.6 }}>
+            <div className="product-actions"><div style={{ background:"#fffbf0", border:"1px solid #f0e0b0", borderRadius:"8px", padding:"12px 16px", marginBottom:"24px", fontSize:".7rem", color:"#888", lineHeight:1.6 }}>
               ℹ️ Links to {product.brand}'s official website. Availability and pricing are controlled by the brand.
             </div>
-
-            <a href={product.product_url} target="_blank" rel="noopener noreferrer" style={{ textDecoration:"none", display:"block", marginBottom:"12px" }}>
-              <button className={`cta-btn ${liveStock==="sold_out"?"sold-out":""}`}>
-                {liveStock==="sold_out" ? `View on ${product.brand} (Sold Out) →` : `View & Buy on ${product.brand} →`}
-              </button>
-            </a>
 
             <button onClick={() => {
                 const id = product.id;
@@ -275,7 +269,7 @@ export default function ProductPage() {
               style={{ width:"100%", background:"none", border:"1px solid #e0d8d0", borderRadius:"4px", padding:"12px", cursor:"pointer", fontSize:".72rem", letterSpacing:".1em", textTransform:"uppercase", color:wishlist.includes(product.id)?"#c9a96e":"#888", fontFamily:"'DM Sans',sans-serif", transition:"all .2s" }}>
               {wishlist.includes(product.id) ? "♥ Saved to Wishlist" : "♡ Save to Wishlist"}
             </button>
-          </div>
+          </div></div>
         </div>
 
         {/* Similar */}
