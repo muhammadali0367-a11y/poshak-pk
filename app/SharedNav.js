@@ -124,6 +124,8 @@ export default function SharedNav() {
           .poshak-dd-btn{font-size:.72rem;}
           .poshak-wish-label{display:none;}
           .poshak-search-wrap{min-width:0;}
+          .poshak-search-input{font-size:16px;}
+          .poshak-all-btn{font-size:16px;}
         }
       `}</style>
 
