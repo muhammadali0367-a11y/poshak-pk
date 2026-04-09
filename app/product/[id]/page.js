@@ -15,7 +15,7 @@ export default function ProductPage() {
   const [product,   setProduct]   = useState(null);
   const [similar,   setSimilar]   = useState([]);
   const [loading,   setLoading]   = useState(true);
-  const [liveStock, setLiveStock] = useState("checking");
+  const [liveStock, setLiveStock] = useState(null);
   const [wishlist,  setWishlist]  = useState([]);
   const [mounted,   setMounted]   = useState(false);
 
@@ -159,7 +159,7 @@ export default function ProductPage() {
         .breadcrumb{font-size:.7rem;color:#bbb;}
         .breadcrumb a{color:#c9a96e;text-decoration:none;}
         .breadcrumb a:hover{text-decoration:underline;}
-        @media(max-width:768px){.product-layout{flex-direction:column !important;}.product-img{height:360px !important;}}
+        @media(max-width:768px){.product-layout{flex-direction:column !important;}.product-img{height:auto !important;aspect-ratio:3/4;}}
       `}</style>
 
       <SharedNav />
@@ -178,7 +178,9 @@ export default function ProductPage() {
           <div style={{ flex:"0 0 460px" }}>
             <div style={{ position:"relative", borderRadius:"12px", overflow:"hidden", boxShadow:"0 8px 40px rgba(0,0,0,.1)" }}>
               <img className="product-img" src={product.image_url} alt={product.name}
-                style={{ width:"100%", height:"540px", objectFit:"cover", display:"block", filter: liveStock==="sold_out"?"grayscale(20%)":"none" }}
+                fetchPriority="high"
+                loading="eager"
+                style={{ width:"100%", height:"540px", objectFit:"cover", display:"block", background:"#f5f0eb", filter: liveStock==="sold_out"?"grayscale(20%)":"none" }}
                 onError={e => { e.target.src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=500&q=80"; }} />
               {discountPct && (
                 <div style={{ position:"absolute", top:"14px", left:"14px", background:BADGE_COLORS.Sale, color:"#fff", fontSize:".62rem", letterSpacing:".14em", textTransform:"uppercase", padding:"4px 12px", borderRadius:"20px", fontWeight:600 }}>

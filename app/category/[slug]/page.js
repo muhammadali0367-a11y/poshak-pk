@@ -90,12 +90,7 @@ export default function CategoryPage() {
     setProducts([]);
   }, [mounted, routeParams?.slug]);
 
-  useEffect(() => {
-    fetch("/api/brands")
-      .then(r => r.json())
-      .then(j => { if (j.brands) setAllBrands(j.brands); })
-      .catch(() => {});
-  }, []);
+  // brands fetch removed — not needed on category page
 
   const loadProducts = useCallback((pageNum) => {
     if (!catName) return;
@@ -194,7 +189,7 @@ export default function CategoryPage() {
         .breadcrumb{font-size:.7rem;color:#bbb;}
         .breadcrumb a{color:#c9a96e;text-decoration:none;}
         .breadcrumb a:hover{text-decoration:underline;}
-        @media(max-width:768px){.card-img{aspect-ratio:3/4;}.cats-row{display:none!important;}.product-grid{grid-template-columns:repeat(2,1fr)!important;gap:12px!important;}.card-info{padding:10px!important;}.card-tag{display:none!important;}}
+        @media(max-width:768px){.card-img{aspect-ratio:3/4;height:auto;}.cats-row{display:none!important;}.product-grid{grid-template-columns:repeat(2,1fr)!important;gap:12px!important;}.card-info{padding:10px!important;}.card-tag{display:none!important;}}
       `}</style>
 
       <SharedNav />
@@ -250,13 +245,14 @@ export default function CategoryPage() {
         ) : (
           <>
             <div className="product-grid" style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))", gap:"20px", marginBottom:"40px" }}>
-              {visibleProducts.map((p) => (
+              {visibleProducts.map((p, idx) => (
                 <div key={p.id} className="card" onClick={() => router.push(`/product/${p.id}`)}>
                   <div style={{ position:"relative", overflow:"hidden" }}>
                     <img className="card-img"
                       src={p.image_url || p.image || "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=500&q=80"}
                       alt={p.name || "Product"}
-                      loading="lazy"
+                      loading={idx < 4 ? "eager" : "lazy"}
+                      fetchPriority={idx < 4 ? "high" : "auto"}
                       onError={e => { e.currentTarget.src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=500&q=80"; }}
                     />
                     {p.badge && <div className="badge-pill" style={{ background:BADGE_COLORS[p.badge]||"#888" }}>{p.badge}</div>}

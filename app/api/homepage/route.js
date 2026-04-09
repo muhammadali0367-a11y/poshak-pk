@@ -15,7 +15,7 @@ export async function GET() {
         // Query strictly by the category column — single source of truth
         const { data, error } = await supabase
           .from('products')
-          .select('id, name, brand, price, original_price, product_type, tags, collection, category, color, fabric, occasion, image_url, product_url, in_stock')
+          .select('id, name, brand, price, original_price, category, color, image_url, product_url, in_stock')
           .eq('category', cat)
           .eq('in_stock', true)
           .order('brand')
@@ -55,7 +55,7 @@ export async function GET() {
     // New Arrivals — most recently added products across all brands
     const { data: newData } = await supabase
       .from('products')
-      .select('id, name, brand, price, original_price, product_type, tags, collection, category, color, fabric, occasion, image_url, product_url, in_stock')
+      .select('id, name, brand, price, original_price, category, color, image_url, product_url, in_stock')
       .eq('in_stock', true)
       .order('created_at', { ascending: false })
       .limit(16)
@@ -74,7 +74,11 @@ export async function GET() {
       if (newArrivals.length > 0) sections['New Arrivals'] = newArrivals
     }
 
-    return Response.json({ sections })
+    return Response.json({ sections }, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+      }
+    })
   } catch (err) {
     return Response.json({ error: err.message }, { status: 500 })
   }

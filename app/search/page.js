@@ -90,7 +90,7 @@ function SearchResults() {
     if (!sentinel) return;
     const observer = new IntersectionObserver(entries => {
       if (entries[0].isIntersecting && !loading && page < totalPages) {
-        setPage(n => n + 1);
+        setTimeout(() => setPage(n => n + 1), 100);
       }
     }, { rootMargin: "200px" });
     observer.observe(sentinel);
@@ -141,7 +141,7 @@ function SearchResults() {
       ) : (
         <>
           <div className="product-grid">
-            {products.map(p => (
+            {products.map((p, idx) => (
               <div key={p.id}
                 style={{ background:"#fff", border:"1px solid #e8e0d8", borderRadius:"10px", overflow:"hidden", cursor:"pointer", position:"relative", boxShadow:"0 2px 10px rgba(0,0,0,.04)", transition:"transform .28s,box-shadow .28s,border-color .2s" }}
                 onClick={() => router.push(`/product/${p.id}`)}
@@ -149,7 +149,7 @@ function SearchResults() {
                 onMouseOut={e => { e.currentTarget.style.transform="none"; e.currentTarget.style.borderColor="#e8e0d8"; e.currentTarget.style.boxShadow="0 2px 10px rgba(0,0,0,.04)"; }}>
                 <div style={{ position:"relative", overflow:"hidden" }}>
                   <img src={p.image_url||"https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=500&q=80"}
-                    alt={p.name||"Product"} loading="lazy" className="card-img"
+                    alt={p.name||"Product"} loading={idx < 4 ? "eager" : "lazy"} fetchPriority={idx < 4 ? "high" : "auto"} className="card-img"
                     style={{ width:"100%", aspectRatio:"3/4", objectFit:"cover", display:"block", background:"#f5f0eb", transition:"transform .48s" }}
                     onError={e=>{e.currentTarget.src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=500&q=80";}}
                   />
@@ -192,7 +192,7 @@ export default function SearchPage() {
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap');
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
         .product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:20px;margin-bottom:40px;}.card-img{aspect-ratio:3/4!important;height:auto!important;}
-        @media(max-width:768px){.product-grid{grid-template-columns:repeat(2,1fr)!important;gap:12px!important;}.card-img{height:180px!important;}.card-tag{display:none!important;}}
+        @media(max-width:768px){.product-grid{grid-template-columns:repeat(2,1fr)!important;gap:12px!important;}.card-img{aspect-ratio:3/4!important;height:auto!important;}.card-tag{display:none!important;}}
       `}</style>
       <SharedNav />
       <Suspense fallback={<div style={{height:"62px",borderBottom:"1px solid #e8e0d8"}} />}>
