@@ -18,13 +18,13 @@ function SidebarSection({ title, items, onItemClick }) {
   return (
     <div style={{ borderTop:"1px solid #f0ebe4" }}>
       <button onClick={() => setOpen(v=>!v)}
-        style={{ width:"100%", padding:"12px 20px", background:"transparent", border:"none", textAlign:"left", cursor:"pointer", fontFamily:"'DM Sans',sans-serif", fontSize:".6rem", letterSpacing:".22em", textTransform:"uppercase", color:"#bbb", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+        style={{ width:"100%", padding:"12px 20px", background:"transparent", border:"none", textAlign:"left", cursor:"pointer", fontFamily:"'DM Sans',sans-serif", fontSize:".6rem", letterSpacing:".22em", textTransform:"uppercase", color:"#7a6a5a", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
         {title}
         <span style={{ transition:"transform .2s", transform:open?"rotate(180deg)":"none", fontSize:".7rem" }}>▾</span>
       </button>
       {open && items.map(item => (
         <button key={item} onClick={() => onItemClick(item)}
-          style={{ width:"100%", padding:"9px 20px", background:"transparent", border:"none", borderLeft:"3px solid transparent", textAlign:"left", cursor:"pointer", fontSize:".76rem", color:"#888", fontFamily:"'DM Sans',sans-serif", transition:"all .15s", display:"block" }}
+          style={{ width:"100%", padding:"9px 20px", background:"transparent", border:"none", borderLeft:"3px solid transparent", textAlign:"left", cursor:"pointer", fontSize:".76rem", color:"#4a3a2a", fontFamily:"'DM Sans',sans-serif", transition:"all .15s", display:"block" }}
           onMouseOver={e => { e.currentTarget.style.color="#c9a96e"; e.currentTarget.style.borderLeftColor="#c9a96e"; e.currentTarget.style.background="#fff8ef"; }}
           onMouseOut={e => { e.currentTarget.style.color="#888"; e.currentTarget.style.borderLeftColor="transparent"; e.currentTarget.style.background="transparent"; }}>
           {item}
@@ -110,13 +110,13 @@ export default function SharedNav() {
         .poshak-overlay{position:fixed;inset:0;background:rgba(20,14,8,.35);z-index:299;opacity:0;pointer-events:none;transition:opacity .28s;}
         .poshak-overlay.open{opacity:1;pointer-events:all;}
         .poshak-search-wrap{display:flex;align-items:center;background:#fff;border:1px solid #e0d8d0;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.04);width:100%;max-width:560px;margin:0 auto;position:relative;}
-        .poshak-all-btn{height:46px;padding:0 12px;background:transparent;border:none;border-right:1px solid #e0d8d0;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.75rem;color:#555;display:flex;align-items:center;gap:5px;white-space:nowrap;flex-shrink:0;}
+        .poshak-all-btn{height:46px;padding:0 12px;background:transparent;border:none;border-right:1px solid #e0d8d0;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.75rem;color:#2a2420;display:flex;align-items:center;gap:5px;white-space:nowrap;flex-shrink:0;}
         .poshak-search-input{flex:1;height:46px;border:none;outline:none;background:transparent;font-family:'DM Sans',sans-serif;font-size:.9rem;color:#2a2420;padding:0 12px;}
-        .poshak-search-input::placeholder{color:#c8c0b8;}
+        .poshak-search-input::placeholder{color:#a89e94;}
         .poshak-dropdown{position:fixed;top:62px;left:50%;transform:translateX(-50%);background:#fff;border:1px solid #e0d8d0;border-radius:10px;box-shadow:0 12px 40px rgba(0,0,0,.14);z-index:201;padding:20px 24px;display:flex;gap:32px;width:min(520px,94vw);max-height:80vh;overflow-y:auto;}
         .poshak-dd-col{flex:1;min-width:0;}
         .poshak-dd-title{font-size:.6rem;letter-spacing:.22em;text-transform:uppercase;color:#c9a96e;margin-bottom:12px;font-weight:600;}
-        .poshak-dd-btn{display:block;width:100%;background:none;border:none;text-align:left;padding:5px 0;font-size:.78rem;color:#555;font-family:'DM Sans',sans-serif;cursor:pointer;white-space:nowrap;transition:color .15s;}
+        .poshak-dd-btn{display:block;width:100%;background:none;border:none;text-align:left;padding:5px 0;font-size:.78rem;color:#2a2420;font-family:'DM Sans',sans-serif;cursor:pointer;white-space:nowrap;transition:color .15s;}
         .poshak-dd-btn:hover{color:#c9a96e;}
         @media(max-width:600px){
           .poshak-wordmark{font-size:1.1rem;letter-spacing:.1em;}
@@ -137,7 +137,7 @@ export default function SharedNav() {
           <button onClick={() => setSidebarOpen(false)} style={{ background:"none", border:"none", cursor:"pointer", fontSize:"1.1rem", color:"#aaa" }}>✕</button>
         </div>
         <button onClick={() => { setSidebarOpen(false); router.push("/"); }}
-          style={{ width:"100%", padding:"11px 20px", background:"transparent", border:"none", textAlign:"left", cursor:"pointer", fontSize:".8rem", color:"#555", fontFamily:"'DM Sans',sans-serif" }}>
+          style={{ width:"100%", padding:"11px 20px", background:"transparent", border:"none", textAlign:"left", cursor:"pointer", fontSize:".8rem", color:"#2a2420", fontFamily:"'DM Sans',sans-serif" }}>
           All Dresses
         </button>
         <SidebarSection title="Categories" items={popCategories}
@@ -199,7 +199,7 @@ export default function SharedNav() {
         </div>
         {/* Wishlist button */}
         <button onClick={() => router.push("/wishlist")}
-          style={{ background:"none", border:"none", cursor:"pointer", flexShrink:0, display:"flex", alignItems:"center", gap:"5px", color: wishCount>0?"#c9a96e":"#888", fontFamily:"'DM Sans',sans-serif", fontSize:".75rem", padding:"4px 8px", whiteSpace:"nowrap" }}>
+          style={{ background:"none", border:"none", cursor:"pointer", flexShrink:0, display:"flex", alignItems:"center", gap:"5px", color: wishCount>0?"#c9a96e":"#4a3a2a", fontFamily:"'DM Sans',sans-serif", fontSize:".75rem", padding:"4px 8px", whiteSpace:"nowrap" }}>
           <span style={{ fontSize:".9rem" }}>{wishCount>0?"♥":"♡"}</span>
           <span className="poshak-wish-label">Wishlist{wishCount>0?` (${wishCount})`:""}</span>
         </button>

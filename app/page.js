@@ -990,11 +990,11 @@ export default function App() {
           {/* HERO */}
           <section style={{ textAlign:"center", padding:"48px 32px 32px", position:"relative", overflow:"hidden" }}>
             <div style={{ position:"absolute", inset:0, background:"radial-gradient(ellipse 75% 55% at 50% 0%,rgba(201,169,110,.09) 0%,transparent 72%)", pointerEvents:"none" }} />
-            <p style={{ fontSize:".65rem", letterSpacing:".38em", textTransform:"uppercase", color:"#c9a96e", marginBottom:"14px" }}>Pakistan's Women's Fashion Discovery</p>
-            <h1 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"clamp(1.8rem,4vw,3.2rem)", fontWeight:300, lineHeight:1.1, marginBottom:"4px" }}>Find Every Dress,</h1>
-            <h1 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"clamp(1.8rem,4vw,3.2rem)", fontWeight:300, fontStyle:"italic", lineHeight:1.1, marginBottom:"24px", color:"#c9a96e" }}>Across Every Brand</h1>
+            <p style={{ fontSize:".65rem", letterSpacing:".38em", textTransform:"uppercase", color:"#9a6a30", marginBottom:"14px" }}>Pakistan's Women's Fashion Discovery</p>
+            <h1 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"clamp(1.8rem,4vw,3.2rem)", fontWeight:400, lineHeight:1.1, marginBottom:"4px", color:"#1a1210" }}>Find Every Dress,</h1>
+            <h1 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"clamp(1.8rem,4vw,3.2rem)", fontWeight:400, fontStyle:"italic", lineHeight:1.1, marginBottom:"24px", color:"#a07840" }}>Across Every Brand</h1>
             <div style={{ width:"48px", height:"1px", background:"linear-gradient(90deg,transparent,#c9a96e,transparent)", margin:"0 auto 16px" }} />
-            <p style={{ fontSize:".72rem", color:"#aaa", letterSpacing:".12em", textTransform:"uppercase" }}>
+            <p style={{ fontSize:".72rem", color:"#888", letterSpacing:".12em", textTransform:"uppercase" }}>
               Updated daily · 25,000+ products · 15+ brands
             </p>
           </section>
@@ -1175,32 +1175,42 @@ export default function App() {
           <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))", gap:"32px", marginBottom:"32px" }}>
             <div>
               <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"1.4rem", color:"#c9a96e", marginBottom:"8px", fontWeight:300 }}>Poshak</div>
-              <p style={{ fontSize:".72rem", color:"#aaa", lineHeight:1.6, letterSpacing:".02em" }}>Every brand. One place.<br/>Pakistan's first women's fashion search engine.</p>
+              <p style={{ fontSize:".72rem", color:"#777", lineHeight:1.6, letterSpacing:".02em" }}>Every brand. One place.<br/>Pakistan's first women's fashion search engine.</p>
             </div>
             <div>
               <div style={{ fontSize:".6rem", letterSpacing:".2em", textTransform:"uppercase", color:"#c9a96e", marginBottom:"10px" }}>Top Brands</div>
               {["Khaadi","Gul Ahmed","Maria B","Sana Safinaz","Limelight","Beechtree"].map(b => (
-                <div key={b} style={{ fontSize:".75rem", color:"#aaa", marginBottom:"5px", cursor:"pointer" }}
+                <div key={b} style={{ fontSize:".75rem", color:"#666", marginBottom:"5px", cursor:"pointer" }}
                   onClick={() => router.push(`/brand/${slugify(b)}`)}>{b}</div>
               ))}
             </div>
             <div>
               <div style={{ fontSize:".6rem", letterSpacing:".2em", textTransform:"uppercase", color:"#c9a96e", marginBottom:"10px" }}>Categories</div>
               {["Lawn","Bridal","Pret / Ready to Wear","Unstitched","Festive / Eid","Formal"].map(cat => (
-                <div key={cat} style={{ fontSize:".75rem", color:"#aaa", marginBottom:"5px", cursor:"pointer" }}
+                <div key={cat} style={{ fontSize:".75rem", color:"#666", marginBottom:"5px", cursor:"pointer" }}
                   onClick={() => router.push(`/category/${slugify(cat)}`)}>{cat}</div>
               ))}
             </div>
             <div>
               <div style={{ fontSize:".6rem", letterSpacing:".2em", textTransform:"uppercase", color:"#c9a96e", marginBottom:"10px" }}>About</div>
-              <div style={{ fontSize:".75rem", color:"#aaa", marginBottom:"5px" }}>About Poshak</div>
-              <div style={{ fontSize:".75rem", color:"#aaa", marginBottom:"5px" }}>Contact</div>
-              <div style={{ fontSize:".75rem", color:"#aaa", marginBottom:"5px" }}>theposhak.pk</div>
+              <div style={{ fontSize:".75rem", color:"#666", marginBottom:"5px", cursor:"pointer" }}
+                onClick={() => router.push("/about")}>About Poshak</div>
+              <div style={{ fontSize:".75rem", color:"#666", marginBottom:"12px", cursor:"pointer" }}
+                onClick={() => router.push("/about#contact")}>Contact</div>
+              <div style={{ fontSize:".6rem", letterSpacing:".1em", textTransform:"uppercase", color:"#c9a96e", marginBottom:"6px" }}>Get in touch</div>
+              <a href="mailto:hello@theposhak.pk"
+                style={{ fontSize:".72rem", color:"#666", display:"block", marginBottom:"4px", textDecoration:"none" }}>
+                hello@theposhak.pk
+              </a>
+              <a href="https://wa.me/923161200044"
+                style={{ fontSize:".72rem", color:"#666", display:"block", textDecoration:"none" }}>
+                +92 316 1200044
+              </a>
             </div>
           </div>
           <div style={{ borderTop:"1px solid #e8e0d8", paddingTop:"16px", display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:"8px" }}>
-            <p style={{ fontSize:".62rem", letterSpacing:".12em", color:"#ccc", textTransform:"uppercase" }}>© 2026 Poshak · Pakistan's Women's Fashion Discovery</p>
-            <p style={{ fontSize:".62rem", color:"#ccc" }}>Updated daily from 15+ brands</p>
+            <p style={{ fontSize:".62rem", letterSpacing:".12em", color:"#888", textTransform:"uppercase" }}>© 2026 Poshak · Pakistan's Women's Fashion Discovery</p>
+            <p style={{ fontSize:".62rem", color:"#888" }}>Updated daily from 15+ brands</p>
           </div>
         </div>
       </footer>
