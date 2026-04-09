@@ -33,6 +33,20 @@ export default function ProductPage() {
       });
     }
   }
+  const [shareMsg,  setShareMsg]  = useState("");
+
+  function handleShare() {
+    const url = window.location.href;
+    const text = product ? `Check out ${product.name} by ${product.brand} on Poshak!` : "Check this out on Poshak!";
+    if (navigator.share) {
+      navigator.share({ title: product?.name || "Poshak", text, url }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(url).then(() => {
+        setShareMsg("Link copied!");
+        setTimeout(() => setShareMsg(""), 2000);
+      });
+    }
+  }
 
   // Fix hydration: only read params after mount
   useEffect(() => {
@@ -173,8 +187,8 @@ export default function ProductPage() {
         .breadcrumb{font-size:.7rem;color:#bbb;}
         .breadcrumb a{color:#c9a96e;text-decoration:none;}
         .breadcrumb a:hover{text-decoration:underline;}
-        @media(max-width:768px){.desktop-cta{display:none;}.product-layout{flex-direction:column !important;}}
-        .sticky-cta{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e8e0d8;padding:12px 20px;z-index:100;display:flex;gap:10px;align-items:center;transform:translateZ(0);will-change:transform;}
+        @media(max-width:768px){.desktop-cta{display:none;}.product-layout{flex-direction:column !important;}.product-img{height:auto !important;aspect-ratio:3/4;}}
+        .sticky-cta{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e8e0d8;padding:12px 20px;z-index:100;display:flex;gap:10px;align-items:center;}
         .share-btn{background:none;border:1px solid #e0d8d0;color:#777;padding:10px 14px;border-radius:4px;cursor:pointer;font-size:.75rem;font-family:'DM Sans',sans-serif;white-space:nowrap;transition:all .2s;flex-shrink:0;}
         .share-btn:hover{border-color:#c9a96e;color:#c9a96e;}
         @media(min-width:769px){.sticky-cta{display:none;}}@media(max-width:768px){.product-actions{padding-bottom:80px;}}
@@ -196,14 +210,16 @@ export default function ProductPage() {
           <div style={{ flex:"0 0 460px" }}>
             <div style={{ position:"relative", borderRadius:"12px", overflow:"hidden", boxShadow:"0 8px 40px rgba(0,0,0,.1)" }}>
               <div style={{ position:"relative", width:"100%", aspectRatio:"3/4", background:"#f5f0eb" }}>
-              <Image src={product.image_url || "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&q=80"}
-                alt={product.name || "Product"}
-                fill
-                priority
-                sizes="(max-width:768px) 100vw, 50vw"
-                style={{ objectFit:"cover", filter: liveStock==="sold_out"?"grayscale(20%)":"none" }}
-                onError={() => {}}
-                onError={e => { e.target.src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=500&q=80"; }} />
+                <Image
+                  src={product.image_url || "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&q=80"}
+                  alt={product.name || "Product"}
+                  fill
+                  priority
+                  sizes="(max-width:768px) 100vw, 50vw"
+                  style={{ objectFit:"cover", filter: liveStock==="sold_out"?"grayscale(20%)":"none" }}
+                  onError={() => {}}
+                />
+              </div>
               {discountPct && (
                 <div style={{ position:"absolute", top:"14px", left:"14px", background:BADGE_COLORS.Sale, color:"#fff", fontSize:".62rem", letterSpacing:".14em", textTransform:"uppercase", padding:"4px 12px", borderRadius:"20px", fontWeight:600 }}>
                   -{discountPct}% Off
@@ -295,7 +311,14 @@ export default function ProductPage() {
               {similar.map(sp => (
                 <div key={sp.id} className="similar-card" onClick={() => router.push(`/product/${sp.id}`)}>
                   <div style={{ position:"relative", width:"100%", aspectRatio:"3/4", background:"#f5f0eb" }}>
-                    <Image src={sp.image_url || "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=400&q=70"} alt={sp.name || "Product"} fill sizes="25vw" style={{ objectFit:"cover" }} onError={()=>{}} />
+                    <Image
+                      src={sp.image_url || "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=400&q=70"}
+                      alt={sp.name || "Product"}
+                      fill
+                      sizes="25vw"
+                      style={{ objectFit:"cover" }}
+                      onError={() => {}}
+                    />
                   </div>
                   <div style={{ padding:"10px" }}>
                     <div style={{ fontSize:".56rem", letterSpacing:".12em", textTransform:"uppercase", color:"#c9a96e", marginBottom:"3px" }}>{sp.brand}</div>
@@ -317,6 +340,18 @@ export default function ProductPage() {
           </button>
           <a href={product.product_url} target="_blank" rel="noopener noreferrer"
             style={{ flex:1, background: liveStock==="sold_out"?"#888":"#2a2420", color:"#fff", border:"none", padding:"12px 20px", fontFamily:"'DM Sans',sans-serif", fontSize:".78rem", letterSpacing:".1em", textTransform:"uppercase", fontWeight:500, cursor:"pointer", borderRadius:"4px", textAlign:"center", textDecoration:"none", display:"flex", alignItems:"center", justifyContent:"center" }}>
+            {liveStock==="sold_out" ? `Sold Out — View on ${product.brand}` : `View & Buy on ${product.brand} →`}
+          </a>
+        </div>
+      )}
+
+      {product && (
+        <div className="sticky-cta">
+          <button className="share-btn" onClick={handleShare}>
+            {shareMsg || "Share"}
+          </button>
+          <a href={product.product_url} target="_blank" rel="noopener noreferrer"
+            style={{ flex:1, background:liveStock==="sold_out"?"#888":"#2a2420", color:"#fff", border:"none", padding:"12px 20px", fontFamily:"'DM Sans',sans-serif", fontSize:".78rem", letterSpacing:".1em", textTransform:"uppercase", fontWeight:500, cursor:"pointer", borderRadius:"4px", textAlign:"center", textDecoration:"none", display:"flex", alignItems:"center", justifyContent:"center" }}>
             {liveStock==="sold_out" ? `Sold Out — View on ${product.brand}` : `View & Buy on ${product.brand} →`}
           </a>
         </div>
