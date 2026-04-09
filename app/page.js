@@ -548,7 +548,6 @@ const FALLBACK_PRODUCTS = [
 //  CSS
 // ═══════════════════════════════════════════════════════════════════════════════
 const CSS = `
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;600&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 body{overflow-x:hidden;}
 ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:#f0ebe4;}::-webkit-scrollbar-thumb{background:#c9a96e;border-radius:2px;}
@@ -670,9 +669,22 @@ export default function App() {
   const [color,           setColor]           = useState("All");
   const [brand,           setBrand]           = useState("All Brands");
   const [wishlist,        setWishlist]        = useState([]);
+  const [recentlyViewed,  setRecentlyViewed]  = useState([]);
+  const [showBackToTop,   setShowBackToTop]   = useState(false);
 
   // Set mounted on client only — prevents hydration mismatch
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    setMounted(true);
+    // Load recently viewed from localStorage
+    try {
+      const rv = JSON.parse(localStorage.getItem("poshak_recently_viewed") || "[]");
+      setRecentlyViewed(rv);
+    } catch(e) {}
+    // Back to top scroll listener
+    const onScroll = () => setShowBackToTop(window.scrollY > 500);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   // Load wishlist from localStorage on mount
   useEffect(() => {
@@ -682,6 +694,18 @@ export default function App() {
     } catch(e) {}
   }, []);
   const [selectedProduct, setSelectedProduct] = useState(null);
+
+  function openProduct(product) {
+    setSelectedProduct(product);
+    // Save to recently viewed (max 10)
+    try {
+      const rv = JSON.parse(localStorage.getItem("poshak_recently_viewed") || "[]");
+      const filtered = rv.filter(p => p.id !== product.id);
+      const updated = [product, ...filtered].slice(0, 10);
+      localStorage.setItem("poshak_recently_viewed", JSON.stringify(updated));
+      setRecentlyViewed(updated);
+    } catch(e) {}
+  }
   const [filtersOpen,     setFiltersOpen]     = useState(false);
   const [suggestions,     setSuggestions]     = useState([]);
   const [showSugg,        setShowSugg]        = useState(false);
@@ -945,17 +969,19 @@ export default function App() {
   const toggleWish = (id, e, product) => {
     e?.stopPropagation();
     setWishlist(w => {
-      const updated = w.includes(id) ? w.filter(x=>x!==id) : [...w,id];
+      const isAdding = !w.includes(id);
+      const updated = isAdding ? [...w,id] : w.filter(x=>x!==id);
       try { localStorage.setItem("poshak_wishlist", JSON.stringify(updated)); } catch(e) {}
-      // Also store/remove full product object for wishlist page
       try {
         const stored = JSON.parse(localStorage.getItem("poshak_wishlist_products") || "[]");
-        const updatedProds = w.includes(id)
-          ? stored.filter(p => p.id !== id)
-          : product ? [...stored, product] : stored;
+        const updatedProds = isAdding
+          ? product ? [...stored, product] : stored
+          : stored.filter(p => p.id !== id);
         localStorage.setItem("poshak_wishlist_products", JSON.stringify(updatedProds));
       } catch(e) {}
       window.dispatchEvent(new Event("storage"));
+      // Toast notification
+      if (window.__poshakToast) window.__poshakToast(isAdding ? "♥ Added to Wishlist" : "Removed from Wishlist");
       return updated;
     });
   };
@@ -972,13 +998,13 @@ export default function App() {
   };
 
   if (!mounted) return (
-    <div style={{ fontFamily:"'DM Sans',sans-serif", background:"linear-gradient(160deg,#fdfcfb 0%,#f5f0eb 40%,#ede8e0 100%)", minHeight:"100vh" }}>
+    <div style={{ fontFamily:"'DM Sans',sans-serif", background:"#fdfcfb", minHeight:"100vh" }}>
       <SharedNav />
     </div>
   );
 
   return (
-    <div suppressHydrationWarning style={{ fontFamily:"'DM Sans',sans-serif", background:"linear-gradient(160deg,#fdfcfb 0%,#f5f0eb 40%,#ede8e0 100%)", minHeight:"100vh", color:"#2a2420" }}>
+    <div suppressHydrationWarning style={{ fontFamily:"'DM Sans',sans-serif", background:"#fdfcfb", minHeight:"100vh", color:"#2a2420" }}>
       <style suppressHydrationWarning>{CSS}</style>
 
       {/* ── NAV (shared across all pages) ── */}
@@ -997,10 +1023,24 @@ export default function App() {
             <p style={{ fontSize:".72rem", color:"#888", letterSpacing:".12em", textTransform:"uppercase" }}>
               Updated daily · 25,000+ products · 15+ brands
             </p>
+            <div style={{ marginTop:"14px", display:"flex", justifyContent:"center", gap:"8px", flexWrap:"wrap" }}>
+              <button onClick={() => router.push("/search?q=sale")}
+                style={{ background:"#b03030", color:"#fff", border:"none", borderRadius:"20px", padding:"6px 16px", fontSize:".72rem", letterSpacing:".08em", cursor:"pointer", fontFamily:"'DM Sans',sans-serif" }}>
+                On Sale
+              </button>
+              <button onClick={() => router.push("/search?q=new+arrivals")}
+                style={{ background:"#3d8a60", color:"#fff", border:"none", borderRadius:"20px", padding:"6px 16px", fontSize:".72rem", letterSpacing:".08em", cursor:"pointer", fontFamily:"'DM Sans',sans-serif" }}>
+                New Arrivals
+              </button>
+              <button onClick={() => router.push("/search?q=bridal")}
+                style={{ background:"#2a2420", color:"#c9a96e", border:"1px solid #c9a96e", borderRadius:"20px", padding:"6px 16px", fontSize:".72rem", letterSpacing:".08em", cursor:"pointer", fontFamily:"'DM Sans',sans-serif" }}>
+                Bridal
+              </button>
+            </div>
           </section>
 
           {/* CATEGORY CAROUSEL */}
-          <CategoryCarousel categories={POPULATED_CATEGORIES.filter(c=>c!=="All")} onNavigate={cat => router.push(`/category/${slugify(cat)}`)} />
+          <CategoryCarousel categories={POPULATED_CATEGORIES.filter(c=>c!=="All")} onNavigate={cat => router.push(`/category/${slugify(cat)}`)} activeCategory={activeCategory} />
 
           {/* ── PRODUCTS AREA ── */}
           <div style={{ padding:"0 24px 60px" }}>
@@ -1170,6 +1210,43 @@ export default function App() {
       </div>
 
       {/* FOOTER */}
+      {/* Recently Viewed */}
+      {recentlyViewed.length > 0 && (
+        <div style={{ maxWidth:"1240px", margin:"0 auto", padding:"0 24px 40px" }}>
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:"16px", paddingBottom:"12px", borderBottom:"1px solid #e8e0d8" }}>
+            <div>
+              <h2 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"1.4rem", fontWeight:300, color:"#2a2420" }}>Recently Viewed</h2>
+              <p style={{ fontSize:".68rem", color:"#bbb", marginTop:"3px" }}>{recentlyViewed.length} items</p>
+            </div>
+          </div>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))", gap:"12px" }}>
+            {recentlyViewed.slice(0, 6).map(p => (
+              <div key={p.id} style={{ background:"#fff", border:"1px solid #e8e0d8", borderRadius:"8px", overflow:"hidden", cursor:"pointer" }}
+                onClick={() => openProduct(p)}>
+                <img src={p.image || p.image_url || "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=300&q=70"}
+                  alt={p.name} loading="lazy"
+                  style={{ width:"100%", aspectRatio:"3/4", objectFit:"cover", display:"block", background:"#f5f0eb" }}
+                  onError={e => { e.currentTarget.src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=300&q=70"; }} />
+                <div style={{ padding:"8px" }}>
+                  <div style={{ fontSize:".58rem", color:"#c9a96e", textTransform:"uppercase", letterSpacing:".1em", marginBottom:"2px" }}>{p.brand}</div>
+                  <div style={{ fontSize:".78rem", color:"#2a2420", lineHeight:1.3, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical" }}>{p.name}</div>
+                  <div style={{ fontSize:".78rem", fontWeight:500, marginTop:"4px" }}>Rs. {Number(p.price).toLocaleString()}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Back to top */}
+      <button className={`back-to-top ${showBackToTop?"visible":""}`}
+        onClick={() => window.scrollTo({ top:0, behavior:"smooth" })}
+        aria-label="Back to top">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M7 12V2M3 6l4-4 4 4" stroke="#c9a96e" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </button>
+
       <footer style={{ borderTop:"1px solid #e8e0d8", padding:"40px 24px 32px", background:"rgba(255,255,255,.55)" }}>
         <div style={{ maxWidth:"1240px", margin:"0 auto" }}>
           <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))", gap:"32px", marginBottom:"32px" }}>
@@ -1369,53 +1446,36 @@ function SidebarSection({ title, items, onItemClick }) {
   );
 }
 
-// ─── CATEGORY CAROUSEL (auto-scrolling) ───────────────────────────────────────
-function CategoryCarousel({ categories, onNavigate }) {
-  const scrollRef = useRef(null);
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    let animId;
-    let pos = 0;
-    const speed = 0.5;
-    function tick() {
-      pos += speed;
-      if (pos >= el.scrollWidth / 2) pos = 0;
-      el.scrollLeft = pos;
-      animId = requestAnimationFrame(tick);
-    }
-    animId = requestAnimationFrame(tick);
-    el.addEventListener("mouseenter", () => cancelAnimationFrame(animId));
-    el.addEventListener("mouseleave", () => { animId = requestAnimationFrame(tick); });
-    return () => cancelAnimationFrame(animId);
-  }, []);
-
-  // Duplicate for seamless loop
-  const doubled = [...categories, ...categories];
-
+// ─── CATEGORY CAROUSEL (static scrollable — no auto-scroll) ───────────────────
+function CategoryCarousel({ categories, onNavigate, activeCategory }) {
   const COLORS = ["#f5ebe0","#e8f0f5","#f0ebe5","#e8f5ec","#f5e8f0","#f5f0e8","#e8eef5","#f0f5e8","#f5e8e8","#e8f5f5","#f0e8f5","#f5f5e8"];
 
   return (
-    <div style={{ overflow:"hidden", borderBottom:"1px solid #e8e0d8", borderTop:"1px solid #e8e0d8", background:"#fdfcfb", position:"relative" }}>
-      <div style={{ position:"absolute", left:0, top:0, bottom:0, width:"32px", background:"linear-gradient(90deg,#fdfcfb,transparent)", zIndex:2, pointerEvents:"none" }} />
-      <div style={{ position:"absolute", right:0, top:0, bottom:0, width:"32px", background:"linear-gradient(270deg,#fdfcfb,transparent)", zIndex:2, pointerEvents:"none" }} />
-      <div ref={scrollRef} style={{ display:"flex", overflowX:"hidden", gap:"0", userSelect:"none" }}>
-        {doubled.map((cat, i) => (
-          <button key={i}
-            onClick={() => onNavigate(cat)}
-            style={{
-              flexShrink:0, padding:"16px 28px", background:COLORS[i % COLORS.length],
-              border:"none", borderRight:"1px solid #e8e0d8", cursor:"pointer",
-              fontFamily:"'DM Sans',sans-serif", fontSize:".72rem", letterSpacing:".12em",
-              textTransform:"uppercase", color:"#555", whiteSpace:"nowrap",
-              transition:"background .2s, color .2s",
-            }}
-            onMouseOver={e => { e.currentTarget.style.background="#c9a96e"; e.currentTarget.style.color="#fff"; }}
-            onMouseOut={e => { e.currentTarget.style.background=COLORS[i % COLORS.length]; e.currentTarget.style.color="#555"; }}>
-            {cat}
-          </button>
-        ))}
+    <div style={{ position:"relative", borderBottom:"1px solid #e8e0d8", borderTop:"1px solid #e8e0d8", background:"#fdfcfb" }}>
+      <div style={{ position:"absolute", left:0, top:0, bottom:0, width:"24px", background:"linear-gradient(90deg,#fdfcfb,transparent)", zIndex:2, pointerEvents:"none" }} />
+      <div style={{ position:"absolute", right:0, top:0, bottom:0, width:"24px", background:"linear-gradient(270deg,#fdfcfb,transparent)", zIndex:2, pointerEvents:"none" }} />
+      <div style={{ display:"flex", overflowX:"auto", gap:0, userSelect:"none", scrollbarWidth:"none", msOverflowStyle:"none" }}>
+        {categories.map((cat, i) => {
+          const isActive = activeCategory === cat;
+          return (
+            <button key={cat}
+              onClick={() => onNavigate(cat)}
+              style={{
+                flexShrink:0, padding:"13px 22px",
+                background: isActive ? "#2a2420" : COLORS[i % COLORS.length],
+                border:"none", borderRight:"1px solid #e8e0d8", cursor:"pointer",
+                fontFamily:"'DM Sans',sans-serif", fontSize:".72rem", letterSpacing:".12em",
+                textTransform:"uppercase",
+                color: isActive ? "#c9a96e" : "#555",
+                whiteSpace:"nowrap", transition:"background .18s, color .18s",
+                fontWeight: isActive ? 500 : 400,
+              }}
+              onMouseOver={e => { if(!isActive){ e.currentTarget.style.background="#c9a96e"; e.currentTarget.style.color="#fff"; }}}
+              onMouseOut={e => { if(!isActive){ e.currentTarget.style.background=COLORS[i % COLORS.length]; e.currentTarget.style.color="#555"; }}}>
+              {cat}
+            </button>
+          );
+        })}
       </div>
     </div>
   );

@@ -20,6 +20,11 @@ export const metadata = {
   },
 };
 
+// Font preloading — declared at module level so Next.js puts in <head>
+export const viewport = {
+  themeColor: "#2a2420",
+};
+
 const websiteSchema = {
   "@context": "https://schema.org",
   "@type": "WebSite",
@@ -55,6 +60,15 @@ export default function RootLayout({ children }) {
 
   return (
     <html lang="en">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" />
+        <style dangerouslySetInnerHTML={{__html:`
+          *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+          body{font-family:'DM Sans',system-ui,sans-serif;background:#fdfcfb;color:#2a2420;}
+        `}} />
+      </head>
       <body>
         {/* Structured Data */}
         <script

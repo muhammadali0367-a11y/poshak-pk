@@ -43,6 +43,9 @@ export default function SharedNav() {
   const [allBrands,     setAllBrands]     = useState([]);
   const [popCategories, setPopCategories] = useState(CATEGORIES); // default to all, update from API
   const [wishCount,     setWishCount]     = useState(0);
+  const [suggestions,   setSuggestions]   = useState([]);
+  const [toast,         setToast]         = useState(null);
+  const toastRef = useRef(null);
 
   // Read wishlist count from localStorage
   useEffect(() => {
@@ -67,6 +70,30 @@ export default function SharedNav() {
       .then(j => { if (j.brands) setAllBrands(j.brands); })
       .catch(() => {});
   }, []);
+
+  // Toast helper — expose globally so other components can call showToast("msg")
+  useEffect(() => {
+    window.__poshakToast = (msg) => {
+      setToast(msg);
+      if (toastRef.current) clearTimeout(toastRef.current);
+      toastRef.current = setTimeout(() => setToast(null), 2500);
+    };
+    return () => { delete window.__poshakToast; };
+  }, []);
+
+  // Search suggestions — brand names + category names matching query
+  function getSuggestions(q) {
+    if (!q || q.length < 2) { setSuggestions([]); return; }
+    const ql = q.toLowerCase();
+    const brandMatches = allBrands.filter(b => b.toLowerCase().includes(ql)).slice(0, 4);
+    const catMatches = CATEGORIES.filter(c => c.toLowerCase().includes(ql)).slice(0, 3);
+    const popular = [
+      "lawn suits","bridal dress","shalwar kameez","unstitched fabric",
+      "festive collection","winter khaddar","pret kurta","co-ord set",
+      "sale","new arrivals","black lawn","gulabi lawn","embroidered"
+    ].filter(s => s.includes(ql)).slice(0, 3);
+    setSuggestions({ brands: brandMatches, categories: catMatches, popular });
+  }
 
   useEffect(() => {
     fetch("/api/homepage")
@@ -100,8 +127,7 @@ export default function SharedNav() {
   return (
     <>
       <style suppressHydrationWarning>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap');
-        .poshak-nav{height:62px;border-bottom:1px solid #e8e0d8;display:grid;grid-template-columns:auto auto 1fr auto;align-items:center;padding:0 20px;position:sticky;top:0;z-index:200;background:rgba(253,252,251,.97);backdrop-filter:blur(14px);gap:12px;font-family:'DM Sans',sans-serif;}
+        .poshak-nav{height:62px;border-bottom:1px solid #e8e0d8;display:grid;grid-template-columns:auto auto 1fr auto;align-items:center;padding:0 20px;position:sticky;top:0;z-index:200;background:rgba(253,252,251,.97);gap:12px;font-family:'DM Sans',sans-serif;}
         .poshak-wordmark{font-family:'Cormorant Garamond',serif;font-size:1.45rem;font-weight:300;letter-spacing:.18em;cursor:pointer;color:#2a2420;user-select:none;white-space:nowrap;}
         .poshak-hamburger{background:none;border:none;cursor:pointer;padding:8px;display:flex;flex-direction:column;gap:5px;flex-shrink:0;}
         .poshak-hamburger span{display:block;width:22px;height:1.5px;background:#2a2420;border-radius:2px;transition:all .22s;}
@@ -118,6 +144,11 @@ export default function SharedNav() {
         .poshak-dd-title{font-size:.6rem;letter-spacing:.22em;text-transform:uppercase;color:#c9a96e;margin-bottom:12px;font-weight:600;}
         .poshak-dd-btn{display:block;width:100%;background:none;border:none;text-align:left;padding:5px 0;font-size:.78rem;color:#2a2420;font-family:'DM Sans',sans-serif;cursor:pointer;white-space:nowrap;transition:color .15s;}
         .poshak-dd-btn:hover{color:#c9a96e;}
+        .poshak-suggestions{position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #e0d8d0;border-top:none;border-radius:0 0 10px 10px;box-shadow:0 8px 24px rgba(0,0,0,.1);z-index:202;max-height:280px;overflow-y:auto;}
+        .poshak-sug-item{display:block;width:100%;padding:9px 14px;background:none;border:none;text-align:left;font-size:.82rem;color:#2a2420;font-family:'DM Sans',sans-serif;cursor:pointer;transition:background .12s;}
+        .poshak-sug-item:hover{background:#fdf7ef;color:#9a6a30;}
+        .poshak-sug-label{font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:#c9a96e;padding:8px 14px 4px;display:block;}
+        .poshak-toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#2a2420;color:#f5f0eb;padding:10px 20px;border-radius:24px;font-size:.78rem;font-family:'DM Sans',sans-serif;z-index:999;pointer-events:none;white-space:nowrap;border:1px solid #c9a96e;transition:opacity .3s;}
         @media(max-width:600px){
           .poshak-wordmark{font-size:1.1rem;letter-spacing:.1em;}
           .poshak-dropdown{gap:16px;padding:16px;}
@@ -168,11 +199,42 @@ export default function SharedNav() {
           <input className="poshak-search-input"
             placeholder="Search: black lawn, kala suit, bridal chiffon…"
             value={query}
-            onChange={e => setQuery(e.target.value)}
+            onChange={e => { setQuery(e.target.value); getSuggestions(e.target.value); }}
+            onFocus={e => getSuggestions(e.target.value)}
             onKeyDown={e => { if (e.key === "Enter") handleSearch(); }}
           />
           {query && (
-            <button onClick={() => setQuery("")} style={{ background:"none", border:"none", color:"#ccc", cursor:"pointer", padding:"0 10px", flexShrink:0 }}>✕</button>
+            <button onClick={() => { setQuery(""); setSuggestions([]); }} style={{ background:"none", border:"none", color:"#ccc", cursor:"pointer", padding:"0 10px", flexShrink:0 }}>✕</button>
+          )}
+
+          {/* Search suggestions */}
+          {query.length >= 2 && suggestions && (suggestions.brands?.length > 0 || suggestions.categories?.length > 0 || suggestions.popular?.length > 0) && !showDropdown && (
+            <div className="poshak-suggestions">
+              {suggestions.popular?.length > 0 && <>
+                <span className="poshak-sug-label">Popular</span>
+                {suggestions.popular.map(s => (
+                  <button key={s} className="poshak-sug-item" onClick={() => { handleSearch(s); setSuggestions([]); }}>
+                    {s}
+                  </button>
+                ))}
+              </>}
+              {suggestions.brands?.length > 0 && <>
+                <span className="poshak-sug-label">Brands</span>
+                {suggestions.brands.map(b => (
+                  <button key={b} className="poshak-sug-item" onClick={() => { setShowDropdown(false); setSuggestions([]); setQuery(""); router.push(`/brand/${slugify(b)}`); }}>
+                    {b}
+                  </button>
+                ))}
+              </>}
+              {suggestions.categories?.length > 0 && <>
+                <span className="poshak-sug-label">Categories</span>
+                {suggestions.categories.map(cat => (
+                  <button key={cat} className="poshak-sug-item" onClick={() => { setShowDropdown(false); setSuggestions([]); setQuery(""); router.push(`/category/${slugify(cat)}`); }}>
+                    {cat}
+                  </button>
+                ))}
+              </>}
+            </div>
           )}
 
           {/* Mega dropdown */}
@@ -206,6 +268,9 @@ export default function SharedNav() {
           <span className="poshak-wish-label">Wishlist{wishCount>0?` (${wishCount})`:""}</span>
         </button>
       </nav>
+      {toast && (
+        <div className="poshak-toast">{toast}</div>
+      )}
     </>
   );
 }

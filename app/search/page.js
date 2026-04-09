@@ -187,9 +187,8 @@ function SearchResults() {
 
 export default function SearchPage() {
   return (
-    <div style={{ fontFamily:"'DM Sans',sans-serif", background:"linear-gradient(160deg,#fdfcfb 0%,#f5f0eb 100%)", minHeight:"100vh", color:"#2a2420" }}>
+    <div style={{ fontFamily:"'DM Sans',sans-serif", background:"#fdfcfb", minHeight:"100vh", color:"#2a2420" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap');
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
         .product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:20px;margin-bottom:40px;}.card-img{aspect-ratio:3/4!important;height:auto!important;}
         @media(max-width:768px){.product-grid{grid-template-columns:repeat(2,1fr)!important;gap:12px!important;}.card-img{aspect-ratio:3/4!important;height:auto!important;}.card-tag{display:none!important;}}

@@ -18,6 +18,20 @@ export default function ProductPage() {
   const [liveStock, setLiveStock] = useState(null);
   const [wishlist,  setWishlist]  = useState([]);
   const [mounted,   setMounted]   = useState(false);
+  const [shareMsg,  setShareMsg]  = useState("");
+
+  function handleShare() {
+    const url = window.location.href;
+    const text = product ? `Check out ${product.name} by ${product.brand} on Poshak!` : "Check this out on Poshak!";
+    if (navigator.share) {
+      navigator.share({ title: product?.name || "Poshak", text, url }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(url).then(() => {
+        setShareMsg("Link copied!");
+        setTimeout(() => setShareMsg(""), 2000);
+      });
+    }
+  }
 
   // Fix hydration: only read params after mount
   useEffect(() => {
@@ -141,15 +155,14 @@ export default function ProductPage() {
   };
 
   return (
-    <div style={{ fontFamily:"'DM Sans',sans-serif", background:"linear-gradient(160deg,#fdfcfb 0%,#f5f0eb 100%)", minHeight:"100vh", color:"#2a2420" }}>
+    <div style={{ fontFamily:"'DM Sans',sans-serif", background:"#fdfcfb", minHeight:"100vh", paddingBottom:"0", color:"#2a2420" }}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
       />
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap');
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-        .nav{height:60px;border-bottom:1px solid #e8e0d8;display:flex;align-items:center;padding:0 24px;position:sticky;top:0;z-index:200;background:rgba(253,252,251,.97);backdrop-filter:blur(14px);justify-content:space-between;}
+        .nav{height:60px;border-bottom:1px solid #e8e0d8;display:flex;align-items:center;padding:0 24px;position:sticky;top:0;z-index:200;background:rgba(253,252,251,.97);justify-content:space-between;}
         .wordmark{font-family:'Cormorant Garamond',serif;font-size:1.45rem;font-weight:300;letter-spacing:.18em;cursor:pointer;color:#2a2420;}
         .cta-btn{background:#2a2420;color:#fff;border:none;padding:16px 24px;font-family:'DM Sans',sans-serif;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;font-weight:500;cursor:pointer;border-radius:4px;transition:all .22s;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;}
         .cta-btn:hover{background:#c9a96e;}
@@ -160,6 +173,10 @@ export default function ProductPage() {
         .breadcrumb a{color:#c9a96e;text-decoration:none;}
         .breadcrumb a:hover{text-decoration:underline;}
         @media(max-width:768px){.product-layout{flex-direction:column !important;}.product-img{height:auto !important;aspect-ratio:3/4;}}
+        .sticky-cta{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e8e0d8;padding:12px 20px;z-index:100;display:flex;gap:10px;align-items:center;}
+        .share-btn{background:none;border:1px solid #e0d8d0;color:#777;padding:10px 14px;border-radius:4px;cursor:pointer;font-size:.75rem;font-family:'DM Sans',sans-serif;white-space:nowrap;transition:all .2s;flex-shrink:0;}
+        .share-btn:hover{border-color:#c9a96e;color:#c9a96e;}
+        @media(min-width:769px){.sticky-cta{display:none;}}
       `}</style>
 
       <SharedNav />
@@ -285,6 +302,19 @@ export default function ProductPage() {
           </div>
         )}
       </div>
+
+      {/* Sticky CTA — mobile only */}
+      {product && (
+        <div className="sticky-cta">
+          <button className="share-btn" onClick={handleShare}>
+            {shareMsg || "Share"}
+          </button>
+          <a href={product.product_url} target="_blank" rel="noopener noreferrer"
+            style={{ flex:1, background: liveStock==="sold_out"?"#888":"#2a2420", color:"#fff", border:"none", padding:"12px 20px", fontFamily:"'DM Sans',sans-serif", fontSize:".78rem", letterSpacing:".1em", textTransform:"uppercase", fontWeight:500, cursor:"pointer", borderRadius:"4px", textAlign:"center", textDecoration:"none", display:"flex", alignItems:"center", justifyContent:"center" }}>
+            {liveStock==="sold_out" ? `Sold Out — View on ${product.brand}` : `View & Buy on ${product.brand} →`}
+          </a>
+        </div>
+      )}
 
       <footer style={{ borderTop:"1px solid #e8e0d8", padding:"32px 24px", background:"rgba(255,255,255,.55)" }}>
         <div style={{ maxWidth:"1240px", margin:"0 auto", display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:"12px" }}>

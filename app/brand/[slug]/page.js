@@ -51,9 +51,15 @@ export default function BrandPage() {
   const [priceRange, setPriceRange] = useState("All Prices");
   const [wishlist,   setWishlist]   = useState([]);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [showBackToTop, setShowBackToTop] = useState(false);
   const sentinelRef = useRef(null);
 
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    setMounted(true);
+    const onScroll = () => setShowBackToTop(window.scrollY > 500);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   useEffect(() => {
     if (!mounted) return;
@@ -125,11 +131,10 @@ export default function BrandPage() {
   );
 
   return (
-    <div style={{ fontFamily:"'DM Sans',sans-serif", background:"linear-gradient(160deg,#fdfcfb 0%,#f5f0eb 100%)", minHeight:"100vh", color:"#2a2420" }}>
+    <div style={{ fontFamily:"'DM Sans',sans-serif", background:"#fdfcfb", minHeight:"100vh", color:"#2a2420" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap');
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-        .nav{height:60px;border-bottom:1px solid #e8e0d8;display:flex;align-items:center;padding:0 24px;position:sticky;top:0;z-index:200;background:rgba(253,252,251,.97);backdrop-filter:blur(14px);justify-content:space-between;}
+        .nav{height:60px;border-bottom:1px solid #e8e0d8;display:flex;align-items:center;padding:0 24px;position:sticky;top:0;z-index:200;background:rgba(253,252,251,.97);justify-content:space-between;}
         .wordmark{font-family:'Cormorant Garamond',serif;font-size:1.45rem;font-weight:300;letter-spacing:.18em;cursor:pointer;color:#2a2420;}
         .card{background:#fff;border:1px solid #e8e0d8;border-radius:10px;overflow:hidden;cursor:pointer;position:relative;box-shadow:0 2px 10px rgba(0,0,0,.04);transition:transform .28s,box-shadow .28s,border-color .2s;}
         .card:hover{border-color:#c9a96e;transform:translateY(-5px);box-shadow:0 18px 44px rgba(180,140,90,.14);}
@@ -144,7 +149,7 @@ export default function BrandPage() {
         select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23aaa'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px !important;}
         .load-more{background:none;border:1px solid #e0d8d0;border-radius:4px;padding:12px 40px;cursor:pointer;font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:#888;font-family:'DM Sans',sans-serif;transition:all .2s;}
         .load-more:hover{border-color:#c9a96e;color:#c9a96e;}
-        .breadcrumb{font-size:.7rem;color:#bbb;}
+        .breadcrumb{font-size:.7rem;color:#bbb;}.back-to-top{position:fixed;bottom:24px;right:20px;width:40px;height:40px;background:#2a2420;border:1px solid #c9a96e;border-radius:50%;cursor:pointer;display:none;align-items:center;justify-content:center;z-index:90;}.back-to-top.visible{display:flex;}
         .breadcrumb a{color:#c9a96e;text-decoration:none;}
         .breadcrumb a:hover{text-decoration:underline;}
         @media(max-width:768px){.card-img{aspect-ratio:3/4;}.product-grid{grid-template-columns:repeat(2,1fr)!important;gap:12px!important;}.card-tag{display:none!important;}}
@@ -233,6 +238,12 @@ export default function BrandPage() {
         )}
       </div>
 
+      <button className={`back-to-top ${showBackToTop?"visible":""}`}
+        onClick={() => window.scrollTo({ top:0, behavior:"smooth" })}>
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M7 12V2M3 6l4-4 4 4" stroke="#c9a96e" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </button>
       <footer style={{ borderTop:"1px solid #e8e0d8", padding:"40px 24px 32px", background:"rgba(255,255,255,.55)" }}>
         <div style={{ maxWidth:"1240px", margin:"0 auto" }}>
           <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))", gap:"32px", marginBottom:"32px" }}>
