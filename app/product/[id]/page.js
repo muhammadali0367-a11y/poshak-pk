@@ -164,7 +164,7 @@ export default function ProductPage() {
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
         .nav{height:60px;border-bottom:1px solid #e8e0d8;display:flex;align-items:center;padding:0 24px;position:sticky;top:0;z-index:200;background:rgba(253,252,251,.97);justify-content:space-between;}
         .wordmark{font-family:'Cormorant Garamond',serif;font-size:1.45rem;font-weight:300;letter-spacing:.18em;cursor:pointer;color:#2a2420;}
-        .cta-btn{background:#2a2420;color:#fff;border:none;padding:16px 24px;font-family:'DM Sans',sans-serif;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;font-weight:500;cursor:pointer;border-radius:4px;transition:all .22s;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;}
+        .cta-btn-wrap{display:block;}.cta-btn{background:#2a2420;color:#fff;border:none;padding:16px 24px;font-family:'DM Sans',sans-serif;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;font-weight:500;cursor:pointer;border-radius:4px;transition:all .22s;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;}
         .cta-btn:hover{background:#c9a96e;}
         .cta-btn.sold-out{background:#888;cursor:not-allowed;}
         .similar-card{background:#fff;border:1px solid #e8e0d8;border-radius:8px;overflow:hidden;cursor:pointer;transition:all .22s;}
@@ -172,7 +172,7 @@ export default function ProductPage() {
         .breadcrumb{font-size:.7rem;color:#bbb;}
         .breadcrumb a{color:#c9a96e;text-decoration:none;}
         .breadcrumb a:hover{text-decoration:underline;}
-        @media(max-width:768px){.product-layout{flex-direction:column !important;}.product-img{height:auto !important;aspect-ratio:3/4;}}
+        @media(max-width:768px){.desktop-cta{display:none;}.product-layout{flex-direction:column !important;}.product-img{height:auto !important;aspect-ratio:3/4;}}
         .sticky-cta{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e8e0d8;padding:12px 20px;z-index:100;display:flex;gap:10px;align-items:center;}
         .share-btn{background:none;border:1px solid #e0d8d0;color:#777;padding:10px 14px;border-radius:4px;cursor:pointer;font-size:.75rem;font-family:'DM Sans',sans-serif;white-space:nowrap;transition:all .2s;flex-shrink:0;}
         .share-btn:hover{border-color:#c9a96e;color:#c9a96e;}
@@ -249,6 +249,12 @@ export default function ProductPage() {
             <div className="product-actions"><div style={{ background:"#fffbf0", border:"1px solid #f0e0b0", borderRadius:"8px", padding:"12px 16px", marginBottom:"24px", fontSize:".7rem", color:"#888", lineHeight:1.6 }}>
               ℹ️ Links to {product.brand}'s official website. Availability and pricing are controlled by the brand.
             </div>
+
+            <a href={product.product_url} target="_blank" rel="noopener noreferrer" className="desktop-cta" style={{ textDecoration:"none", display:"block", marginBottom:"12px" }}>
+              <button className={`cta-btn ${liveStock==="sold_out"?"sold-out":""}`}>
+                {liveStock==="sold_out" ? `View on ${product.brand} (Sold Out) →` : `View & Buy on ${product.brand} →`}
+              </button>
+            </a>
 
             <button onClick={() => {
                 const id = product.id;
