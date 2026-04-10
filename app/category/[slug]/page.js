@@ -76,6 +76,7 @@ export default function CategoryPage() {
   const [allBrands,  setAllBrands]  = useState([]);
   const [sort,       setSort]       = useState("price_desc");
   const [wishlist,   setWishlist]   = useState([]);
+  const [showNoResultsHint, setShowNoResultsHint] = useState(false);
   const sentinelRef = useRef(null);
 
   useEffect(() => {
@@ -117,7 +118,15 @@ export default function CategoryPage() {
           image:          p.image_url || "",
           badge:          deriveBadge(p.tags, p.name, p.original_price, p.price),
         }));
-        setProducts(prev => pageNum === 1 ? prods : [...prev, ...prods]);
+        setProducts(prev => {
+          if (prods.length === 0) return prev;
+          return pageNum === 1 ? prods : [...prev, ...prods];
+        });
+        if (pageNum === 1 && prods.length === 0) {
+          setShowNoResultsHint(brand !== "All Brands" || priceRange !== "All Prices" || sort !== "price_desc");
+        } else {
+          setShowNoResultsHint(false);
+        }
         setTotalPages(json.pages || 1);
         setTotal(json.total || 0);
       })
@@ -216,6 +225,9 @@ export default function CategoryPage() {
             </select>
           </div>
         </div>
+        {showNoResultsHint && (
+          <p style={{ fontSize:".72rem", color:"#9a6a30", marginBottom:"16px" }}>No results found</p>
+        )}
 
         {/* Category pills */}
         <div className="cats-row" style={{ display:"flex", gap:"8px", flexWrap:"wrap", marginBottom:"28px" }}>

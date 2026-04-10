@@ -278,6 +278,19 @@ async function fetchSearchPayload(request) {
 
 export async function GET(request) {
   try {
+    const { searchParams } = new URL(request.url)
+    const logMeta = {
+      url: request.url,
+      timestamp: new Date().toISOString(),
+      search: {
+        q: (searchParams.get('q') || '').trim(),
+        page: searchParams.get('page') || '1',
+        brand: searchParams.get('brand') || '',
+        min_price: searchParams.get('min_price') || '',
+        max_price: searchParams.get('max_price') || '',
+      },
+    }
+
     const cacheKey = request.url
     const now = Date.now()
     const cached = searchCache.get(cacheKey)
@@ -290,11 +303,11 @@ export async function GET(request) {
       inFlight = (async () => {
         let payload = await fetchSearchPayload(request)
         if (payload.products.length === 0) {
-          console.warn('search API returned empty products, retrying once:', request.url)
+          console.warn('search API returned empty products, retrying once:', logMeta)
           payload = await fetchSearchPayload(request)
         }
         if (payload.products.length === 0) {
-          console.warn('search API returned empty products after retry:', request.url)
+          console.warn('search API returned empty products after retry:', logMeta)
           return payload
         }
         searchCache.set(cacheKey, {

@@ -75,6 +75,23 @@ async function fetchProductsPayload(request) {
 
 export async function GET(request) {
   try {
+    const { searchParams } = new URL(request.url)
+    const logMeta = {
+      url: request.url,
+      timestamp: new Date().toISOString(),
+      filters: {
+        page: searchParams.get('page') || '1',
+        category: searchParams.get('category') || '',
+        brand: searchParams.get('brand') || '',
+        min_price: searchParams.get('min_price') || '',
+        max_price: searchParams.get('max_price') || '',
+        color: searchParams.get('color') || '',
+        fabric: searchParams.get('fabric') || '',
+        occasion: searchParams.get('occasion') || '',
+        sort: searchParams.get('sort') || 'price_desc',
+      },
+    }
+
     const cacheKey = request.url
     const now = Date.now()
     const cached = productsCache.get(cacheKey)
@@ -87,11 +104,11 @@ export async function GET(request) {
       inFlight = (async () => {
         let payload = await fetchProductsPayload(request)
         if (payload.products.length === 0) {
-          console.warn('products API returned empty products, retrying once:', request.url)
+          console.warn('products API returned empty products, retrying once:', logMeta)
           payload = await fetchProductsPayload(request)
         }
         if (payload.products.length === 0) {
-          console.warn('products API returned empty products after retry:', request.url)
+          console.warn('products API returned empty products after retry:', logMeta)
           return payload
         }
         productsCache.set(cacheKey, {

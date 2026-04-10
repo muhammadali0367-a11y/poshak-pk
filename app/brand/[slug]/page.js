@@ -53,6 +53,7 @@ export default function BrandPage() {
   const [priceRange, setPriceRange] = useState("All Prices");
   const [allBrands,  setAllBrands]  = useState([]);
   const [wishlist,   setWishlist]   = useState([]);
+  const [showNoResultsHint, setShowNoResultsHint] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
   const sentinelRef = useRef(null);
@@ -100,7 +101,15 @@ export default function BrandPage() {
           original_price: safePrice(p.original_price),
           badge:          deriveBadge(p.tags, p.name, p.original_price, p.price),
         }));
-        setProducts(prev => page === 1 ? prods : [...prev, ...prods]);
+        setProducts(prev => {
+          if (prods.length === 0) return prev;
+          return page === 1 ? prods : [...prev, ...prods];
+        });
+        if (page === 1 && prods.length === 0) {
+          setShowNoResultsHint(category !== "All Categories" || priceRange !== "All Prices");
+        } else {
+          setShowNoResultsHint(false);
+        }
         setTotalPages(json.pages || 1);
         setTotal(json.total || 0);
       })
@@ -186,6 +195,9 @@ export default function BrandPage() {
             ))}
           </div>
         </div>
+        {showNoResultsHint && (
+          <p style={{ fontSize:".72rem", color:"#9a6a30", marginBottom:"16px" }}>No results found</p>
+        )}
 
         {loading && products.length === 0 ? (
           <div style={{ textAlign:"center", padding:"80px 0", color:"#c9a96e" }}>

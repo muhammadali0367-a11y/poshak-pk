@@ -732,6 +732,7 @@ export default function HomeClient({ initialSections = {} }) {
   const [dynamicColors,   setDynamicColors]   = useState([]);
   const [dynamicFabrics,  setDynamicFabrics]  = useState([]);
   const [dynamicOccasions,setDynamicOccasions]= useState([]);
+  const [showNoResultsHint, setShowNoResultsHint] = useState(false);
   const searchRef = useRef(null);
   const sentinelRef = useRef(null);
 
@@ -847,7 +848,8 @@ export default function HomeClient({ initialSections = {} }) {
       .then(r => r.json())
       .then(json => {
         const prods = (json.products || []).map(processProduct);
-        setProducts(prods);
+        setProducts(prev => (prods.length === 0 ? prev : prods));
+        setShowNoResultsHint(prods.length === 0);
         setTotalResults(json.total || prods.length);
         setTotalPages(json.pages || 1);
         setDataSource("supabase");
@@ -1080,6 +1082,9 @@ export default function HomeClient({ initialSections = {} }) {
                 {isFiltering ? `${totalResults} dresses` : ""}
               </span>
             </div>
+            {isFiltering && showNoResultsHint && (
+              <p style={{ fontSize:".72rem", color:"#9a6a30", marginBottom:"14px" }}>No results found</p>
+            )}
 
             {/* FILTER PANEL */}
             <div className="filter-panel" style={{ maxHeight:filtersOpen?"420px":"0", padding:filtersOpen?"20px":"0 20px", marginBottom:filtersOpen?"20px":"0" }}>
