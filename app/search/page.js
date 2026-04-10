@@ -50,7 +50,13 @@ function SearchResults() {
   const sentinelRef = useRef(null);
 
   useEffect(() => {
+    console.log("SearchResults mounted");
+  }, []);
+
+  useEffect(() => {
     getBrandsCached().then((brands) => {
+      console.log("fetched brands:", brands);
+      console.log("setAllBrands called with:", brands);
       setAllBrands(brands);
     });
   }, []);

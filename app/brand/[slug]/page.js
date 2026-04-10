@@ -58,6 +58,10 @@ export default function BrandPage() {
   const sentinelRef = useRef(null);
 
   useEffect(() => {
+    console.log("BrandPage mounted");
+  }, []);
+
+  useEffect(() => {
     const onScroll = () => setShowBackToTop(window.scrollY > 500);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -72,6 +76,8 @@ export default function BrandPage() {
 
   useEffect(() => {
     getBrandsCached().then((brandsList) => {
+      console.log("fetched brands:", brandsList);
+      console.log("setAllBrands called with:", brandsList);
       setAllBrands(brandsList);
     });
   }, []);

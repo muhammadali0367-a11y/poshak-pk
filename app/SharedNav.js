@@ -48,6 +48,14 @@ export default function SharedNav({ brands }) {
   const [toast,         setToast]         = useState(null);
   const toastRef = useRef(null);
 
+  useEffect(() => {
+    console.log("SharedNav mounted");
+  }, []);
+
+  useEffect(() => {
+    console.log("brands prop:", brands);
+  }, [brands]);
+
   // Read wishlist count from localStorage
   useEffect(() => {
     try {
@@ -68,10 +76,13 @@ export default function SharedNav({ brands }) {
   useEffect(() => {
     if (Array.isArray(brands)) {
       setBrandsCache(brands);
+      console.log("setAllBrands called with:", brands);
       setAllBrands(brands);
       if (brands.length > 0) return;
     }
     getBrandsCached().then((cachedBrands) => {
+      console.log("fetched brands:", cachedBrands);
+      console.log("setAllBrands called with:", cachedBrands);
       setAllBrands(cachedBrands);
     });
   }, [brands]);

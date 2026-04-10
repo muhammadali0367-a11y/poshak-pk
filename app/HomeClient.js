@@ -735,6 +735,10 @@ export default function HomeClient({ initialSections = {} }) {
   const searchRef = useRef(null);
   const sentinelRef = useRef(null);
 
+  useEffect(() => {
+    console.log("HomeClient mounted");
+  }, []);
+
   // ── Parse price range ──────────────────────────────────────────────────────
   function parsePriceRange(pr) {
     if (!pr || pr === "All Prices") return [null, null];
@@ -803,6 +807,8 @@ export default function HomeClient({ initialSections = {} }) {
   // ── Fetch all brands separately — always runs regardless of homepage cache ──
   useEffect(() => {
     getBrandsCached().then((brands) => {
+      console.log("fetched brands:", brands);
+      console.log("setAllBrands called with:", brands);
       setAllBrands(brands);
       setBrandsCache(brands);
     });

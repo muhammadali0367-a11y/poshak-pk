@@ -79,6 +79,10 @@ export default function CategoryPage() {
   const sentinelRef = useRef(null);
 
   useEffect(() => {
+    console.log("CategoryPage mounted");
+  }, []);
+
+  useEffect(() => {
     const slug = routeParams?.slug || "";
     const name = SLUG_TO_CAT[slug] || slug.replace(/-/g," ").replace(/\b\w/g,c=>c.toUpperCase());
     setCatName(name);
@@ -88,6 +92,8 @@ export default function CategoryPage() {
 
   useEffect(() => {
     getBrandsCached().then((brandsList) => {
+      console.log("fetched brands:", brandsList);
+      console.log("setAllBrands called with:", brandsList);
       setAllBrands(brandsList);
     });
   }, []);

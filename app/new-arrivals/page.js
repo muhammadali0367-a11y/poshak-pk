@@ -37,6 +37,10 @@ export default function NewArrivalsPage() {
   const [wishlist, setWishlist] = useState([]);
   const sentinelRef = useRef(null);
 
+  useEffect(() => {
+    console.log("NewArrivalsPage mounted");
+  }, []);
+
   const WINDOW_SIZE = 72;
   const visibleProducts = useMemo(() => {
     if (products.length <= WINDOW_SIZE) return products;
@@ -45,6 +49,8 @@ export default function NewArrivalsPage() {
 
   useEffect(() => {
     getBrandsCached().then((brands) => {
+      console.log("fetched brands:", brands);
+      console.log("setAllBrands called with:", brands);
       setAllBrands(brands);
     });
     try {
