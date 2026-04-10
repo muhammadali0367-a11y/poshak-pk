@@ -16,6 +16,23 @@ function normalizeBrands(payload) {
   return Array.isArray(payload?.brands) ? payload.brands : [];
 }
 
+async function fetchBrandsWithRetry() {
+  const first = await fetch("/api/brands")
+    .then((res) => res.json())
+    .then((json) => normalizeBrands(json))
+    .catch(() => []);
+
+  if (first.length > 0) return first;
+
+  // Retry once when API returns an empty brands array.
+  const second = await fetch("/api/brands")
+    .then((res) => res.json())
+    .then((json) => normalizeBrands(json))
+    .catch(() => []);
+
+  return second;
+}
+
 export function getBrandsCached() {
   if (hasFreshValue(brandsCache)) {
     return Promise.resolve(brandsCache.value);
@@ -25,10 +42,8 @@ export function getBrandsCached() {
     return brandsCache.inFlight;
   }
 
-  brandsCache.inFlight = fetch("/api/brands")
-    .then((res) => res.json())
-    .then((json) => {
-      const brands = normalizeBrands(json);
+  brandsCache.inFlight = fetchBrandsWithRetry()
+    .then((brands) => {
       brandsCache.value = brands;
       brandsCache.expiresAt = Date.now() + CACHE_TTL_MS;
       return brands;

@@ -69,7 +69,7 @@ export default function SharedNav({ brands }) {
     if (Array.isArray(brands)) {
       setBrandsCache(brands);
       setAllBrands(brands);
-      return;
+      if (brands.length > 0) return;
     }
     getBrandsCached().then((cachedBrands) => {
       setAllBrands(cachedBrands);
