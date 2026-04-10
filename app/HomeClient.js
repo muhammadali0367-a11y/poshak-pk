@@ -652,7 +652,23 @@ export default function HomeClient({ initialSections = {} }) {
   const router = useRouter();
   const [mounted,         setMounted]         = useState(false);
   const [products,        setProducts]        = useState([]);
-  const [homepageSections,setHomepageSections]= useState(initialSections);   // { "Lawn": [...4 products] }
+  const [homepageSections,setHomepageSections]= useState(() => {
+    // Process server-side data immediately so image_url → image mapping exists on first render
+    if (!initialSections || Object.keys(initialSections).length === 0) return {};
+    const processed = {};
+    for (const [cat, prods] of Object.entries(initialSections)) {
+      processed[cat] = prods.map(p => ({
+        ...p,
+        price: Number(p.price) || 0,
+        original_price: Number(p.original_price) || 0,
+        category: p.category || cat,
+        categories: [p.category || cat],
+        image: p.image_url || p.image || "",
+        in_stock: p.in_stock !== false,
+      }));
+    }
+    return processed;
+  });   // { "Lawn": [...4 products] }
   const [allBrands,        setAllBrands]        = useState([]);
   const [loading,         setLoading]         = useState(Object.keys(initialSections).length === 0);
   const [loadingMore,     setLoadingMore]     = useState(false);
@@ -1212,7 +1228,7 @@ export default function HomeClient({ initialSections = {} }) {
               <div key={p.id} style={{ background:"#fff", border:"1px solid #e8e0d8", borderRadius:"8px", overflow:"hidden", cursor:"pointer" }}
                 onClick={() => openProduct(p)}>
                 <div style={{ position:"relative", width:"100%", aspectRatio:"3/4", background:"#f5f0eb" }}>
-                  <Image src={p.image || p.image_url || "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=300&q=70"} alt={p.name || "Product"} fill sizes="(max-width:768px) 33vw, 160px" style={{ objectFit:"cover" }} onError={()=>{}} />
+                  <Image src={p.image || p.image_url || ""} alt={p.name || "Product"} fill sizes="(max-width:768px) 33vw, 160px" style={{ objectFit:"cover" }} onError={()=>{}} />
                 </div>
                 <div style={{ padding:"8px" }}>
                   <div style={{ fontSize:".58rem", color:"#c9a96e", textTransform:"uppercase", letterSpacing:".1em", marginBottom:"2px" }}>{p.brand}</div>
@@ -1473,7 +1489,7 @@ function CategoryCarousel({ categories, onNavigate, activeCategory }) {
   );
 }
 function ImageWithFallback({ src, alt, priority = false }) {
-  const [imgSrc, setImgSrc] = useState(src || "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=500&q=80");
+  const [imgSrc, setImgSrc] = useState(src || "");
   useEffect(() => { if (src) setImgSrc(src); }, [src]);
   return (
     <Image
@@ -1484,7 +1500,7 @@ function ImageWithFallback({ src, alt, priority = false }) {
       style={{ objectFit:"cover" }}
       priority={priority}
       loading={priority ? "eager" : "lazy"}
-      onError={() => setImgSrc("https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=500&q=80")}
+      onError={() => setImgSrc("/placeholder.png")}
     />
   );
 }
