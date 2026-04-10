@@ -201,14 +201,15 @@ async function fetchSearchPayload(request) {
       const vectorResults = await vectorSearch(embedding, {
         brand, color: detectedColor, min_price, max_price, topK: 100
       })
+      const inStockVectorResults = vectorResults.filter(p => p.in_stock !== false)
 
-      if (vectorResults.length > 0) {
+      if (inStockVectorResults.length > 0) {
         const queryTerms = [...new Set([
           ...normalizedQ.toLowerCase().split(/\s+/),
           ...translatedQ.toLowerCase().split(/\s+/)
         ])].filter(t => t.length > 2)
 
-        const reranked = hybridRerank(vectorResults, queryTerms)
+        const reranked = hybridRerank(inStockVectorResults, queryTerms)
         total = reranked.length
         products = reranked.slice(from, from + PAGE_SIZE)
       }

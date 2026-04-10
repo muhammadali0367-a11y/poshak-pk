@@ -33,6 +33,7 @@ async function fetchProductsPayload(request) {
       'id, name, brand, price, original_price, product_type, tags, collection, category, color, fabric, occasion, image_url, product_url, in_stock',
       { count: 'exact' }
     )
+    .eq('in_stock', true)
 
   // Always exclude western/standalone product types
   for (const ex of EXCLUDED_PRODUCT_TYPES) {
