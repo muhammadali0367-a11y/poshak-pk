@@ -195,26 +195,31 @@ async function fetchSearchPayload(request) {
     // ── Step 3: Vector search via pgvector ────────────────────────────────────
     let products = []
     let total = 0
+    const shouldRunVectorSearch =
+      rawQ.trim().length >= 3 &&
+      !/^\d+$/.test(rawQ)
 
-    try {
-      const embedding = await getQueryEmbedding(normalizedQ)
-      const vectorResults = await vectorSearch(embedding, {
-        brand, color: detectedColor, min_price, max_price, topK: 100
-      })
-      const inStockVectorResults = vectorResults.filter(p => p.in_stock !== false)
+    if (shouldRunVectorSearch) {
+      try {
+        const embedding = await getQueryEmbedding(normalizedQ)
+        const vectorResults = await vectorSearch(embedding, {
+          brand, color: detectedColor, min_price, max_price, topK: 100
+        })
+        const inStockVectorResults = vectorResults.filter(p => p.in_stock !== false)
 
-      if (inStockVectorResults.length > 0) {
-        const queryTerms = [...new Set([
-          ...normalizedQ.toLowerCase().split(/\s+/),
-          ...translatedQ.toLowerCase().split(/\s+/)
-        ])].filter(t => t.length > 2)
+        if (inStockVectorResults.length > 0) {
+          const queryTerms = [...new Set([
+            ...normalizedQ.toLowerCase().split(/\s+/),
+            ...translatedQ.toLowerCase().split(/\s+/)
+          ])].filter(t => t.length > 2)
 
-        const reranked = hybridRerank(inStockVectorResults, queryTerms)
-        total = reranked.length
-        products = reranked.slice(from, from + PAGE_SIZE)
+          const reranked = hybridRerank(inStockVectorResults, queryTerms)
+          total = reranked.length
+          products = reranked.slice(from, from + PAGE_SIZE)
+        }
+      } catch (e) {
+        console.error('Vector search failed:', e)
       }
-    } catch (e) {
-      console.error('Vector search failed:', e)
     }
 
     // ── Step 4: Keyword fallback if vector returned nothing ───────────────────
