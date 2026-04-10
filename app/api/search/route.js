@@ -169,6 +169,43 @@ function hybridRerank(products, queryTerms) {
     .sort((a, b) => b._score - a._score)
 }
 
+function normalizeForMatch(v) {
+  return String(v || '').trim().toLowerCase()
+}
+
+function applySafeBoosts(products, rawQuery) {
+  const q = normalizeForMatch(rawQuery)
+
+  return products
+    .map((p, idx) => {
+      const baseScore = typeof p._score === 'number'
+        ? p._score
+        : (products.length - idx) * 1e-9 // keep fallback ordering stable when boosts tie
+
+      let boost = 0
+
+      // In-stock boost (defensive; search already filters in-stock in fallback path).
+      if (p.in_stock !== false) boost += 0.05
+
+      // Exact brand match boost.
+      if (q && normalizeForMatch(p.brand) === q) boost += 0.35
+
+      // Mild recency boost when created_at is available.
+      if (p.created_at) {
+        const t = Date.parse(p.created_at)
+        if (!Number.isNaN(t)) {
+          const daysOld = (Date.now() - t) / (1000 * 60 * 60 * 24)
+          if (daysOld <= 30) boost += 0.08
+          else if (daysOld <= 90) boost += 0.04
+          else if (daysOld <= 180) boost += 0.02
+        }
+      }
+
+      return { ...p, _boostedScore: baseScore + boost }
+    })
+    .sort((a, b) => b._boostedScore - a._boostedScore)
+}
+
 function toCardProduct(p) {
   return {
     id: p.id,
@@ -227,8 +264,9 @@ async function fetchSearchPayload(request) {
           ])].filter(t => t.length > 2)
 
           const reranked = hybridRerank(inStockVectorResults, queryTerms)
-          total = reranked.length
-          products = reranked.slice(from, from + PAGE_SIZE).map(toCardProduct)
+          const boosted = applySafeBoosts(reranked, rawQ)
+          total = boosted.length
+          products = boosted.slice(from, from + PAGE_SIZE).map(toCardProduct)
         }
       } catch (e) {
         console.error('Vector search failed:', e)
@@ -239,7 +277,7 @@ async function fetchSearchPayload(request) {
     if (products.length === 0) {
       let q = supabase
         .from('products')
-        .select('id, name, brand, price, original_price, tags, image_url, product_url', { count: 'exact' })
+        .select('id, name, brand, price, original_price, tags, image_url, product_url, in_stock, created_at', { count: 'exact' })
         .eq('in_stock', true)
 
       if (pureColor) {
@@ -283,7 +321,8 @@ async function fetchSearchPayload(request) {
       const { data, error, count } = await q
       if (error) throw error
 
-      products = (data || []).map(toCardProduct)
+      const boostedFallback = applySafeBoosts(data || [], rawQ)
+      products = boostedFallback.map(toCardProduct)
       total = count || 0
     }
 
