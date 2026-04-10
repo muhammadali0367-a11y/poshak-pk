@@ -18,7 +18,6 @@ export default function ProductPage() {
   const [loading,   setLoading]   = useState(true);
   const [liveStock, setLiveStock] = useState(null);
   const [wishlist,  setWishlist]  = useState([]);
-  const [mounted,   setMounted]   = useState(false);
   const [shareMsg,  setShareMsg]  = useState("");
 
   function handleShare() {
@@ -34,9 +33,7 @@ export default function ProductPage() {
     }
   }
 
-  // Fix hydration: only read params after mount
   useEffect(() => {
-    setMounted(true);
     // Load wishlist from localStorage
     try {
       const saved = localStorage.getItem("poshak_wishlist");
@@ -45,11 +42,10 @@ export default function ProductPage() {
   }, []);
 
   useEffect(() => {
-    if (!mounted) return;
     const productId = params?.id;
     if (!productId) return;
     setId(productId);
-  }, [mounted, params]);
+  }, [params]);
 
   useEffect(() => {
     if (!id) return;
@@ -110,7 +106,7 @@ export default function ProductPage() {
   };
   const s = stockInfo[liveStock] || stockInfo.unknown;
 
-  if (!mounted || loading) return (
+  if (loading) return (
     <div style={{ fontFamily:"'DM Sans',sans-serif", display:"flex", alignItems:"center", justifyContent:"center", height:"100vh", background:"#fdfcfb", color:"#c9a96e" }}>
       <div style={{ textAlign:"center" }}>
         <div style={{ fontSize:"2rem", marginBottom:"12px" }}>◌</div>

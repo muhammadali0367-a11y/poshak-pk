@@ -13,13 +13,9 @@ export default function WishlistPage() {
   const [products,  setProducts]  = useState([]);
   const [loading,   setLoading]   = useState(true);
   const [wishlist,  setWishlist]  = useState([]);
-  const [mounted,   setMounted]   = useState(false);
-
-  useEffect(() => { setMounted(true); }, []);
 
   // Load wishlist products from localStorage
   useEffect(() => {
-    if (!mounted) return;
     try {
       const ids = JSON.parse(localStorage.getItem("poshak_wishlist") || "[]");
       const storedProds = JSON.parse(localStorage.getItem("poshak_wishlist_products") || "[]");
@@ -60,7 +56,7 @@ export default function WishlistPage() {
     } catch(e) {
       setLoading(false);
     }
-  }, [mounted]);
+  }, []);
 
   const removeFromWishlist = (id) => {
     const updated = wishlist.filter(x => x !== id);
@@ -83,8 +79,6 @@ export default function WishlistPage() {
     } catch(e) {}
     window.dispatchEvent(new Event("storage"));
   };
-
-  if (!mounted) return null;
 
   return (
     <div style={{ fontFamily:"'DM Sans',sans-serif", background:"linear-gradient(160deg,#fdfcfb 0%,#f5f0eb 100%)", minHeight:"100vh", color:"#2a2420" }}>

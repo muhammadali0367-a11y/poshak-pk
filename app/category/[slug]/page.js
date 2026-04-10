@@ -64,7 +64,6 @@ export default function CategoryPage() {
   const routeParams = useParams();
   const router      = useRouter();
 
-  const [mounted,    setMounted]    = useState(false);
   const [catName,    setCatName]    = useState("");
   const [products,   setProducts]   = useState([]);
   const [loading,    setLoading]    = useState(true);
@@ -78,19 +77,13 @@ export default function CategoryPage() {
   const [wishlist,   setWishlist]   = useState([]);
   const sentinelRef = useRef(null);
 
-  // Fix: only read params after mount to prevent hydration mismatch
   useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (!mounted) return;
     const slug = routeParams?.slug || "";
     const name = SLUG_TO_CAT[slug] || slug.replace(/-/g," ").replace(/\b\w/g,c=>c.toUpperCase());
     setCatName(name);
     setPage(1);
     setProducts([]);
-  }, [mounted, routeParams?.slug]);
+  }, [routeParams?.slug]);
 
   // brands fetch removed — not needed on category page
 
@@ -158,15 +151,6 @@ export default function CategoryPage() {
     if (products.length <= WINDOW_SIZE) return products;
     return products.slice(products.length - WINDOW_SIZE);
   }, [products]);
-
-  if (!mounted) return (
-    <div style={{ display:"flex", alignItems:"center", justifyContent:"center", height:"100vh", fontFamily:"'DM Sans',sans-serif", color:"#c9a96e" }}>
-      <div style={{ textAlign:"center" }}>
-        <div style={{ fontSize:"1.5rem", marginBottom:"8px" }}>◌</div>
-        <p style={{ fontSize:".8rem", letterSpacing:".1em" }}>Loading…</p>
-      </div>
-    </div>
-  );
 
   return (
     <div style={{ fontFamily:"'DM Sans',sans-serif", background:"#fdfcfb", minHeight:"100vh", color:"#2a2420" }}>

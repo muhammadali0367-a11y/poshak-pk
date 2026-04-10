@@ -42,7 +42,6 @@ export default function BrandPage() {
   const routeParams = useParams();
   const router      = useRouter();
 
-  const [mounted,    setMounted]    = useState(false);
   const [brandName,  setBrandName]  = useState("");
   const [products,   setProducts]   = useState([]);
   const [loading,    setLoading]    = useState(true);
@@ -57,19 +56,17 @@ export default function BrandPage() {
   const sentinelRef = useRef(null);
 
   useEffect(() => {
-    setMounted(true);
     const onScroll = () => setShowBackToTop(window.scrollY > 500);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   useEffect(() => {
-    if (!mounted) return;
     const slug = routeParams?.slug || "";
     setBrandName(deslugify(slug));
     setPage(1);
     setProducts([]);
-  }, [mounted, routeParams?.slug]);
+  }, [routeParams?.slug]);
 
   useEffect(() => {
     if (!brandName) return;
@@ -122,15 +119,6 @@ export default function BrandPage() {
     observer.observe(sentinel);
     return () => { observer.disconnect(); if (timer) clearTimeout(timer); };
   }, [loadingMore, loading, page, totalPages]);
-
-  if (!mounted) return (
-    <div style={{ display:"flex", alignItems:"center", justifyContent:"center", height:"100vh", fontFamily:"'DM Sans',sans-serif", color:"#c9a96e" }}>
-      <div style={{ textAlign:"center" }}>
-        <div style={{ fontSize:"1.5rem", marginBottom:"8px" }}>◌</div>
-        <p style={{ fontSize:".8rem", letterSpacing:".1em" }}>Loading…</p>
-      </div>
-    </div>
-  );
 
   return (
     <div style={{ fontFamily:"'DM Sans',sans-serif", background:"#fdfcfb", minHeight:"100vh", color:"#2a2420" }}>
