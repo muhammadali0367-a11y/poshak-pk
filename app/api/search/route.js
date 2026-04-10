@@ -294,12 +294,19 @@ async function fetchSearchPayload(request) {
           `fabric.ilike.%${rem}%`,
         ].join(','))
       } else {
-        const terms = [...new Set([rawQ, normalizedQ, translatedQ])]
+        const terms = [...new Set([rawQ, normalizedQ, translatedQ]
           .filter(Boolean)
-          .map(t => t.toLowerCase())
-        const orParts = []
+          .flatMap(t => t.toLowerCase().split(/\s+/).map(s => s.trim()).filter(Boolean))
+        )]
+
+        // Strict pass: require all keywords to be present across relevant fields.
+        let strictQ = supabase
+          .from('products')
+          .select('id, name, brand, price, original_price, tags, image_url, product_url, in_stock, created_at')
+          .eq('in_stock', true)
+
         for (const term of terms) {
-          orParts.push(
+          strictQ = strictQ.or([
             `name.ilike.%${term}%`,
             `brand.ilike.%${term}%`,
             `tags.ilike.%${term}%`,
@@ -307,22 +314,60 @@ async function fetchSearchPayload(request) {
             `product_type.ilike.%${term}%`,
             `color.ilike.%${term}%`,
             `fabric.ilike.%${term}%`,
-          )
+          ].join(','))
         }
-        q = q.or([...new Set(orParts)].join(','))
+
+        if (brand)     strictQ = strictQ.ilike('brand', `%${brand}%`)
+        if (min_price) strictQ = strictQ.gte('price', parseInt(min_price))
+        if (max_price) strictQ = strictQ.lte('price', parseInt(max_price))
+
+        strictQ = strictQ.order('created_at', { ascending: false }).range(0, 299)
+
+        const { data: strictData, error: strictError } = await strictQ
+        if (strictError) throw strictError
+
+        const strictMatches = (strictData || []).filter((p) => {
+          const hay = [
+            p.name, p.brand, p.tags, p.collection, p.product_type, p.color, p.fabric
+          ].join(' ').toLowerCase()
+          return terms.every(term => hay.includes(term))
+        })
+
+        if (strictMatches.length > 0) {
+          total = strictMatches.length
+          products = strictMatches.slice(from, from + PAGE_SIZE)
+        } else {
+          const orParts = []
+          for (const term of terms) {
+            orParts.push(
+              `name.ilike.%${term}%`,
+              `brand.ilike.%${term}%`,
+              `tags.ilike.%${term}%`,
+              `collection.ilike.%${term}%`,
+              `product_type.ilike.%${term}%`,
+              `color.ilike.%${term}%`,
+              `fabric.ilike.%${term}%`,
+            )
+          }
+          q = q.or([...new Set(orParts)].join(','))
+        }
       }
 
-      if (brand)     q = q.ilike('brand', `%${brand}%`)
-      if (min_price) q = q.gte('price', parseInt(min_price))
-      if (max_price) q = q.lte('price', parseInt(max_price))
+      if (products.length === 0) {
+        if (brand)     q = q.ilike('brand', `%${brand}%`)
+        if (min_price) q = q.gte('price', parseInt(min_price))
+        if (max_price) q = q.lte('price', parseInt(max_price))
 
-      q = q.order('created_at', { ascending: false }).range(from, from + PAGE_SIZE - 1)
+        q = q.order('created_at', { ascending: false }).range(from, from + PAGE_SIZE - 1)
 
-      const { data, error, count } = await q
-      if (error) throw error
+        const { data, error, count } = await q
+        if (error) throw error
 
-      products = (data || []).map(toCardProduct)
-      total = count || 0
+        products = (data || []).map(toCardProduct)
+        total = count || 0
+      } else {
+        products = products.map(toCardProduct)
+      }
     }
 
     return {
