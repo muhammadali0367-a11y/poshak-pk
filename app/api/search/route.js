@@ -169,6 +169,19 @@ function hybridRerank(products, queryTerms) {
     .sort((a, b) => b._score - a._score)
 }
 
+function toCardProduct(p) {
+  return {
+    id: p.id,
+    name: p.name,
+    brand: p.brand,
+    price: p.price,
+    original_price: p.original_price,
+    tags: p.tags,
+    image_url: p.image_url,
+    product_url: p.product_url,
+  }
+}
+
 async function fetchSearchPayload(request) {
     const { searchParams } = new URL(request.url)
     const rawQ      = (searchParams.get('q') || '').trim()
@@ -215,7 +228,7 @@ async function fetchSearchPayload(request) {
 
           const reranked = hybridRerank(inStockVectorResults, queryTerms)
           total = reranked.length
-          products = reranked.slice(from, from + PAGE_SIZE)
+          products = reranked.slice(from, from + PAGE_SIZE).map(toCardProduct)
         }
       } catch (e) {
         console.error('Vector search failed:', e)
@@ -226,7 +239,7 @@ async function fetchSearchPayload(request) {
     if (products.length === 0) {
       let q = supabase
         .from('products')
-        .select('id, name, brand, price, original_price, product_type, tags, collection, color, fabric, occasion, image_url, product_url, in_stock', { count: 'exact' })
+        .select('id, name, brand, price, original_price, tags, image_url, product_url', { count: 'exact' })
         .eq('in_stock', true)
 
       if (pureColor) {
@@ -270,7 +283,7 @@ async function fetchSearchPayload(request) {
       const { data, error, count } = await q
       if (error) throw error
 
-      products = data || []
+      products = (data || []).map(toCardProduct)
       total = count || 0
     }
 

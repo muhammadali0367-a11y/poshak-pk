@@ -30,7 +30,7 @@ async function fetchProductsPayload(request) {
   let query = supabase
     .from('products')
     .select(
-      'id, name, brand, price, original_price, product_type, tags, collection, category, color, fabric, occasion, image_url, product_url, in_stock',
+      'id, name, brand, price, original_price, product_type, tags, collection, category, color, fabric, occasion, image_url, product_url',
       { count: 'exact' }
     )
     .eq('in_stock', true)
