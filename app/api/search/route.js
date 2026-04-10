@@ -265,9 +265,8 @@ async function fetchSearchPayload(request) {
           ])].filter(t => t.length > 2)
 
           const reranked = hybridRerank(inStockVectorResults, queryTerms)
-          const boosted = applySafeBoosts(reranked, rawQ)
-          total = boosted.length
-          products = boosted.slice(from, from + PAGE_SIZE).map(toCardProduct)
+          total = reranked.length
+          products = reranked.slice(from, from + PAGE_SIZE).map(toCardProduct)
         }
       } catch (e) {
         console.error('Vector search failed:', e)
@@ -322,8 +321,7 @@ async function fetchSearchPayload(request) {
       const { data, error, count } = await q
       if (error) throw error
 
-      const boostedFallback = applySafeBoosts(data || [], rawQ)
-      products = boostedFallback.map(toCardProduct)
+      products = (data || []).map(toCardProduct)
       total = count || 0
     }
 
