@@ -314,6 +314,11 @@ export async function GET(request) {
     const now = Date.now()
     const cached = searchCache.get(cacheKey)
     if (cached && now < cached.expiresAt && Array.isArray(cached.payload.products) && cached.payload.products.length > 0) {
+      console.info('search analytics', {
+        query: logMeta.search.q,
+        timestamp: logMeta.timestamp,
+        resultCount: cached.payload.products.length,
+      })
       return Response.json(cached.payload, { headers: SUCCESS_CACHE_HEADERS })
     }
 
@@ -339,6 +344,11 @@ export async function GET(request) {
     }
 
     const payload = await inFlight
+    console.info('search analytics', {
+      query: logMeta.search.q,
+      timestamp: logMeta.timestamp,
+      resultCount: Array.isArray(payload.products) ? payload.products.length : 0,
+    })
     if (Array.isArray(payload.products) && payload.products.length > 0) {
       return Response.json(payload, { headers: SUCCESS_CACHE_HEADERS })
     }
