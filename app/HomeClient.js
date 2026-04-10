@@ -776,24 +776,11 @@ export default function HomeClient({ initialSections = {} }) {
   useEffect(() => {
     if (!mounted) return;
 
-    // If we got server-side data, we're already good — just do a silent background refresh
+    // If we got server-side data, skip an immediate duplicate client refetch.
     const hasServerData = Object.keys(initialSections).length > 0;
     if (hasServerData) {
-      // Background refresh after 5s so data stays fresh without blocking paint
-      const timer = setTimeout(() => {
-        fetch("/api/homepage")
-          .then(r => r.json())
-          .then(json => {
-            if (json.sections) {
-              const processed = {};
-              for (const [cat, prods] of Object.entries(json.sections)) {
-                processed[cat] = prods.map(processProduct);
-              }
-              setHomepageSections(processed);
-            }
-          }).catch(() => {});
-      }, 5000);
-      return () => clearTimeout(timer);
+      setLoading(false);
+      return;
     }
 
     // Fallback: no server data (shouldn't happen in normal flow)
@@ -1005,18 +992,12 @@ export default function HomeClient({ initialSections = {} }) {
     unknown:  { dot:"in",       text:"Check brand website",    color:"#888"    },
   };
 
-  if (!mounted) return (
-    <div style={{ fontFamily:"'DM Sans',sans-serif", background:"#fdfcfb", minHeight:"100vh" }}>
-      <SharedNav />
-    </div>
-  );
-
   return (
     <div suppressHydrationWarning style={{ fontFamily:"'DM Sans',sans-serif", background:"#fdfcfb", minHeight:"100vh", color:"#2a2420" }}>
       <style suppressHydrationWarning>{CSS}</style>
 
       {/* ── NAV (shared across all pages) ── */}
-      <SharedNav />
+      <SharedNav brands={allBrands} />
 
       {/* ── LAYOUT ── */}
       <div>

@@ -200,12 +200,15 @@ export default function BrandPage() {
             <div className="product-grid" style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))", gap:"20px", marginBottom:"40px" }}>
               {visibleProducts.map(p => (
                 <div key={p.id} className="card" onClick={() => router.push(`/product/${p.id}`)}>
-                  <div style={{ position:"relative", overflow:"hidden" }}>
-                    <img className="card-img"
+                  <div style={{ position:"relative", overflow:"hidden", aspectRatio:"3/4", background:"#f5f0eb" }}>
+                    <Image
+                      className="card-img"
                       src={p.image_url || "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=500&q=80"}
                       alt={p.name || "Product"}
+                      fill
+                      sizes="(max-width:768px) 50vw, (max-width:1240px) 25vw, 240px"
+                      style={{ objectFit: "cover" }}
                       loading="lazy"
-                      onError={e => { e.currentTarget.src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=500&q=80"; }}
                     />
                     {p.badge && <div className="badge-pill" style={{ background:BADGE_COLORS[p.badge]||"#888" }}>{p.badge}</div>}
                     <button className="wish-btn" onClick={e => toggleWish(p.id, e)}>

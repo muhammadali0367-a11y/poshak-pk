@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useRef, useMemo } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import SharedNav from "../SharedNav";
 
@@ -149,13 +150,16 @@ export default function NewArrivalsPage() {
             <div className="product-grid">
               {visibleProducts.map((p, idx) => (
                 <div key={p.id} className="card" onClick={() => router.push(`/product/${p.id}`)}>
-                  <div style={{ position:"relative", overflow:"hidden" }}>
-                    <img className="card-img"
+                  <div style={{ position:"relative", overflow:"hidden", aspectRatio:"3/4", background:"#f5f0eb" }}>
+                    <Image
+                      className="card-img"
                       src={p.image_url || "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=500&q=80"}
                       alt={p.name || "Product"}
+                      fill
+                      sizes="(max-width:768px) 50vw, (max-width:1240px) 25vw, 220px"
+                      style={{ objectFit: "cover" }}
                       loading={idx < 4 ? "eager" : "lazy"}
                       fetchPriority={idx < 4 ? "high" : "auto"}
-                      onError={e => { e.currentTarget.src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=500&q=80"; }}
                     />
                     <div style={{ position:"absolute",top:"10px",left:"10px",background:"#3d8a60",color:"#fff",fontSize:".58rem",letterSpacing:".14em",textTransform:"uppercase",padding:"3px 9px",borderRadius:"20px",fontWeight:600 }}>New</div>
                     {p.original_price > p.price && (

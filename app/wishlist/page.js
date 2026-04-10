@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import SharedNav from "../SharedNav";
 
@@ -88,7 +89,6 @@ export default function WishlistPage() {
   return (
     <div style={{ fontFamily:"'DM Sans',sans-serif", background:"linear-gradient(160deg,#fdfcfb 0%,#f5f0eb 100%)", minHeight:"100vh", color:"#2a2420" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap');
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
         .wish-card{background:#fff;border:1px solid #e8e0d8;border-radius:10px;overflow:hidden;cursor:pointer;position:relative;box-shadow:0 2px 10px rgba(0,0,0,.04);transition:transform .28s,box-shadow .28s,border-color .2s;}
         .wish-card:hover{border-color:#c9a96e;transform:translateY(-5px);box-shadow:0 18px 44px rgba(180,140,90,.14);}
@@ -146,11 +146,15 @@ export default function WishlistPage() {
           <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))", gap:"20px", marginBottom:"60px" }}>
             {products.map(p => (
               <div key={p.id} className="wish-card" onClick={() => router.push(`/product/${p.id}`)}>
-                <div style={{ position:"relative", overflow:"hidden" }}>
-                  <img className="wish-card-img"
+                <div style={{ position:"relative", overflow:"hidden", height:"280px", background:"#f5f0eb" }}>
+                  <Image
+                    className="wish-card-img"
                     src={p.image_url || "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=500&q=80"}
-                    alt={p.name || "Product"} loading="lazy"
-                    onError={e => { e.currentTarget.src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=500&q=80"; }}
+                    alt={p.name || "Product"}
+                    fill
+                    sizes="(max-width:640px) 50vw, (max-width:1240px) 25vw, 220px"
+                    style={{ objectFit: "cover" }}
+                    loading="lazy"
                   />
                   {p.original_price > p.price && (
                     <div style={{ position:"absolute", top:"10px", left:"10px", background:BADGE_COLORS.Sale, color:"#fff", fontSize:".58rem", letterSpacing:".14em", textTransform:"uppercase", padding:"3px 9px", borderRadius:"20px", fontWeight:600 }}>

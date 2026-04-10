@@ -34,14 +34,14 @@ function SidebarSection({ title, items, onItemClick }) {
   );
 }
 
-export default function SharedNav() {
+export default function SharedNav({ brands }) {
   const router          = useRouter();
   const searchRef       = useRef(null);
   const [query,         setQuery]         = useState("");
   const [sidebarOpen,   setSidebarOpen]   = useState(false);
   const [showDropdown,  setShowDropdown]  = useState(false);
   const [allBrands,     setAllBrands]     = useState([]);
-  const [popCategories, setPopCategories] = useState(CATEGORIES); // default to all, update from API
+  const [popCategories] = useState(CATEGORIES);
   const [wishCount,     setWishCount]     = useState(0);
   const [suggestions,   setSuggestions]   = useState([]);
   const [toast,         setToast]         = useState(null);
@@ -65,11 +65,15 @@ export default function SharedNav() {
   }, []);
 
   useEffect(() => {
+    if (Array.isArray(brands)) {
+      setAllBrands(brands);
+      return;
+    }
     fetch("/api/brands")
       .then(r => r.json())
       .then(j => { if (j.brands) setAllBrands(j.brands); })
       .catch(() => {});
-  }, []);
+  }, [brands]);
 
   // Toast helper — expose globally so other components can call showToast("msg")
   useEffect(() => {
@@ -94,18 +98,6 @@ export default function SharedNav() {
     ].filter(s => s.includes(ql)).slice(0, 3);
     setSuggestions({ brands: brandMatches, categories: catMatches, popular });
   }
-
-  useEffect(() => {
-    fetch("/api/homepage")
-      .then(r => r.json())
-      .then(j => {
-        if (j.sections) {
-          const withData = new Set(Object.keys(j.sections));
-          setPopCategories(CATEGORIES.filter(c => withData.has(c)));
-        }
-      })
-      .catch(() => {}); // fallback: keep showing all categories
-  }, []);
 
   // Close dropdown on outside click
   useEffect(() => {
