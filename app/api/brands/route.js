@@ -1,5 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 
+export const revalidate = 600
+
 const BRANDS_CACHE_TTL_MS = 10 * 60 * 1000
 const brandsCache = {
   data: null,
@@ -7,16 +9,20 @@ const brandsCache = {
   inFlight: null,
 }
 
+const CACHE_HEADERS = {
+  'Cache-Control': 'public, s-maxage=600, stale-while-revalidate=1200',
+}
+
 export async function GET() {
   try {
     const now = Date.now()
     if (Array.isArray(brandsCache.data) && now < brandsCache.expiresAt) {
-      return Response.json({ brands: brandsCache.data })
+      return Response.json({ brands: brandsCache.data }, { headers: CACHE_HEADERS })
     }
 
     if (brandsCache.inFlight) {
       const brands = await brandsCache.inFlight
-      return Response.json({ brands })
+      return Response.json({ brands }, { headers: CACHE_HEADERS })
     }
 
     brandsCache.inFlight = (async () => {
@@ -52,7 +58,7 @@ export async function GET() {
     })()
 
     const brands = await brandsCache.inFlight
-    return Response.json({ brands })
+    return Response.json({ brands }, { headers: CACHE_HEADERS })
   } catch (err) {
     return Response.json({ error: err.message }, { status: 500 })
   } finally {
