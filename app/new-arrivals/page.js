@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import SharedNav from "../SharedNav";
+import { getBrandsCached } from "../lib/clientDataCache";
 
 const BADGE_COLORS = { Bestseller:"#b07d4a",New:"#3d8a60",Sale:"#b03030",Exclusive:"#6a4a8a",Premium:"#3a6a9a",Trending:"#9a6a30",Festive:"#8a5a2a" };
 const PRICE_RANGES = ["All Prices","Under 3,000","3,000–6,000","6,000–10,000","10,000–20,000","20,000+"];
@@ -43,7 +44,9 @@ export default function NewArrivalsPage() {
   }, [products]);
 
   useEffect(() => {
-    fetch("/api/brands").then(r=>r.json()).then(j=>{ if(j.brands) setAllBrands(j.brands); }).catch(()=>{});
+    getBrandsCached().then((brands) => {
+      setAllBrands(brands);
+    });
     try {
       const saved = localStorage.getItem("poshak_wishlist");
       if (saved) setWishlist(JSON.parse(saved));

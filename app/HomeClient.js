@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import SharedNav from "./SharedNav";
+import { getBrandsCached, setBrandsCache } from "./lib/clientDataCache";
 
 // ═══════════════════════════════════════════════════════════════════════════════
 //  POSHAK.PK  —  v4.0  Women's Edition
@@ -801,10 +802,10 @@ export default function HomeClient({ initialSections = {} }) {
 
   // ── Fetch all brands separately — always runs regardless of homepage cache ──
   useEffect(() => {
-    fetch("/api/brands")
-      .then(r => r.json())
-      .then(json => { if (json.brands) setAllBrands(json.brands); })
-      .catch(() => {});
+    getBrandsCached().then((brands) => {
+      setAllBrands(brands);
+      setBrandsCache(brands);
+    });
 
     // Fetch dynamic filter options from database
     fetch("/api/filters")
