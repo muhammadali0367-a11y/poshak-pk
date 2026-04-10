@@ -175,6 +175,7 @@ function normalizeForMatch(v) {
 
 function applySafeBoosts(products, rawQuery) {
   const q = normalizeForMatch(rawQuery)
+  const MAX_BOOST = 0.2
 
   return products
     .map((p, idx) => {
@@ -185,23 +186,23 @@ function applySafeBoosts(products, rawQuery) {
       let boost = 0
 
       // In-stock boost (defensive; search already filters in-stock in fallback path).
-      if (p.in_stock !== false) boost += 0.05
+      if (p.in_stock !== false) boost += 0.03
 
       // Exact brand match boost.
-      if (q && normalizeForMatch(p.brand) === q) boost += 0.35
+      if (q && normalizeForMatch(p.brand) === q) boost += 0.14
 
       // Mild recency boost when created_at is available.
       if (p.created_at) {
         const t = Date.parse(p.created_at)
         if (!Number.isNaN(t)) {
           const daysOld = (Date.now() - t) / (1000 * 60 * 60 * 24)
-          if (daysOld <= 30) boost += 0.08
-          else if (daysOld <= 90) boost += 0.04
-          else if (daysOld <= 180) boost += 0.02
+          if (daysOld <= 30) boost += 0.03
+          else if (daysOld <= 90) boost += 0.02
+          else if (daysOld <= 180) boost += 0.01
         }
       }
 
-      return { ...p, _boostedScore: baseScore + boost }
+      return { ...p, _boostedScore: baseScore + Math.min(boost, MAX_BOOST) }
     })
     .sort((a, b) => b._boostedScore - a._boostedScore)
 }
