@@ -4,6 +4,7 @@ import Image from "next/image";
 import ProductCard from "../../components/ProductCard";
 import { useParams, useRouter } from "next/navigation";
 import SharedNav from "../../SharedNav";
+import { getBrandsCached } from "../../lib/clientDataCache";
 
 const CATEGORIES = [
   "Lawn","Kurta","Co-ords","Pret / Ready to Wear","Luxury Pret",
@@ -85,7 +86,11 @@ export default function CategoryPage() {
     setProducts([]);
   }, [routeParams?.slug]);
 
-  // brands fetch removed — not needed on category page
+  useEffect(() => {
+    getBrandsCached().then((brandsList) => {
+      setAllBrands(brandsList);
+    });
+  }, []);
 
   const loadProducts = useCallback((pageNum) => {
     if (!catName) return;
@@ -177,7 +182,7 @@ export default function CategoryPage() {
         @media(max-width:768px){.card-img{aspect-ratio:3/4;height:auto;}.cats-row{display:none!important;}.product-grid{grid-template-columns:repeat(2,1fr)!important;gap:12px!important;}.card-info{padding:10px!important;}.card-tag{display:none!important;}}
       `}</style>
 
-      <SharedNav />
+      <SharedNav brands={allBrands} />
 
       <div style={{ maxWidth:"1240px", margin:"0 auto", padding:"28px 24px" }}>
 

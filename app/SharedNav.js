@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { getBrandsCached, setBrandsCache } from "./lib/clientDataCache";
 
 const CATEGORIES = [
   "Lawn","Kurta","Co-ords","Pret / Ready to Wear","Luxury Pret",
@@ -66,13 +67,13 @@ export default function SharedNav({ brands }) {
 
   useEffect(() => {
     if (Array.isArray(brands)) {
+      setBrandsCache(brands);
       setAllBrands(brands);
       return;
     }
-    fetch("/api/brands")
-      .then(r => r.json())
-      .then(j => { if (j.brands) setAllBrands(j.brands); })
-      .catch(() => {});
+    getBrandsCached().then((cachedBrands) => {
+      setAllBrands(cachedBrands);
+    });
   }, [brands]);
 
   // Toast helper — expose globally so other components can call showToast("msg")

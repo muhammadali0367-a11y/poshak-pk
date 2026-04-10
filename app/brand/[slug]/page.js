@@ -4,6 +4,7 @@ import Image from "next/image";
 import ProductCard from "../../components/ProductCard";
 import { useParams, useRouter } from "next/navigation";
 import SharedNav from "../../SharedNav";
+import { getBrandsCached } from "../../lib/clientDataCache";
 
 const CATEGORIES   = ["All Categories","Lawn","Kurta","Co-ords","Pret / Ready to Wear","Luxury Pret","Unstitched","Shalwar Kameez","Formal","Bridal","Festive / Eid","Winter Collection","Abaya"];
 const PRICE_RANGES = ["All Prices","Under 3,000","3,000–6,000","6,000–10,000","10,000–20,000","20,000+"];
@@ -50,6 +51,7 @@ export default function BrandPage() {
   const [total,      setTotal]      = useState(0);
   const [category,   setCategory]   = useState("All Categories");
   const [priceRange, setPriceRange] = useState("All Prices");
+  const [allBrands,  setAllBrands]  = useState([]);
   const [wishlist,   setWishlist]   = useState([]);
   const [loadingMore, setLoadingMore] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
@@ -67,6 +69,12 @@ export default function BrandPage() {
     setPage(1);
     setProducts([]);
   }, [routeParams?.slug]);
+
+  useEffect(() => {
+    getBrandsCached().then((brandsList) => {
+      setAllBrands(brandsList);
+    });
+  }, []);
 
   useEffect(() => {
     if (!brandName) return;
@@ -145,7 +153,7 @@ export default function BrandPage() {
         @media(max-width:768px){.card-img{aspect-ratio:3/4;}.product-grid{grid-template-columns:repeat(2,1fr)!important;gap:12px!important;}.card-tag{display:none!important;}}
       `}</style>
 
-      <SharedNav />
+      <SharedNav brands={allBrands} />
 
       <div style={{ maxWidth:"1240px", margin:"0 auto", padding:"28px 24px" }}>
         <div className="breadcrumb" style={{ marginBottom:"12px" }}>
