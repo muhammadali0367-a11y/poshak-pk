@@ -9,6 +9,9 @@ const supabase = createClient(
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
 const PAGE_SIZE = 24
+const SEARCH_CACHE_TTL_MS = 10 * 60 * 1000
+const searchCache = new Map()
+const searchInFlight = new Map()
 
 const URDU_TO_ENGLISH = {
   "kala":"black","kali":"black","safed":"white","safaid":"white",
@@ -163,8 +166,7 @@ function hybridRerank(products, queryTerms) {
     .sort((a, b) => b._score - a._score)
 }
 
-export async function GET(request) {
-  try {
+async function fetchSearchPayload(request) {
     const { searchParams } = new URL(request.url)
     const rawQ      = (searchParams.get('q') || '').trim()
     const page      = parseInt(searchParams.get('page') || '1')
@@ -172,7 +174,7 @@ export async function GET(request) {
     const min_price = searchParams.get('min_price')
     const max_price = searchParams.get('max_price')
 
-    if (!rawQ) return Response.json({ products: [], total: 0, page: 1, pages: 0 })
+    if (!rawQ) return { products: [], total: 0, page: 1, pages: 0 }
 
     const from = (page - 1) * PAGE_SIZE
 
@@ -263,15 +265,50 @@ export async function GET(request) {
       total = count || 0
     }
 
-    return Response.json({
+    return {
       products,
       total,
       page,
       pages: Math.ceil(total / PAGE_SIZE),
-    })
+    }
+}
 
+export async function GET(request) {
+  try {
+    const cacheKey = request.url
+    const now = Date.now()
+    const cached = searchCache.get(cacheKey)
+    if (cached && now < cached.expiresAt && Array.isArray(cached.payload.products) && cached.payload.products.length > 0) {
+      return Response.json(cached.payload)
+    }
+
+    let inFlight = searchInFlight.get(cacheKey)
+    if (!inFlight) {
+      inFlight = (async () => {
+        let payload = await fetchSearchPayload(request)
+        if (payload.products.length === 0) {
+          console.warn('search API returned empty products, retrying once:', request.url)
+          payload = await fetchSearchPayload(request)
+        }
+        if (payload.products.length === 0) {
+          console.warn('search API returned empty products after retry:', request.url)
+          return payload
+        }
+        searchCache.set(cacheKey, {
+          payload,
+          expiresAt: Date.now() + SEARCH_CACHE_TTL_MS,
+        })
+        return payload
+      })()
+      searchInFlight.set(cacheKey, inFlight)
+    }
+
+    const payload = await inFlight
+    return Response.json(payload)
   } catch (err) {
     console.error('Search error:', err)
     return Response.json({ error: err.message }, { status: 500 })
+  } finally {
+    searchInFlight.delete(request.url)
   }
 }
