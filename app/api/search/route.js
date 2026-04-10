@@ -10,6 +10,9 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
 const PAGE_SIZE = 24
 const SEARCH_CACHE_TTL_MS = 10 * 60 * 1000
+const SUCCESS_CACHE_HEADERS = {
+  'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
+}
 const searchCache = new Map()
 const searchInFlight = new Map()
 
@@ -279,7 +282,7 @@ export async function GET(request) {
     const now = Date.now()
     const cached = searchCache.get(cacheKey)
     if (cached && now < cached.expiresAt && Array.isArray(cached.payload.products) && cached.payload.products.length > 0) {
-      return Response.json(cached.payload)
+      return Response.json(cached.payload, { headers: SUCCESS_CACHE_HEADERS })
     }
 
     let inFlight = searchInFlight.get(cacheKey)
@@ -304,6 +307,9 @@ export async function GET(request) {
     }
 
     const payload = await inFlight
+    if (Array.isArray(payload.products) && payload.products.length > 0) {
+      return Response.json(payload, { headers: SUCCESS_CACHE_HEADERS })
+    }
     return Response.json(payload)
   } catch (err) {
     console.error('Search error:', err)

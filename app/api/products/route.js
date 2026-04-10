@@ -2,6 +2,9 @@ import { supabase } from '../supabaseClient'
 
 const PAGE_SIZE = 24
 const PRODUCTS_CACHE_TTL_MS = 10 * 60 * 1000
+const SUCCESS_CACHE_HEADERS = {
+  'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
+}
 
 // Global exclusions — never show these product_types anywhere
 const EXCLUDED_PRODUCT_TYPES = ["Western", "PRET LOWERS", "Salt"]
@@ -76,7 +79,7 @@ export async function GET(request) {
     const now = Date.now()
     const cached = productsCache.get(cacheKey)
     if (cached && now < cached.expiresAt && Array.isArray(cached.payload.products) && cached.payload.products.length > 0) {
-      return Response.json(cached.payload)
+      return Response.json(cached.payload, { headers: SUCCESS_CACHE_HEADERS })
     }
 
     let inFlight = productsInFlight.get(cacheKey)
@@ -101,6 +104,9 @@ export async function GET(request) {
     }
 
     const payload = await inFlight
+    if (Array.isArray(payload.products) && payload.products.length > 0) {
+      return Response.json(payload, { headers: SUCCESS_CACHE_HEADERS })
+    }
     return Response.json(payload)
   } catch (err) {
     return Response.json({ error: err.message }, { status: 500 })
