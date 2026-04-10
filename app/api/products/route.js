@@ -51,6 +51,7 @@ export async function GET(request) {
     else if (sort === 'price_desc') query = query.order('price', { ascending: false })
     else if (sort === 'name_asc')   query = query.order('name',  { ascending: true })
     else if (sort === 'name_desc')  query = query.order('name',  { ascending: false })
+    else if (sort === 'newest')     query = query.order('created_at', { ascending: false })
     else                            query = query.order('price', { ascending: false })
 
     query = query.range(from, to)
