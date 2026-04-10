@@ -9,7 +9,7 @@ const brandsCache = {
 };
 
 function hasFreshValue(entry) {
-  return entry.value !== null && Date.now() < entry.expiresAt;
+  return Array.isArray(entry.value) && entry.value.length > 0 && Date.now() < entry.expiresAt;
 }
 
 function normalizeBrands(payload) {
@@ -44,8 +44,10 @@ export function getBrandsCached() {
 
   brandsCache.inFlight = fetchBrandsWithRetry()
     .then((brands) => {
-      brandsCache.value = brands;
-      brandsCache.expiresAt = Date.now() + CACHE_TTL_MS;
+      if (Array.isArray(brands) && brands.length > 0) {
+        brandsCache.value = brands;
+        brandsCache.expiresAt = Date.now() + CACHE_TTL_MS;
+      }
       return brands;
     })
     .catch(() => {
