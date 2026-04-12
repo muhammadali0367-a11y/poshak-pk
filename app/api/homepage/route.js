@@ -19,7 +19,7 @@ export async function GET() {
           .eq('category', cat)
           .eq('in_stock', true)
           .order('brand')
-          .limit(200)
+          .limit(50)
 
         if (!error && data && data.length > 0) {
           // Pick 1 product per brand up to 8, fill remaining slots if fewer brands

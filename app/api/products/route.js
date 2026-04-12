@@ -31,7 +31,7 @@ async function fetchProductsPayload(request) {
     .from('products')
     .select(
       'id, name, brand, price, original_price, product_type, tags, collection, category, color, fabric, occasion, image_url, product_url',
-      { count: 'exact' }
+      { count: 'planned' }
     )
     .eq('in_stock', true)
 
@@ -48,7 +48,6 @@ async function fetchProductsPayload(request) {
   if (color    && color    !== 'All' && color    !== 'All Colors') query = query.ilike('color',    `%${color}%`)
   if (fabric   && fabric   !== 'All Fabrics')                      query = query.ilike('fabric',   `%${fabric}%`)
   if (occasion && occasion !== 'All Occasions')                    query = query.ilike('occasion', `%${occasion}%`)
-
   if (brand)     query = query.ilike('brand', `%${brand}%`)
   if (min_price) query = query.gte('price', parseInt(min_price))
   if (max_price) query = query.lte('price', parseInt(max_price))

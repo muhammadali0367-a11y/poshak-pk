@@ -31,7 +31,7 @@ async function getHomepageSections() {
         .eq('category', cat)
         .eq('in_stock', true)
         .order('brand')
-        .limit(200)
+        .limit(50)
 
       if (!error && data && data.length > 0) {
         const TARGET = 8

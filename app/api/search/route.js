@@ -273,101 +273,39 @@ async function fetchSearchPayload(request) {
       }
     }
 
-    // ── Step 4: Keyword fallback if vector returned nothing ───────────────────
+    // ── Step 4: Full-text search fallback if vector returned nothing ─────────
+    // Uses the GIN index on `name` — no full table scan.
+    // OR+ILIKE chains removed entirely; no secondary ILIKE fallback.
     if (products.length === 0) {
+      // Build the search term: prefer the GPT-normalised query, fall back to raw.
+      const searchTerm = (normalizedQ || rawQ).trim()
+
       let q = supabase
         .from('products')
         .select('id, name, brand, price, original_price, tags, image_url, product_url, in_stock, created_at', { count: 'exact' })
         .eq('in_stock', true)
+        .textSearch('name', searchTerm, { type: 'plain' })
 
+      // Color filters — exact match on structured column
       if (pureColor) {
-        q = q.ilike('color', pureColor)
-      } else if (colorExtract?.remaining) {
-        q = q.ilike('color', colorExtract.color)
-        const rem = colorExtract.remaining
-        q = q.or([
-          `name.ilike.%${rem}%`,
-          `brand.ilike.%${rem}%`,
-          `tags.ilike.%${rem}%`,
-          `collection.ilike.%${rem}%`,
-          `product_type.ilike.%${rem}%`,
-          `fabric.ilike.%${rem}%`,
-        ].join(','))
-      } else {
-        const terms = [...new Set([rawQ, normalizedQ, translatedQ]
-          .filter(Boolean)
-          .flatMap(t => t.toLowerCase().split(/\s+/).map(s => s.trim()).filter(Boolean))
-        )]
-
-        // Strict pass: require all keywords to be present across relevant fields.
-        let strictQ = supabase
-          .from('products')
-          .select('id, name, brand, price, original_price, tags, image_url, product_url, in_stock, created_at')
-          .eq('in_stock', true)
-
-        for (const term of terms) {
-          strictQ = strictQ.or([
-            `name.ilike.%${term}%`,
-            `brand.ilike.%${term}%`,
-            `tags.ilike.%${term}%`,
-            `collection.ilike.%${term}%`,
-            `product_type.ilike.%${term}%`,
-            `color.ilike.%${term}%`,
-            `fabric.ilike.%${term}%`,
-          ].join(','))
-        }
-
-        if (brand)     strictQ = strictQ.ilike('brand', `%${brand}%`)
-        if (min_price) strictQ = strictQ.gte('price', parseInt(min_price))
-        if (max_price) strictQ = strictQ.lte('price', parseInt(max_price))
-
-        strictQ = strictQ.order('created_at', { ascending: false }).range(0, 299)
-
-        const { data: strictData, error: strictError } = await strictQ
-        if (strictError) throw strictError
-
-        const strictMatches = (strictData || []).filter((p) => {
-          const hay = [
-            p.name, p.brand, p.tags, p.collection, p.product_type, p.color, p.fabric
-          ].join(' ').toLowerCase()
-          return terms.every(term => hay.includes(term))
-        })
-
-        if (strictMatches.length > 0) {
-          total = strictMatches.length
-          products = strictMatches.slice(from, from + PAGE_SIZE)
-        } else {
-          const orParts = []
-          for (const term of terms) {
-            orParts.push(
-              `name.ilike.%${term}%`,
-              `brand.ilike.%${term}%`,
-              `tags.ilike.%${term}%`,
-              `collection.ilike.%${term}%`,
-              `product_type.ilike.%${term}%`,
-              `color.ilike.%${term}%`,
-              `fabric.ilike.%${term}%`,
-            )
-          }
-          q = q.or([...new Set(orParts)].join(','))
-        }
+        q = q.eq('color', pureColor.trim().toLowerCase())
+      } else if (colorExtract?.color) {
+        q = q.eq('color', colorExtract.color.trim().toLowerCase())
       }
 
-      if (products.length === 0) {
-        if (brand)     q = q.ilike('brand', `%${brand}%`)
-        if (min_price) q = q.gte('price', parseInt(min_price))
-        if (max_price) q = q.lte('price', parseInt(max_price))
+      // Brand and price filters
+      if (brand)     q = q.eq('brand', brand.trim().toLowerCase())
+      if (min_price) q = q.gte('price', parseInt(min_price))
+      if (max_price) q = q.lte('price', parseInt(max_price))
 
-        q = q.order('created_at', { ascending: false }).range(from, from + PAGE_SIZE - 1)
+      q = q.order('created_at', { ascending: false }).range(from, from + PAGE_SIZE - 1)
 
-        const { data, error, count } = await q
-        if (error) throw error
+      const { data, error, count } = await q
+      if (error) throw error
 
-        products = (data || []).map(toCardProduct)
-        total = count || 0
-      } else {
-        products = products.map(toCardProduct)
-      }
+      products = (data || []).map(toCardProduct)
+      total = count || 0
+      // No secondary ILIKE fallback — if textSearch returns nothing, return empty.
     }
 
     return {
