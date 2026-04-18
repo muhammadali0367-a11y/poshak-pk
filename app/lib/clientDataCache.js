@@ -13,7 +13,15 @@ function hasFreshValue(entry) {
 }
 
 function normalizeBrands(payload) {
-  return Array.isArray(payload?.brands) ? payload.brands : [];
+  if (!Array.isArray(payload?.brands)) return [];
+  const seen = new Set();
+  return payload.brands.filter(b => {
+    if (typeof b !== "string") return false;
+    const t = b.trim();
+    if (!t || seen.has(t)) return false;
+    seen.add(t);
+    return true;
+  }).map(b => b.trim());
 }
 
 async function fetchBrandsWithRetry() {

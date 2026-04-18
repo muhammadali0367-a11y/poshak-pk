@@ -4,7 +4,6 @@ import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import SharedNav from "../../SharedNav";
 
-const BADGE_COLORS = { Bestseller:"#b07d4a",New:"#3d8a60",Sale:"#b03030",Exclusive:"#6a4a8a",Premium:"#3a6a9a",Trending:"#9a6a30",Festive:"#8a5a2a" };
 
 function slugify(s) { return (s||"").toLowerCase().replace(/\s*\/\s*/g,"-").replace(/\s+/g,"-"); }
 
@@ -99,15 +98,15 @@ export default function ProductPage() {
   }, [id]);
 
   const stockInfo = {
-    checking: { color:"#c9a96e", text:"Checking availability…", bg:"#fffbf0" },
-    in_stock: { color:"#3d8a60", text:"In Stock",               bg:"#f0faf4" },
-    sold_out: { color:"#b03030", text:"Sold Out",               bg:"#fff4f4" },
-    unknown:  { color:"#888",    text:"Check brand website",    bg:"#f8f8f8" },
+    checking: { color:"#757575", text:"Checking availability…", bg:"#f2f2f2" },
+    in_stock: { color:"#3d8a60", text:"In Stock",               bg:"#f2f2f2" },
+    sold_out: { color:"#b03030", text:"Sold Out",               bg:"#f2f2f2" },
+    unknown:  { color:"#757575", text:"Check brand website",    bg:"#f2f2f2" },
   };
   const s = stockInfo[liveStock] || stockInfo.unknown;
 
   if (loading) return (
-    <div style={{ fontFamily:"'DM Sans',sans-serif", display:"flex", alignItems:"center", justifyContent:"center", height:"100vh", background:"#fdfcfb", color:"#c9a96e" }}>
+    <div style={{ fontFamily:"'Jost','DM Sans',sans-serif", display:"flex", alignItems:"center", justifyContent:"center", height:"100vh", background:"#ffffff", color:"#757575" }}>
       <div style={{ textAlign:"center" }}>
         <div style={{ fontSize:"2rem", marginBottom:"12px" }}>◌</div>
         <p style={{ fontSize:".8rem", letterSpacing:".1em" }}>Loading…</p>
@@ -116,10 +115,10 @@ export default function ProductPage() {
   );
 
   if (!product) return (
-    <div style={{ fontFamily:"'DM Sans',sans-serif", display:"flex", alignItems:"center", justifyContent:"center", height:"100vh", background:"#fdfcfb" }}>
+    <div style={{ fontFamily:"'Jost','DM Sans',sans-serif", display:"flex", alignItems:"center", justifyContent:"center", height:"100vh", background:"#ffffff" }}>
       <div style={{ textAlign:"center" }}>
-        <p style={{ fontSize:".85rem", color:"#bbb", marginBottom:"16px" }}>Product not found</p>
-        <button onClick={() => router.push("/")} style={{ background:"none", border:"1px solid #e0d8d0", borderRadius:"4px", padding:"10px 24px", cursor:"pointer", fontSize:".72rem", letterSpacing:".1em", textTransform:"uppercase", color:"#888", fontFamily:"'DM Sans',sans-serif" }}>Go Home</button>
+        <p style={{ fontSize:".85rem", color:"#757575", marginBottom:"16px" }}>Product not found</p>
+        <button onClick={() => router.push("/")} style={{ background:"none", border:"2px solid #dfdfdf", padding:"10px 24px", cursor:"pointer", fontSize:".72rem", letterSpacing:".1em", textTransform:"uppercase", color:"#757575", fontFamily:"'Jost','DM Sans',sans-serif" }}>Go Home</button>
       </div>
     </div>
   );
@@ -152,27 +151,23 @@ export default function ProductPage() {
   };
 
   return (
-    <div style={{ fontFamily:"'DM Sans',sans-serif", background:"#fdfcfb", minHeight:"100vh", paddingBottom:"0", color:"#2a2420" }}>
+    <div style={{ fontFamily:"'Jost','DM Sans',sans-serif", background:"#ffffff", minHeight:"100vh", paddingBottom:"0", color:"#000000" }}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
       />
       <style>{`
-        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-        .nav{height:60px;border-bottom:1px solid #e8e0d8;display:flex;align-items:center;padding:0 24px;position:sticky;top:0;z-index:200;background:rgba(253,252,251,.97);justify-content:space-between;}
-        .wordmark{font-family:'Cormorant Garamond',serif;font-size:1.45rem;font-weight:300;letter-spacing:.18em;cursor:pointer;color:#2a2420;}
-        .cta-btn-wrap{display:block;}.cta-btn{background:#2a2420;color:#fff;border:none;padding:16px 24px;font-family:'DM Sans',sans-serif;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;font-weight:500;cursor:pointer;border-radius:4px;transition:all .22s;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;}
-        .cta-btn:hover{background:#c9a96e;}
-        .cta-btn.sold-out{background:#888;cursor:not-allowed;}
-        .similar-card{background:#fff;border:1px solid #e8e0d8;border-radius:8px;overflow:hidden;cursor:pointer;transition:all .22s;}
-        .similar-card:hover{border-color:#c9a96e;transform:translateY(-3px);box-shadow:0 8px 24px rgba(180,140,90,.1);}
-        .breadcrumb{font-size:.7rem;color:#bbb;}
-        .breadcrumb a{color:#c9a96e;text-decoration:none;}
+        .cta-btn{background:#000;color:#fff;border:none;padding:16px 24px;font-family:'Jost','DM Sans',sans-serif;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;font-weight:400;cursor:pointer;transition:background .22s;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;}
+        .cta-btn:hover{background:#757575;}
+        .cta-btn.sold-out{background:#757575;cursor:not-allowed;}
+        .similar-card{background:#fff;border:2px solid #dfdfdf;overflow:hidden;cursor:pointer;}
+        .breadcrumb{font-size:.7rem;color:#757575;}
+        .breadcrumb a{color:#000;text-decoration:none;}
         .breadcrumb a:hover{text-decoration:underline;}
         @media(max-width:768px){.desktop-cta{display:none;}.product-layout{flex-direction:column !important;}.product-img{height:auto !important;aspect-ratio:3/4;}}
-        .sticky-cta{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e8e0d8;padding:12px 20px;z-index:100;display:flex;gap:10px;align-items:center;}
-        .share-btn{background:none;border:1px solid #e0d8d0;color:#777;padding:10px 14px;border-radius:4px;cursor:pointer;font-size:.75rem;font-family:'DM Sans',sans-serif;white-space:nowrap;transition:all .2s;flex-shrink:0;}
-        .share-btn:hover{border-color:#c9a96e;color:#c9a96e;}
+        .sticky-cta{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:2px solid #dfdfdf;padding:12px 20px;z-index:100;display:flex;gap:10px;align-items:center;}
+        .share-btn{background:none;border:2px solid #dfdfdf;color:#757575;padding:10px 14px;cursor:pointer;font-size:.75rem;font-family:'Jost','DM Sans',sans-serif;white-space:nowrap;flex-shrink:0;}
+        .share-btn:hover{border-color:#000;color:#000;}
         @media(min-width:769px){.sticky-cta{display:none;}}@media(max-width:768px){.product-actions{padding-bottom:80px;}}
       `}</style>
 
@@ -190,8 +185,8 @@ export default function ProductPage() {
 
           {/* Image */}
           <div style={{ flex:"0 0 460px" }}>
-            <div style={{ position:"relative", borderRadius:"12px", overflow:"hidden", boxShadow:"0 8px 40px rgba(0,0,0,.1)" }}>
-              <div style={{ position:"relative", width:"100%", aspectRatio:"3/4", background:"#f5f0eb" }}>
+            <div style={{ position:"relative", overflow:"hidden" }}>
+              <div style={{ position:"relative", width:"100%", aspectRatio:"3/4", background:"#f2f2f2" }}>
                 <Image
                   src={product.image_url || "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&q=80"}
                   alt={product.name || "Product"}
@@ -203,7 +198,7 @@ export default function ProductPage() {
                 />
               </div>
               {discountPct && (
-                <div style={{ position:"absolute", top:"14px", left:"14px", background:BADGE_COLORS.Sale, color:"#fff", fontSize:".62rem", letterSpacing:".14em", textTransform:"uppercase", padding:"4px 12px", borderRadius:"20px", fontWeight:600 }}>
+                <div style={{ position:"absolute", top:"14px", left:"14px", background:"#b03030", color:"#fff", fontSize:".62rem", letterSpacing:".14em", textTransform:"uppercase", padding:"4px 12px", fontWeight:400 }}>
                   -{discountPct}% Off
                 </div>
               )}
@@ -217,16 +212,16 @@ export default function ProductPage() {
 
           {/* Details */}
           <div style={{ flex:1, minWidth:0 }}>
-            <div style={{ fontSize:".65rem", letterSpacing:".22em", textTransform:"uppercase", color:"#c9a96e", marginBottom:"8px", cursor:"pointer" }}
+            <div style={{ fontSize:".65rem", letterSpacing:".22em", textTransform:"uppercase", color:"#757575", marginBottom:"8px", cursor:"pointer" }}
               onClick={() => router.push(`/brand/${slugify(product.brand)}`)}>
               {product.brand}
             </div>
-            <h1 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"2rem", fontWeight:400, color:"#2a2420", lineHeight:1.25, marginBottom:"16px" }}>{product.name}</h1>
+            <h1 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"2rem", fontWeight:400, color:"#000000", lineHeight:1.25, marginBottom:"16px" }}>{product.name}</h1>
 
             <div style={{ marginBottom:"20px" }}>
               {product.price > 0
-                ? <span style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"2rem", color:"#2a2420" }}>Rs. {product.price.toLocaleString()}</span>
-                : <span style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"1.4rem", color:"#bbb", fontStyle:"italic" }}>Price unavailable — check brand website</span>
+                ? <span style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"2rem", color:"#000000" }}>Rs. {product.price.toLocaleString()}</span>
+                : <span style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"1.4rem", color:"#757575", fontStyle:"italic" }}>Price unavailable — check brand website</span>
               }
               {product.original_price > product.price && (
                 <span style={{ fontSize:".95rem", textDecoration:"line-through", color:"#bbb", marginLeft:"12px" }}>Rs. {(product.original_price||0).toLocaleString()}</span>
@@ -234,22 +229,22 @@ export default function ProductPage() {
             </div>
 
             {/* Stock */}
-            <div style={{ display:"flex", alignItems:"center", gap:"8px", marginBottom:"24px", padding:"10px 14px", background:s.bg, borderRadius:"6px", border:`1px solid ${s.color}22` }}>
-              <div style={{ width:"8px", height:"8px", borderRadius:"50%", background:s.color, flexShrink:0 }} />
-              <span style={{ fontSize:".72rem", color:s.color, fontWeight:500 }}>{s.text}</span>
+            <div style={{ display:"flex", alignItems:"center", gap:"8px", marginBottom:"24px", padding:"10px 14px", background:s.bg, border:"2px solid #dfdfdf" }}>
+              <div style={{ width:"8px", height:"8px", background:s.color, flexShrink:0 }} />
+              <span style={{ fontSize:".72rem", color:s.color, fontWeight:400 }}>{s.text}</span>
             </div>
 
             {/* Details */}
-            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"16px", background:"#f8f4ef", borderRadius:"10px", padding:"20px", marginBottom:"24px" }}>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"16px", background:"#f2f2f2", padding:"20px", marginBottom:"24px" }}>
               {[["Brand",product.brand],["Collection",product.collection],["Type",product.product_type],["Status",product.in_stock?"In Stock":"Out of Stock"]].map(([label,value]) => value ? (
                 <div key={label}>
-                  <div style={{ fontSize:".58rem", letterSpacing:".18em", textTransform:"uppercase", color:"#bbb", marginBottom:"4px" }}>{label}</div>
-                  <div style={{ fontSize:".88rem", color:"#2a2420", fontWeight:500 }}>{value}</div>
+                  <div style={{ fontSize:".58rem", letterSpacing:".18em", textTransform:"uppercase", color:"#757575", marginBottom:"4px" }}>{label}</div>
+                  <div style={{ fontSize:".88rem", color:"#000000", fontWeight:400 }}>{value}</div>
                 </div>
               ) : null)}
             </div>
 
-            <div className="product-actions"><div style={{ background:"#fffbf0", border:"1px solid #f0e0b0", borderRadius:"8px", padding:"12px 16px", marginBottom:"24px", fontSize:".7rem", color:"#888", lineHeight:1.6 }}>
+            <div className="product-actions"><div style={{ background:"#f2f2f2", border:"2px solid #dfdfdf", padding:"12px 16px", marginBottom:"24px", fontSize:".7rem", color:"#757575", lineHeight:1.6 }}>
               ℹ️ Links to {product.brand}'s official website. Availability and pricing are controlled by the brand.
             </div>
 
@@ -275,7 +270,7 @@ export default function ProductPage() {
                   return updated;
                 });
               }}
-              style={{ width:"100%", background:"none", border:"1px solid #e0d8d0", borderRadius:"4px", padding:"12px", cursor:"pointer", fontSize:".72rem", letterSpacing:".1em", textTransform:"uppercase", color:wishlist.includes(product.id)?"#c9a96e":"#888", fontFamily:"'DM Sans',sans-serif", transition:"all .2s" }}>
+              style={{ width:"100%", background:"none", border:"2px solid #dfdfdf", padding:"12px", cursor:"pointer", fontSize:".72rem", letterSpacing:".1em", textTransform:"uppercase", color:wishlist.includes(product.id)?"#000":"#757575", fontFamily:"'Jost','DM Sans',sans-serif" }}>
               {wishlist.includes(product.id) ? "♥ Saved to Wishlist" : "♡ Save to Wishlist"}
             </button>
           </div></div>
@@ -285,14 +280,14 @@ export default function ProductPage() {
         {similar.length > 0 && (
           <div style={{ marginBottom:"60px" }}>
             <div style={{ display:"flex", alignItems:"center", gap:"16px", marginBottom:"24px" }}>
-              <div style={{ flex:1, height:"1px", background:"linear-gradient(90deg,transparent,#c9a96e 30%,#c9a96e 70%,transparent)" }} />
-              <span style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"1.2rem", color:"#aaa", fontStyle:"italic", whiteSpace:"nowrap" }}>You May Also Like</span>
-              <div style={{ flex:1, height:"1px", background:"linear-gradient(90deg,#c9a96e 30%,transparent)" }} />
+              <div style={{ flex:1, height:"2px", background:"#dfdfdf" }} />
+              <span style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"1.2rem", color:"#757575", fontStyle:"italic", whiteSpace:"nowrap" }}>You May Also Like</span>
+              <div style={{ flex:1, height:"2px", background:"#dfdfdf" }} />
             </div>
             <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))", gap:"16px" }}>
               {similar.map(sp => (
                 <div key={sp.id} className="similar-card" onClick={() => router.push(`/product/${sp.id}`)}>
-                  <div style={{ position:"relative", width:"100%", aspectRatio:"3/4", background:"#f5f0eb" }}>
+                  <div style={{ position:"relative", width:"100%", aspectRatio:"3/4", background:"#f2f2f2" }}>
                     <Image
                       src={sp.image_url || "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=400&q=70"}
                       alt={sp.name || "Product"}
@@ -303,9 +298,9 @@ export default function ProductPage() {
                     />
                   </div>
                   <div style={{ padding:"10px" }}>
-                    <div style={{ fontSize:".56rem", letterSpacing:".12em", textTransform:"uppercase", color:"#c9a96e", marginBottom:"3px" }}>{sp.brand}</div>
-                    <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:".88rem", color:"#2a2420", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", marginBottom:"4px" }}>{sp.name}</div>
-                    <div style={{ fontSize:".75rem", color:"#aaa" }}>Rs. {(sp.price||0).toLocaleString()}</div>
+                    <div style={{ fontSize:".56rem", letterSpacing:".12em", textTransform:"uppercase", color:"#757575", marginBottom:"3px" }}>{sp.brand}</div>
+                    <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:".88rem", color:"#000000", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", marginBottom:"4px" }}>{sp.name}</div>
+                    <div style={{ fontSize:".75rem", color:"#757575" }}>Rs. {(sp.price||0).toLocaleString()}</div>
                   </div>
                 </div>
               ))}
@@ -321,27 +316,15 @@ export default function ProductPage() {
             {shareMsg || "Share"}
           </button>
           <a href={product.product_url} target="_blank" rel="noopener noreferrer"
-            style={{ flex:1, background: liveStock==="sold_out"?"#888":"#2a2420", color:"#fff", border:"none", padding:"12px 20px", fontFamily:"'DM Sans',sans-serif", fontSize:".78rem", letterSpacing:".1em", textTransform:"uppercase", fontWeight:500, cursor:"pointer", borderRadius:"4px", textAlign:"center", textDecoration:"none", display:"flex", alignItems:"center", justifyContent:"center" }}>
+            style={{ flex:1, background:liveStock==="sold_out"?"#757575":"#000000", color:"#fff", border:"none", padding:"12px 20px", fontFamily:"'Jost','DM Sans',sans-serif", fontSize:".78rem", letterSpacing:".1em", textTransform:"uppercase", fontWeight:400, cursor:"pointer", textAlign:"center", textDecoration:"none", display:"flex", alignItems:"center", justifyContent:"center" }}>
             {liveStock==="sold_out" ? `Sold Out — View on ${product.brand}` : `View & Buy on ${product.brand} →`}
           </a>
         </div>
       )}
 
-      {product && (
-        <div className="sticky-cta">
-          <button className="share-btn" onClick={handleShare}>
-            {shareMsg || "Share"}
-          </button>
-          <a href={product.product_url} target="_blank" rel="noopener noreferrer"
-            style={{ flex:1, background:liveStock==="sold_out"?"#888":"#2a2420", color:"#fff", border:"none", padding:"12px 20px", fontFamily:"'DM Sans',sans-serif", fontSize:".78rem", letterSpacing:".1em", textTransform:"uppercase", fontWeight:500, cursor:"pointer", borderRadius:"4px", textAlign:"center", textDecoration:"none", display:"flex", alignItems:"center", justifyContent:"center" }}>
-            {liveStock==="sold_out" ? `Sold Out — View on ${product.brand}` : `View & Buy on ${product.brand} →`}
-          </a>
-        </div>
-      )}
-
-      <footer style={{ borderTop:"1px solid #e8e0d8", padding:"32px 24px", background:"rgba(255,255,255,.55)" }}>
+      <footer style={{ borderTop:"2px solid #dfdfdf", padding:"32px 24px", background:"#ffffff" }}>
         <div style={{ maxWidth:"1240px", margin:"0 auto", display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:"12px" }}>
-          <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"1.2rem", color:"#c9a96e", fontWeight:300 }}>Poshak</div>
+          <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"1.2rem", color:"#000000", fontWeight:300 }}>Poshak</div>
           <p style={{ fontSize:".62rem", letterSpacing:".12em", color:"#ccc", textTransform:"uppercase" }}>Every brand. One place.</p>
           <p style={{ fontSize:".62rem", color:"#ccc" }}>Updated daily from 15+ brands</p>
         </div>

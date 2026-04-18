@@ -3,10 +3,6 @@ import Image from "next/image";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-const BADGE_COLORS = {
-  Bestseller:"#b07d4a", New:"#3d8a60", Sale:"#b03030",
-  Exclusive:"#6a4a8a", Premium:"#3a6a9a", Trending:"#9a6a30", Festive:"#8a5a2a"
-};
 
 const FALLBACK = "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=500&q=80";
 
@@ -35,37 +31,16 @@ export default function ProductCard({ p, idx = 99, wishlist = [], onWish, onClic
   }
 
   return (
-    <div
-      onClick={handleClick}
-      style={{
-        background:"#fff",
-        border:"1px solid #e8e0d8",
-        borderRadius:"10px",
-        overflow:"hidden",
-        cursor:"pointer",
-        position:"relative",
-        boxShadow:"0 2px 10px rgba(0,0,0,.04)",
-        transition:"transform .28s,box-shadow .28s,border-color .2s",
-      }}
-      onMouseOver={e => {
-        e.currentTarget.style.transform = "translateY(-5px)";
-        e.currentTarget.style.borderColor = "#c9a96e";
-        e.currentTarget.style.boxShadow = "0 18px 44px rgba(180,140,90,.14)";
-      }}
-      onMouseOut={e => {
-        e.currentTarget.style.transform = "none";
-        e.currentTarget.style.borderColor = "#e8e0d8";
-        e.currentTarget.style.boxShadow = "0 2px 10px rgba(0,0,0,.04)";
-      }}
-    >
+    <div onClick={handleClick} style={{ cursor:"pointer", position:"relative" }}>
       {/* Image container — aspect-ratio reserves exact space before image loads = zero CLS */}
-      <div style={{ position:"relative", aspectRatio:"3/4", background:"#f5f0eb", overflow:"hidden" }}>
+      <div className="product-card-image">
         <Image
           src={imgSrc}
           alt={p.name || "Product"}
-          fill
-          sizes="(max-width:768px) 50vw, (max-width:1240px) 25vw, 220px"
-          style={{ objectFit:"cover", transition:"transform .48s" }}
+          width={652}
+          height={738}
+          quality={85}
+          style={{ width:"100%", height:"auto", display:"block", objectFit:"cover", transition:"transform .48s" }}
           priority={isPriority}
           loading={isPriority ? "eager" : "lazy"}
           onError={() => setImgSrc(FALLBACK)}
@@ -73,62 +48,42 @@ export default function ProductCard({ p, idx = 99, wishlist = [], onWish, onClic
 
         {/* Badge */}
         {p.badge && (
-          <div style={{
-            position:"absolute", top:"10px", left:"10px",
-            background: BADGE_COLORS[p.badge] || "#888",
-            color:"#fff", fontSize:".58rem", letterSpacing:".14em",
-            textTransform:"uppercase", padding:"3px 9px",
-            borderRadius:"20px", fontWeight:600, zIndex:2,
-          }}>
+          <div className="product-card-badge" style={{ position:"absolute", top:"10px", left:"10px", zIndex:2 }}>
             {p.badge}
           </div>
         )}
 
-        {/* Wishlist button — position:absolute, outside document flow = no CLS */}
+        {/* Wishlist button */}
         <button
           onClick={e => { e.stopPropagation(); onWish?.(p.id, e); }}
+          className="product-card-wishlist"
           style={{
             position:"absolute", top:"10px", right:"10px",
-            background:"rgba(255,255,255,.94)", border:"1px solid #e8e0d8",
-            borderRadius:"50%", width:"34px", height:"34px",
+            background:"none", border:"none",
+            width:"28px", height:"28px",
             display:"flex", alignItems:"center", justifyContent:"center",
-            cursor:"pointer", zIndex:2, flexShrink:0,
+            cursor:"pointer", zIndex:2,
           }}
         >
-          <span style={{ color: isWished ? "#c9a96e" : "#ccc", fontSize:".9rem" }}>
+          <span style={{ color: isWished ? "#000000" : "#757575", fontSize:"1rem" }}>
             {isWished ? "♥" : "♡"}
           </span>
         </button>
       </div>
 
-      {/* Card body — fixed min-height reserves space before content loads = no CLS */}
-      <div style={{ padding:"14px", minHeight:"80px" }}>
-        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
-          <div style={{ flex:1, minWidth:0, paddingRight:"8px" }}>
-            <div style={{
-              fontSize:".6rem", letterSpacing:".14em", textTransform:"uppercase",
-              color:"#c9a96e", marginBottom:"4px",
-            }}>
-              {p.brand}
-            </div>
-            <div style={{
-              fontFamily:"'Cormorant Garamond',serif", fontSize:"1rem",
-              color:"#2a2420", lineHeight:1.3, overflow:"hidden",
-              display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical",
-            }}>
-              {p.name}
-            </div>
-          </div>
-          <div style={{ textAlign:"right", flexShrink:0 }}>
-            <div style={{ fontSize:".88rem", fontWeight:500 }}>
-              Rs. {price.toLocaleString()}
-            </div>
-            {origPrice > price && (
-              <div style={{ fontSize:".72rem", textDecoration:"line-through", color:"#bbb" }}>
-                Rs. {origPrice.toLocaleString()}
-              </div>
-            )}
-          </div>
+      {/* Card body */}
+      <div style={{ padding:"10px 0 0 0" }}>
+        <div className="product-card-brand">{p.brand}</div>
+        <div className="product-card-name">{p.name}</div>
+        <div className="product-card-price">
+          {origPrice > price ? (
+            <>
+              <span className="product-card-price-sale">Rs. {price.toLocaleString()}</span>
+              <span className="product-card-price-original">Rs. {origPrice.toLocaleString()}</span>
+            </>
+          ) : (
+            <>Rs. {price.toLocaleString()}</>
+          )}
         </div>
       </div>
     </div>

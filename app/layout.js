@@ -1,3 +1,4 @@
+import "./globals.css";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import Script from "next/script";
@@ -22,7 +23,7 @@ export const metadata = {
 
 // Font preloading — declared at module level so Next.js puts in <head>
 export const viewport = {
-  themeColor: "#2a2420",
+  themeColor: "#000000",
 };
 
 const websiteSchema = {
@@ -63,10 +64,10 @@ export default function RootLayout({ children }) {
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" />
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Sans:wght@300;400;500&family=Jost:wght@300;400&display=swap" />
         <style dangerouslySetInnerHTML={{__html:`
           *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-          body{font-family:'DM Sans',system-ui,sans-serif;background:#fdfcfb;color:#2a2420;}
+          body{font-family:'Jost','DM Sans',Arial,Helvetica,sans-serif;background:#ffffff;color:#000000;}
         `}} />
       </head>
       <body>

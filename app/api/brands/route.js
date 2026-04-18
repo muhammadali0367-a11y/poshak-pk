@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
+import { supabase } from '@/app/lib/supabase'
 
 export const revalidate = 600
 
@@ -26,11 +26,6 @@ export async function GET() {
     }
 
     brandsCache.inFlight = (async () => {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    )
-
     const allBrands = new Set()
     let from = 0
 
@@ -40,12 +35,13 @@ export async function GET() {
         .from('products')
         .select('brand')
         .not('brand', 'is', null)
+        .order('brand')
         .range(from, from + 999)
 
       if (error) throw error
       if (!data || data.length === 0) break
 
-      data.forEach(r => { if (r.brand) allBrands.add(r.brand) })
+      data.forEach(r => { if (r.brand) allBrands.add(r.brand.trim()) })
 
       if (data.length < 1000) break  // Last page
       from += 1000

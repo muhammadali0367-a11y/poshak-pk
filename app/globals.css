@@ -1,42 +1,235 @@
+@import "tailwindcss";
+
+/* ══════════════════════════════════════════════
+   POSHAK DESIGN SYSTEM — Mytheresa Reference
+   ══════════════════════════════════════════════ */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* COLORS */
+  --color-black:        #000000;
+  --color-white:        #ffffff;
+  --color-gray-body:    #757575;
+  --color-gray-border:  #dfdfdf;
+  --color-gray-bg:      #f2f2f2;
+  --color-gray-footer:  #6e6e6e;
+  --color-page-bg:      #ffffff;
+
+  /* SPACING */
+  --space-2: 2px;  --space-4: 4px;  --space-8: 8px;  --space-10: 10px;
+  --space-14: 14px;  --space-16: 16px;  --space-18: 18px;  --space-20: 20px;
+  --space-24: 24px;  --space-30: 30px;  --space-32: 32px;  --space-50: 50px;
+
+  /* TYPOGRAPHY */
+  --font-family:         'Jost', 'DM Sans', Arial, Helvetica, sans-serif;
+  --font-family-display: 'Cormorant Garamond', Georgia, serif;
+  --font-xs: 12px;  --font-sm: 14px;  --font-base: 16px;
+  --font-lg: 20px;  --font-xl: 36px;
+  --font-weight: 400;
+
+  /* BORDERS */
+  --border-width: 2px;
+  --border-color: var(--color-gray-border);
+  --border-dark:  var(--color-gray-body);
+
+  /* LAYOUT */
+  --max-width:    1440px;
+  --side-padding: 30px;
+  --card-gap:     14px;
+  --nav-height:   74px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+*, *::before, *::after { box-sizing: border-box; }
 
-html,
+html, body { max-width: 100vw; overflow-x: hidden; }
+
 body {
-  max-width: 100vw;
-  overflow-x: hidden;
-}
-
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-family);
+  font-weight: var(--font-weight);
+  color: var(--color-black);
+  background: var(--color-page-bg);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  margin: 0; padding: 0;
 }
 
-* {
-  box-sizing: border-box;
+a { color: inherit; text-decoration: none; }
+
+/* PRODUCT GRID */
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 28px;
+  padding: var(--space-20) var(--space-18);
+}
+@media (max-width: 1140px) { .product-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 768px)  { .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* PRODUCT CARD */
+.product-card-wrap {
+  display: block;
+  width: auto;
+  min-width: 0;
   padding: 0;
-  margin: 0;
+  margin-bottom: 0;
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
+.product-card-image {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 652 / 738;
+  overflow: hidden;
+  background: var(--color-white);
+  cursor: pointer;
+  min-width: 0;
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
+.product-card-badge {
+  color: var(--color-gray-body);
+  font-size: var(--font-base);
+  text-transform: uppercase;
+  border-top: var(--border-width) solid var(--color-gray-body);
+  border-bottom: var(--border-width) solid var(--color-gray-body);
+  padding: var(--space-2) 0;
+  display: inline-block;
+  margin-bottom: var(--space-4);
 }
+
+.product-card-brand {
+  font-size: var(--font-lg);
+  text-transform: uppercase;
+  font-weight: var(--font-weight);
+  letter-spacing: 0.5px;
+  color: var(--color-black);
+  margin-top: var(--space-10);
+}
+
+.product-card-name {
+  color: var(--color-gray-body);
+  font-size: var(--font-base);
+  font-weight: var(--font-weight);
+  line-height: 1.4;
+}
+
+.product-card-price {
+  font-size: var(--font-base);
+  font-weight: var(--font-weight);
+  color: var(--color-black);
+  margin-top: var(--space-2);
+}
+
+.product-card-price-sale { color: #c00; }
+
+.product-card-price-original {
+  text-decoration: line-through;
+  color: var(--color-gray-body);
+  margin-left: 6px;
+  font-size: var(--font-sm);
+}
+
+.product-card-wishlist {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  cursor: pointer;
+}
+.product-card-wrap:hover .product-card-wishlist { opacity: 1; }
+
+/* FILTER BAR */
+.filter-bar {
+  border-bottom: var(--border-width) solid var(--border-color);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: var(--color-gray-body);
+  font-size: var(--font-base);
+  padding: var(--space-16) 0;
+  background: var(--color-white);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.filter-bar-item {
+  cursor: pointer;
+  padding: 0 var(--space-32);
+  display: flex;
+  align-items: center;
+  transition: color 0.2s ease;
+}
+.filter-bar-item:hover { color: var(--color-black); }
+
+/* NAV */
+.nav-main {
+  border-bottom: var(--border-width) solid var(--border-color);
+  min-height: var(--nav-height);
+  display: flex;
+  justify-content: center;
+  background: var(--color-white);
+}
+
+.nav-inner {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  max-width: var(--max-width);
+  padding: 0 var(--side-padding);
+  width: 100%;
+  align-items: center;
+}
+
+.nav-categories {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  font-size: var(--font-xs);
+  text-transform: uppercase;
+}
+
+.nav-cat-link {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding: 0 var(--space-8);
+  cursor: pointer;
+}
+
+/* SEARCH INPUTS */
+.search-input-main {
+  border: none;
+  border-bottom: var(--border-width) solid var(--color-black);
+  font-family: var(--font-family);
+  font-size: var(--font-xl);
+  font-weight: 300;
+  text-align: center;
+  outline: none;
+  width: 100%;
+  max-width: 650px;
+  height: 48px;
+  background: transparent;
+}
+
+.search-input-nav {
+  border: none;
+  border-bottom: var(--border-width) solid var(--color-black);
+  font-family: var(--font-family);
+  font-size: var(--font-xs);
+  outline: none;
+  height: 27px;
+  padding-top: 6px;
+  background: transparent;
+}
+
+.results-title {
+  font-size: var(--font-lg);
+  font-weight: var(--font-weight);
+  text-align: center;
+  padding: var(--space-16) var(--space-24) var(--space-50);
+}
+
+.container-main {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 var(--side-padding);
+}
+
+/* GLOBAL OVERRIDES — enforce Mytheresa's zero-decoration rule */
+button, input, select, a, div { border-radius: 0 !important; }

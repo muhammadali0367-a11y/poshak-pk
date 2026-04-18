@@ -2,7 +2,7 @@
 // Fetches homepage data from Supabase before the page is sent to the browser.
 // The user receives HTML with products already baked in — zero client-side wait.
 
-import { createClient } from '@supabase/supabase-js'
+import { supabase } from '@/app/lib/supabase'
 import HomeClient from './HomeClient'
 
 const CATEGORIES = [
@@ -16,11 +16,6 @@ const CATEGORIES = [
 export const revalidate = 300
 
 async function getHomepageSections() {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  )
-
   const sections = {}
 
   await Promise.all(

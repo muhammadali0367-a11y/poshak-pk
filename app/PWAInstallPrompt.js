@@ -59,12 +59,10 @@ export default function PWAInstallPrompt() {
       transform: "translateX(-50%)",
       width: "calc(100% - 32px)",
       maxWidth: "420px",
-      background: "#2a2420",
-      borderRadius: "16px",
+      background: "#000000",
       padding: "16px 20px",
       zIndex: 9999,
-      boxShadow: "0 8px 40px rgba(0,0,0,0.3)",
-      border: "1px solid #c9a96e",
+      border: "2px solid #dfdfdf",
       display: "flex",
       alignItems: "center",
       gap: "14px",
@@ -73,7 +71,7 @@ export default function PWAInstallPrompt() {
       <img
         src="/icons/icon-72x72.png"
         alt="Poshak"
-        style={{ width: "48px", height: "48px", borderRadius: "12px", flexShrink: 0 }}
+        style={{ width: "48px", height: "48px", flexShrink: 0 }}
       />
 
       {/* Text */}
@@ -81,7 +79,7 @@ export default function PWAInstallPrompt() {
         <div style={{
           fontFamily: "'Cormorant Garamond', serif",
           fontSize: "1rem",
-          color: "#f5f0eb",
+          color: "#ffffff",
           fontWeight: 400,
           marginBottom: "3px"
         }}>
@@ -89,7 +87,7 @@ export default function PWAInstallPrompt() {
         </div>
         <div style={{
           fontSize: ".72rem",
-          color: "#c9a96e",
+          color: "#757575",
           letterSpacing: ".02em",
           lineHeight: 1.4
         }}>
@@ -106,15 +104,14 @@ export default function PWAInstallPrompt() {
           <button
             onClick={handleInstall}
             style={{
-              background: "#c9a96e",
-              color: "#2a2420",
+              background: "#ffffff",
+              color: "#000000",
               border: "none",
-              borderRadius: "8px",
               padding: "7px 14px",
               fontSize: ".72rem",
-              fontWeight: 600,
+              fontWeight: 400,
               cursor: "pointer",
-              fontFamily: "'DM Sans', sans-serif",
+              fontFamily: "'Jost','DM Sans', sans-serif",
               letterSpacing: ".06em",
               whiteSpace: "nowrap",
             }}>
@@ -125,13 +122,12 @@ export default function PWAInstallPrompt() {
           onClick={handleDismiss}
           style={{
             background: "transparent",
-            color: "#888",
+            color: "#757575",
             border: "none",
-            borderRadius: "8px",
             padding: "4px 8px",
             fontSize: ".68rem",
             cursor: "pointer",
-            fontFamily: "'DM Sans', sans-serif",
+            fontFamily: "'Jost','DM Sans', sans-serif",
             textAlign: "center",
           }}>
           {isIOS ? "Got it" : "Not now"}

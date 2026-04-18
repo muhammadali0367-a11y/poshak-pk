@@ -1,10 +1,5 @@
-import { createClient } from '@supabase/supabase-js'
+import { supabase } from '@/app/lib/supabase'
 import OpenAI from 'openai'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-)
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
@@ -34,15 +29,18 @@ const COLOR_SYNONYMS = {
 
 const COLOR_CANONICAL = {
   "black":["black"],"white":["white"],"red":["red"],"blue":["blue"],
-  "green":["green"],"yellow":["yellow"],"pink":["pink"],"purple":["purple"],
-  "orange":["orange"],"brown":["brown"],"grey":["grey","gray"],
-  "beige":["beige"],"cream":["cream"],"navy":["navy blue","navy"],
-  "teal":["teal","turquoise"],"maroon":["maroon"],"mustard":["mustard"],
-  "rust":["rust"],"coral":["coral"],"peach":["peach"],"lilac":["lilac"],
-  "lavender":["lavender"],"ivory":["ivory"],"gold":["gold"],"silver":["silver"],
+  "green":["green","mehndi","mint","olive","pista"],"yellow":["yellow","zard"],
+  "pink":["pink","chai","dusty pink","baby pink","hot pink"],
+  "purple":["purple","mauve","lavender","lilac"],
+  "orange":["orange"],"brown":["brown"],
+  "grey":["grey","gray","zinc"],"beige":["beige","nude","skin","champagne"],
+  "cream":["cream","ivory","off white"],"navy":["navy blue","navy"],
+  "teal":["teal","turquoise","ferozi"],"maroon":["maroon","burgundy","wine"],
+  "mustard":["mustard"],"rust":["rust"],"coral":["coral"],"peach":["peach"],
+  "gold":["gold"],"silver":["silver"],
   "multicolor":["multicolor","multi"],"off white":["off white"],
-  "navy blue":["navy blue"],"hot pink":["hot pink"],"baby pink":["baby pink"],
-  "dark green":["dark green"],"olive green":["olive green"],"sky blue":["sky blue"],
+  "navy blue":["navy blue"],"dark green":["dark green"],
+  "olive green":["olive green"],"sky blue":["sky blue"],
 }
 
 function translateQuery(q) {
@@ -227,6 +225,19 @@ async function fetchSearchPayload(request) {
     const brand     = searchParams.get('brand') || ''
     const min_price = searchParams.get('min_price')
     const max_price = searchParams.get('max_price')
+    const colorParam    = (searchParams.get('color')         || '').toLowerCase().trim()
+    const fabric        = (searchParams.get('fabric')        || '').toLowerCase().trim()
+    const category      = (searchParams.get('category')      || '').trim()     // legacy compat
+    const occasion      = (searchParams.get('occasion')      || '').toLowerCase().trim()
+    const main_category = (searchParams.get('main_category') || '').trim()
+    const stitch_type   = (searchParams.get('stitch_type')   || '').toLowerCase().trim()
+    const tier          = (searchParams.get('tier')          || '').toLowerCase().trim()
+    // piece_count: read new name first, fall back to legacy 'piece' for any remaining callers
+    const piece_count_raw  = searchParams.get('piece_count') || searchParams.get('piece') || ''
+    const parsedPieceCount = piece_count_raw ? parseInt(piece_count_raw) : 0
+    // in_stock: default true (in-stock only); explicit 'false' = out-of-stock only
+    const in_stock_raw  = searchParams.get('in_stock')
+    const filterInStock = in_stock_raw === 'false' ? false : true
 
     if (!rawQ) return { products: [], total: 0, page: 1, pages: 0 }
 
@@ -241,7 +252,8 @@ async function fetchSearchPayload(request) {
     const colorExtract = !pureColor
       ? (extractColorFromQuery(normalizedQ) || extractColorFromQuery(translatedQ))
       : null
-    const detectedColor = pureColor || colorExtract?.color || null
+    // URL param takes precedence over auto-detected color
+    const effectiveColor = colorParam || pureColor || colorExtract?.color || null
 
     // ── Step 3: Vector search via pgvector ────────────────────────────────────
     let products = []
@@ -254,47 +266,65 @@ async function fetchSearchPayload(request) {
       try {
         const embedding = await getQueryEmbedding(normalizedQ)
         const vectorResults = await vectorSearch(embedding, {
-          brand, color: detectedColor, min_price, max_price, topK: 100
+          brand, color: effectiveColor, min_price, max_price, topK: 100
         })
-        const inStockVectorResults = vectorResults.filter(p => p.in_stock !== false)
+        // Apply in_stock filter — default in-stock only; explicit false = out-of-stock only
+        const stockFiltered = filterInStock === false
+          ? vectorResults.filter(p => p.in_stock === false)
+          : vectorResults.filter(p => p.in_stock !== false)
 
-        if (inStockVectorResults.length > 0) {
+        if (stockFiltered.length > 0) {
           const queryTerms = [...new Set([
             ...normalizedQ.toLowerCase().split(/\s+/),
             ...translatedQ.toLowerCase().split(/\s+/)
           ])].filter(t => t.length > 2)
 
-          const reranked = hybridRerank(inStockVectorResults, queryTerms)
-          total = reranked.length
-          products = reranked.slice(from, from + PAGE_SIZE).map(toCardProduct)
+          const reranked = hybridRerank(stockFiltered, queryTerms)
+
+          // Post-filter new contract fields on vector results.
+          // If match_products RPC does not return these columns the filter evaluates
+          // false for every row → filtered.length === 0 → ILIKE fallback runs instead,
+          // which applies them via .eq() and handles them correctly.
+          let filtered = reranked
+          if (main_category)        filtered = filtered.filter(p => normalizeForMatch(p.main_category) === normalizeForMatch(main_category))
+          if (stitch_type)          filtered = filtered.filter(p => normalizeForMatch(p.stitch_type)   === normalizeForMatch(stitch_type))
+          if (tier)                 filtered = filtered.filter(p => normalizeForMatch(p.tier)           === normalizeForMatch(tier))
+          if (parsedPieceCount > 0) filtered = filtered.filter(p => Number(p.piece_count) === parsedPieceCount)
+
+          if (filtered.length > 0) {
+            total = filtered.length
+            products = filtered.slice(from, from + PAGE_SIZE).map(toCardProduct)
+          }
         }
       } catch (e) {
         console.error('Vector search failed:', e)
       }
     }
 
-    // ── Step 4: Full-text search fallback if vector returned nothing ─────────
-    // Uses the GIN index on `name` — no full table scan.
-    // OR+ILIKE chains removed entirely; no secondary ILIKE fallback.
+    // ── Step 4: Broad fallback if vector returned nothing ────────────────────
     if (products.length === 0) {
-      // Build the search term: prefer the GPT-normalised query, fall back to raw.
-      const searchTerm = (normalizedQ || rawQ).trim()
+      // Use rawQ (not GPT-expanded normalizedQ) so single discovery terms like
+      // "lawn" match against category/fabric columns, not just product names.
+      const safeTerm = rawQ.toLowerCase().trim().replace(/[%_(),']/g, ' ').trim()
 
       let q = supabase
         .from('products')
         .select('id, name, brand, price, original_price, tags, image_url, product_url, in_stock, created_at', { count: 'exact' })
-        .eq('in_stock', true)
-        .textSearch('name', searchTerm, { type: 'plain' })
+        .eq('in_stock', filterInStock)
+        .or(`name.ilike.%${safeTerm}%,category.ilike.%${safeTerm}%,fabric.ilike.%${safeTerm}%,tags.ilike.%${safeTerm}%`)
 
-      // Color filters — exact match on structured column
-      if (pureColor) {
-        q = q.eq('color', pureColor.trim().toLowerCase())
-      } else if (colorExtract?.color) {
-        q = q.eq('color', colorExtract.color.trim().toLowerCase())
-      }
+      // Structured filters
+      if (effectiveColor)       q = q.eq('color',        effectiveColor.toLowerCase())
+      if (fabric)               q = q.eq('fabric',       fabric)
+      if (category)             q = q.eq('category',     category)       // legacy compat
+      if (main_category)        q = q.eq('main_category', main_category)
+      if (stitch_type)          q = q.eq('stitch_type',  stitch_type)
+      if (tier)                 q = q.eq('tier',          tier)
+      if (occasion)             q = q.eq('occasion',     occasion)
+      if (parsedPieceCount > 0) q = q.eq('piece_count',  parsedPieceCount)
 
       // Brand and price filters
-      if (brand)     q = q.eq('brand', brand.trim().toLowerCase())
+      if (brand)     q = q.eq('brand', brand.trim())
       if (min_price) q = q.gte('price', parseInt(min_price))
       if (max_price) q = q.lte('price', parseInt(max_price))
 
@@ -305,7 +335,6 @@ async function fetchSearchPayload(request) {
 
       products = (data || []).map(toCardProduct)
       total = count || 0
-      // No secondary ILIKE fallback — if textSearch returns nothing, return empty.
     }
 
     return {
